@@ -1,0 +1,10 @@
+{
+  "name": "NIVEX",
+  "short_name": "NIVEX",
+  "description": "Travel with stablecoins, spend in local currency.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F9FC",
+  "theme_color": "#2563EB",
+  "icons": []
+}
