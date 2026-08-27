@@ -217,6 +217,12 @@ a {
   justify-content: center;
 }
 
+.onboarding-logo {
+  display: flex;
+  justify-content: center;
+  margin: 0 auto 26px;
+}
+
 .balance-card {
   position: relative;
   overflow: hidden;

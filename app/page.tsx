@@ -1,21 +1,19 @@
 import Link from "next/link";
 import { WalletCards } from "lucide-react";
 import { PhoneShell } from "@/components/layout/PhoneShell";
-import { BrandMark } from "@/components/ui/BrandMark";
+import { NivexLogo } from "@/components/ui/NivexLogo";
 import { DemoNotice } from "@/components/ui/DemoNotice";
-import { RouteArc } from "@/components/route-visual/RouteArc";
 
 export default function OnboardingPage() {
   return (
     <PhoneShell>
       <div className="content centered">
-        <div className="illustration">
-          <RouteArc />
+        <div className="onboarding-logo">
+          <NivexLogo size={112} layout="stacked" />
         </div>
         <div style={{ textAlign: "center" }}>
-          <BrandMark />
-          <h1 className="h1">Ví stablecoin cho hành trình quốc tế.</h1>
-          <p className="muted">Biết trước tỷ giá, phí và số tiền địa phương bạn sẽ nhận được.</p>
+          <h1 className="h1">Chuyển tiền quốc tế, rõ ràng từ đầu.</h1>
+          <p className="muted">Biết trước tỷ giá, phí và số tiền người nhận sẽ nhận được.</p>
         </div>
         <div className="stack" style={{ marginTop: 28 }}>
           <Link className="btn-primary" href="/wallet-ready">
