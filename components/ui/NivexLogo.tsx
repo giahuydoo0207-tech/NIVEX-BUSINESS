@@ -64,7 +64,7 @@ export function NivexWordmark({ size = 34, className }: NivexWordmarkProps) {
   return (
     <span
       className={className}
-      style={{ color: "#0F172A", fontFamily: "Sora, Inter, sans-serif", fontSize: size, fontWeight: 700, letterSpacing: "0.18em", lineHeight: 1 }}
+      style={{ color: "#172033", fontFamily: '"Segoe UI Variable", "Segoe UI", Arial, sans-serif', fontSize: size, fontWeight: 700, letterSpacing: 0, lineHeight: 1 }}
     >
       NIVEX
     </span>

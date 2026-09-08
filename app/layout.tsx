@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "NIVEX",
-  description: "Travel with stablecoins, spend in local currency.",
+  title: "NIVEX Business",
+  description: "Cross-border invoice and USDC payment operations for modern teams.",
 };
 
 export const viewport: Viewport = {

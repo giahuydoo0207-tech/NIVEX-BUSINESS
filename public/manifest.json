@@ -1,10 +1,10 @@
 {
-  "name": "NIVEX",
-  "short_name": "NIVEX",
-  "description": "Travel with stablecoins, spend in local currency.",
+  "name": "NIVEX Business",
+  "short_name": "NIVEX Business",
+  "description": "Cross-border invoice and USDC payment operations for modern teams.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F7F9FC",
+  "background_color": "#F5F7FB",
   "theme_color": "#2563EB",
   "icons": []
 }

@@ -1,12 +1,14 @@
 {
-  "name": "nivex-mobile",
+  "name": "nivex-business",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "tsc --noEmit",
+    "test": "node --test lib/money.test.ts"
   },
   "dependencies": {
     "lucide-react": "0.468.0",
