@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowDown,
   ArrowRight,
   ArrowUpRight,
   Building2,
@@ -18,6 +17,15 @@ import {
   LandingMotion,
   LandingNavigation,
 } from "@/components/marketing/LandingMotion";
+import {
+  CoreCapabilityGrid,
+  HeroSystemScene,
+  PaymentLifecycle,
+  RecipientVerificationScene,
+  SettlementScene,
+  SolanaCoreGrid,
+  WalletApprovalScene,
+} from "@/components/marketing/TechScenes";
 
 const questions = [
   [
@@ -47,27 +55,17 @@ export default function LandingPage() {
     <main className="landing">
       <LandingNavigation />
       <section className="landing-hero">
-        <Image
-          className="hero-art"
-          src="/images/payment-network.webp"
-          alt="Các khối doanh nghiệp và người nhận kết nối qua hạ tầng thanh toán NIVEX"
-          fill
-          priority
-          sizes="(max-width: 800px) 1280px, 100vw"
-        />
+        <HeroSystemScene />
         <div className="hero-copy">
-          <span className="hero-kicker">
-            KẾT NỐI DOANH NGHIỆP VỚI NHÂN SỰ TOÀN CẦU
-          </span>
+          <span className="hero-kicker">NIVEX BUSINESS · SOLANA DEVNET</span>
           <h1>
-            NIVEX
+            Chi trả USDC
             <br />
-            <span>BUSINESS</span>
+            <span>Rõ từng bước</span>
           </h1>
           <p>
-            Thanh toán USDC cho đội ngũ quốc tế.
-            <br />
-            Rõ ràng từ hóa đơn đến người nhận.
+            Tạo hóa đơn, kiểm tra người nhận và theo dõi thanh toán trong một
+            không gian dành cho doanh nghiệp.
           </p>
           <div className="hero-actions">
             <Link href="/business/register" className="business-primary-button">
@@ -80,16 +78,15 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
-        <div className="hero-caption">
-          <span>
-            <Globe2 size={16} />
-            Một kết nối. Cả đội ngũ.
-          </span>
-          <span>BUSINESS → USDC → NGƯỜI NHẬN</span>
+        <div className="hero-story-track" aria-label="Bốn chương của quy trình">
+          <span className="active">Công việc</span>
+          <span>Kiểm tra</span>
+          <span>Hóa đơn</span>
+          <span>Thanh toán</span>
         </div>
       </section>
       <div className="platform-strip">
-        <span>Dành cho đội ngũ không biên giới</span>
+        <span>Một quy trình cho đội ngũ không biên giới</span>
         <strong>
           <Building2 size={19} />
           Doanh nghiệp
@@ -107,17 +104,123 @@ export default function LandingPage() {
           Đội ngũ từ xa
         </strong>
       </div>
-      <section id="platform" className="landing-section product-section reveal">
-        <div className="landing-section-heading">
-          <p className="eyebrow">KHÔNG GIAN VẬN HÀNH CHUNG</p>
+      <section id="platform" className="landing-section story-section">
+        <div className="landing-section-heading reveal">
           <h2>
-            Từng khoản thanh toán.
+            Công việc hoàn thành.
             <br />
-            Một góc nhìn rõ ràng.
+            Đúng người được trả.
           </h2>
           <p>
-            Người nhận, hóa đơn và trạng thái nằm trong cùng một quy trình. Đội
-            ngũ tài chính luôn biết bước tiếp theo.
+            Mỗi chương làm rõ một quyết định, từ thông tin công việc đến lúc
+            người nhận thấy khoản thanh toán.
+          </p>
+        </div>
+        <div className="story-sequence">
+          <article id="recipient-check" className="story-chapter reveal">
+            <header>
+              <span>KIỂM TRA NGƯỜI NHẬN</span>
+              <h3>Đúng người trước khi đúng số tiền.</h3>
+              <p>
+                Hóa đơn và thông tin người nhận được đặt cạnh nhau để doanh
+                nghiệp đối chiếu trước khi tiếp tục.
+              </p>
+            </header>
+            <figure className="story-visual">
+              <RecipientVerificationScene />
+              <figcaption>
+                NIVEX chỉ trình bày dữ liệu cần kiểm tra, không đứng giữa dòng
+                tiền.
+              </figcaption>
+            </figure>
+          </article>
+          <article id="wallet-approval" className="story-chapter reveal">
+            <header>
+              <span>XÁC NHẬN HÓA ĐƠN</span>
+              <h3>Mỗi khoản chi được xem lại trước khi ký.</h3>
+              <p>
+                Nhập số USDC bất kỳ, kiểm tra nội dung và để ví doanh nghiệp là
+                nơi xác nhận cuối cùng.
+              </p>
+            </header>
+            <figure className="story-visual">
+              <WalletApprovalScene />
+              <figcaption>
+                Không nhập seed phrase hay private key vào NIVEX Business.
+              </figcaption>
+            </figure>
+          </article>
+          <article id="solana-settlement" className="story-chapter reveal">
+            <header>
+              <span>THANH TOÁN TRỰC TIẾP</span>
+              <h3>Tiền đi thẳng. Trạng thái quay về.</h3>
+              <p>
+                USDC đi từ ví doanh nghiệp đến ví người nhận qua Solana; NIVEX
+                ghi nhận trạng thái để hai bên cùng theo dõi.
+              </p>
+            </header>
+            <figure className="story-visual">
+              <SettlementScene />
+              <figcaption>
+                Bản hiện tại dùng Solana Devnet và mô phỏng bước kết nối ví.
+              </figcaption>
+            </figure>
+          </article>
+        </div>
+      </section>
+      <section id="core" className="landing-section capability-section">
+        <div className="landing-section-heading reveal">
+          <h2>
+            Lõi vận hành được thiết kế
+            <br />
+            quanh một quyết định đúng.
+          </h2>
+          <p>
+            Trước khi chạm đến blockchain, NIVEX làm rõ người nhận, số tiền và
+            quyền phê duyệt của doanh nghiệp.
+          </p>
+        </div>
+        <CoreCapabilityGrid />
+      </section>
+      <section id="solana" className="landing-section solana-core-section">
+        <div className="landing-section-heading reveal">
+          <p className="eyebrow">SOLANA DEVNET</p>
+          <h2>
+            Solana là lớp xác nhận.
+            <br />
+            Không phải người quản lý tiền.
+          </h2>
+          <p>
+            Ví doanh nghiệp tạo chữ ký. Solana thực thi giao dịch. NIVEX đọc
+            trạng thái để biến dữ liệu on-chain thành quy trình dễ theo dõi.
+          </p>
+        </div>
+        <SolanaCoreGrid />
+      </section>
+      <section id="workflow" className="landing-section lifecycle-section">
+        <div className="landing-section-heading reveal">
+          <h2>
+            Từ yêu cầu đến xác nhận
+            <br />
+            trong ba bước.
+          </h2>
+          <p>
+            Mỗi bước tạo ra một trạng thái riêng, vì “đã tạo”, “đã ký” và “đã
+            hoàn tất” không phải cùng một việc.
+          </p>
+        </div>
+        <PaymentLifecycle />
+      </section>
+      <section id="product" className="landing-section product-section reveal">
+        <div className="landing-section-heading">
+          <h2>
+            Toàn bộ câu chuyện.
+            <br />
+            Quay về một nơi.
+          </h2>
+          <p>
+            Dashboard tập hợp hóa đơn, người nhận và trạng thái để đội ngũ tài
+            chính biết chính xác bước tiếp theo.
           </p>
         </div>
         <Link
@@ -132,136 +235,50 @@ export default function LandingPage() {
             height={1418}
             sizes="(max-width: 768px) 100vw, 1100px"
           />
+          <span
+            className="product-focus product-focus-invoices"
+            aria-hidden="true"
+          >
+            <small>01</small>
+            Hóa đơn
+          </span>
+          <span
+            className="product-focus product-focus-recipients"
+            aria-hidden="true"
+          >
+            <small>02</small>
+            Người nhận
+          </span>
+          <span
+            className="product-focus product-focus-status"
+            aria-hidden="true"
+          >
+            <small>03</small>
+            Trạng thái
+          </span>
         </Link>
         <div className="product-facts">
           <div>
             <FileCheck2 />
-            <h3>Đúng hóa đơn</h3>
-            <p>
-              Số tiền, nội dung công việc và hạn thanh toán được tập hợp tại một
-              nơi.
-            </p>
+            <h3>Hóa đơn có ngữ cảnh</h3>
+            <p>Số tiền, công việc và hạn thanh toán luôn đi cùng nhau.</p>
           </div>
           <div>
             <ShieldCheck />
-            <h3>Đúng người nhận</h3>
+            <h3>Người nhận đã đối chiếu</h3>
             <p>
-              Kiểm tra thông tin được chia sẻ và tình trạng sẵn sàng nhận VND.
+              Chỉ những thông tin được chia sẻ mới xuất hiện với doanh nghiệp.
             </p>
           </div>
           <div>
             <WalletCards />
-            <h3>Rõ từng bước</h3>
-            <p>
-              Xem lại yêu cầu thanh toán trước khi chuyển sang bước kết nối ví.
-            </p>
-          </div>
-        </div>
-      </section>
-      <section
-        id="workflow"
-        className="landing-section workflow-section reveal"
-      >
-        <div className="landing-section-heading">
-          <h2>
-            Từ công việc hoàn thành
-            <br />
-            đến yêu cầu thanh toán.
-          </h2>
-          <p>Ba bước để chuẩn bị một khoản chi trả cho đội ngũ.</p>
-        </div>
-        <div className="workflow-layout">
-          <div className="workflow-rail">
-            <article>
-              <span>01</span>
-              <div>
-                <h3>Tạo không gian tổ chức</h3>
-                <p>
-                  Đăng ký doanh nghiệp và người đại diện. Tập hợp đội ngũ trong
-                  cùng không gian làm việc.
-                </p>
-              </div>
-            </article>
-            <article>
-              <span>02</span>
-              <div>
-                <h3>Kiểm tra & tạo hóa đơn</h3>
-                <p>
-                  Chọn người nhận, nhập số USDC và nội dung công việc. Xem lại
-                  trước khi tạo yêu cầu.
-                </p>
-              </div>
-            </article>
-            <article>
-              <span>03</span>
-              <div>
-                <h3>Theo dõi thanh toán</h3>
-                <p>
-                  Mở yêu cầu và kiểm tra chi tiết. Bản demo cho phép trải nghiệm
-                  bước kết nối ví mô phỏng.
-                </p>
-              </div>
-            </article>
-          </div>
-          <div
-            className="payment-diagram"
-            aria-label="Luồng định hướng: doanh nghiệp chuyển USDC đến người nhận. NIVEX hỗ trợ chuẩn bị và theo dõi thanh toán."
-          >
-            <h3>Thanh toán giữa hai bên.</h3>
-            <div className="diagram-transfer">
-              <div className="diagram-node">
-                <span className="diagram-node-icon">
-                  <Building2 size={26} aria-hidden="true" />
-                </span>
-                <div>
-                  <strong>Doanh nghiệp</strong>
-                  <small>Xem lại và xác nhận bằng ví</small>
-                </div>
-              </div>
-              <div className="diagram-path">
-                <ArrowDown size={48} strokeWidth={1.25} aria-hidden="true" />
-                <span>
-                  <strong>USDC</strong>
-                  <small>Qua mạng Solana</small>
-                </span>
-              </div>
-              <div className="diagram-node">
-                <span className="diagram-node-icon">
-                  <UsersRound size={26} aria-hidden="true" />
-                </span>
-                <div>
-                  <strong>Người nhận</strong>
-                  <small>Nhận USDC vào ví</small>
-                </div>
-              </div>
-            </div>
-            <div className="diagram-support">
-              <h4>Công cụ của bạn: NIVEX Business</h4>
-              <ul>
-                <li>
-                  <FileCheck2 size={18} aria-hidden="true" />
-                  Chuẩn bị hóa đơn
-                </li>
-                <li>
-                  <ShieldCheck size={18} aria-hidden="true" />
-                  Kiểm tra thông tin người nhận
-                </li>
-                <li>
-                  <WalletCards size={18} aria-hidden="true" />
-                  Theo dõi trạng thái thanh toán
-                </li>
-              </ul>
-            </div>
-            <p>
-              Luồng sản phẩm định hướng. Bản hiện tại mô phỏng thanh toán, chưa
-              chuyển tiền thật.
-            </p>
+            <h3>Trạng thái tách bạch</h3>
+            <p>Tạo yêu cầu, xác nhận và hoàn tất là ba mốc riêng biệt.</p>
           </div>
         </div>
       </section>
       <section id="trust" className="landing-section trust-section reveal">
         <div className="landing-section-heading">
-          <p className="eyebrow">MINH BẠCH TỪ THIẾT KẾ</p>
           <h2>
             Quyền kiểm soát
             <br />ở phía bạn.

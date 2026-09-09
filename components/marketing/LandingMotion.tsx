@@ -6,41 +6,47 @@ import { NivexLogo } from "@/components/ui/NivexLogo";
 export function LandingNavigation() {
   const [open, setOpen] = useState(false);
   return (
-    <header className="landing-nav">
-      <Link
-        href="/"
-        className="brand-lockup"
-        aria-label="NIVEX Business trang chủ"
-      >
-        <NivexLogo size={32} variant="plain" />
-        <span>Business</span>
-      </Link>
-      <nav
-        className={open ? "landing-links open" : "landing-links"}
-        aria-label="Điều hướng chính"
-        onClick={() => setOpen(false)}
-      >
-        <a href="#platform">Nền tảng</a>
-        <a href="#workflow">Cách hoạt động</a>
-        <a href="#trust">Minh bạch</a>
-        <a href="#faq">FAQ</a>
-      </nav>
-      <div className="landing-nav-actions">
-        <Link href="/business/login">Đăng nhập</Link>
-        <Link href="/business/register" className="business-primary-button">
-          Đăng ký
-          <ArrowUpRight size={16} />
-        </Link>
-        <button
-          className="icon-button menu-button"
-          aria-label={open ? "Đóng menu" : "Mở menu"}
-          aria-expanded={open}
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
+    <>
+      <div className="landing-signal">
+        <span>Hạ tầng thanh toán cho đội ngũ toàn cầu</span>
+        <span>Bản trải nghiệm trên Solana Devnet</span>
       </div>
-    </header>
+      <header className="landing-nav">
+        <Link
+          href="/"
+          className="brand-lockup"
+          aria-label="NIVEX Business trang chủ"
+        >
+          <NivexLogo size={32} variant="plain" />
+          <span>Business</span>
+        </Link>
+        <nav
+          className={open ? "landing-links open" : "landing-links"}
+          aria-label="Điều hướng chính"
+          onClick={() => setOpen(false)}
+        >
+          <a href="#product">Sản phẩm</a>
+          <a href="#solana">Core & Solana</a>
+          <a href="#workflow">Quy trình</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <div className="landing-nav-actions">
+          <Link href="/business/login">Đăng nhập</Link>
+          <Link href="/business/register" className="business-primary-button">
+            Đăng ký
+            <ArrowUpRight size={16} />
+          </Link>
+          <button
+            className="icon-button menu-button"
+            aria-label={open ? "Đóng menu" : "Mở menu"}
+            aria-expanded={open}
+            onClick={() => setOpen(!open)}
+          >
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+      </header>
+    </>
   );
 }
 export function LandingMotion() {
