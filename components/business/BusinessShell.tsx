@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   ArrowUpRight,
   Bell,
+  BriefcaseBusiness,
   Building2,
   ChevronDown,
   FileText,
@@ -28,6 +29,12 @@ const navigation = [
     icon: LayoutDashboard,
   },
   {
+    key: "jobs",
+    href: "/business/jobs",
+    label: "Cơ hội việc làm",
+    icon: BriefcaseBusiness,
+  },
+  {
     key: "invoices",
     href: "/business/invoices",
     label: "Hóa đơn",
@@ -45,7 +52,7 @@ export function BusinessShell({
   active,
 }: {
   children: React.ReactNode;
-  active: "dashboard" | "contractors" | "invoices";
+  active: "dashboard" | "jobs" | "contractors" | "invoices";
 }) {
   const [menu, setMenu] = useState(false);
   const [dialog, setDialog] = useState<
@@ -85,13 +92,20 @@ export function BusinessShell({
               <Icon size={18} />
               <span>{label}</span>
               {key === "invoices" && <span className="nav-count">USDC</span>}
+              {key === "jobs" && <span className="nav-count">NEW</span>}
             </Link>
           ))}
         </nav>
-        <Link href="/business/invoices/new" className="sidebar-create">
-          <Plus size={17} />
-          Tạo hóa đơn
-        </Link>
+        <div className="sidebar-quick-actions">
+          <Link href="/business/jobs/new" className="sidebar-create">
+            <Plus size={17} />
+            Đăng cơ hội
+          </Link>
+          <Link href="/business/invoices/new" className="sidebar-create">
+            <FileText size={17} />
+            Tạo hóa đơn
+          </Link>
+        </div>
         <div className="sidebar-bottom">
           <div className="sidebar-environment">
             <span className="network-badge">
@@ -212,9 +226,9 @@ export function BusinessShell({
         ) : dialog === "help" ? (
           <div className="dialog-body">
             <ol>
+              <li>Đăng cơ hội remote và xem số người phù hợp.</li>
               <li>Kiểm tra thông tin người nhận tại mục Nhân sự.</li>
               <li>Tạo hóa đơn với số USDC và hạn thanh toán.</li>
-              <li>Mở trang thanh toán để xem lại và trải nghiệm kết nối ví.</li>
             </ol>
             <p>Hóa đơn bạn tạo được lưu trên trình duyệt này.</p>
             <Link className="business-secondary-button" href="/#faq">

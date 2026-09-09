@@ -1740,8 +1740,8 @@ p {
     font-size: 12px;
   }
 }
-/* Dashboard command center */
-.business-app-dashboard {
+/* NIVEX Business dark command center */
+.business-app {
   --canvas: #020817;
   --surface: #081321;
   --ink: #f5f8fc;
@@ -1750,100 +1750,100 @@ p {
   color: var(--ink);
   background: var(--canvas);
 }
-.business-app-dashboard .business-sidebar {
+.business-app .business-sidebar {
   color: #dfe7f2;
   background: #050d18;
   border-right-color: #263247;
 }
-.business-app-dashboard .business-brand {
+.business-app .business-brand {
   color: #f8fafc;
 }
-.business-app-dashboard .business-brand > span {
+.business-app .business-brand > span {
   color: #9aa9bc;
   border-color: #344156;
 }
-.business-app-dashboard .organization-switcher {
+.business-app .organization-switcher {
   color: #e8eef7;
   border-color: #2c394d;
   background: #091321;
   box-shadow: none;
 }
-.business-app-dashboard .organization-switcher small,
-.business-app-dashboard .nav-label,
-.business-app-dashboard .sidebar-profile small {
+.business-app .organization-switcher small,
+.business-app .nav-label,
+.business-app .sidebar-profile small {
   color: #8493a8;
 }
-.business-app-dashboard .organization-icon {
+.business-app .organization-icon {
   color: #adc0d8;
   border-color: #344156;
   background: #0d1827;
 }
-.business-app-dashboard .business-navigation a,
-.business-app-dashboard .sidebar-create,
-.business-app-dashboard .sidebar-bottom > button,
-.business-app-dashboard .sidebar-bottom > a {
+.business-app .business-navigation a,
+.business-app .sidebar-create,
+.business-app .sidebar-bottom > button,
+.business-app .sidebar-bottom > a {
   color: #95a4b8;
 }
-.business-app-dashboard .business-navigation a:hover,
-.business-app-dashboard .sidebar-create:hover,
-.business-app-dashboard .sidebar-bottom > button:hover,
-.business-app-dashboard .sidebar-bottom > a:hover {
+.business-app .business-navigation a:hover,
+.business-app .sidebar-create:hover,
+.business-app .sidebar-bottom > button:hover,
+.business-app .sidebar-bottom > a:hover {
   color: #eef4fc;
   background: #101c2c;
 }
-.business-app-dashboard .business-navigation a.active {
+.business-app .business-navigation a.active {
   color: #ffffff;
   background: #102342;
   box-shadow: inset 2px 0 #2d7ff9;
 }
-.business-app-dashboard .nav-count {
+.business-app .nav-count {
   color: #78aaf5;
 }
-.business-app-dashboard .sidebar-environment,
-.business-app-dashboard .sidebar-profile {
+.business-app .sidebar-environment,
+.business-app .sidebar-profile {
   border-color: #273448;
 }
-.business-app-dashboard .sidebar-environment p,
-.business-app-dashboard .sidebar-environment > a {
+.business-app .sidebar-environment p,
+.business-app .sidebar-environment > a {
   color: #8493a8;
 }
-.business-app-dashboard .network-badge {
+.business-app .network-badge {
   color: #b9c7d9;
   border-color: #334156;
   background: #091321;
 }
-.business-app-dashboard .avatar {
+.business-app .avatar {
   color: #dce8fa;
   background: #14233a;
 }
-.business-app-dashboard .business-workspace {
+.business-app .business-workspace {
   background: #020817;
 }
-.business-app-dashboard .business-topbar {
+.business-app .business-topbar {
   color: #dce5f1;
   border-bottom-color: #253146;
   background: #050d18e8;
   backdrop-filter: blur(16px);
 }
-.business-app-dashboard .business-topbar .breadcrumb {
+.business-app .business-topbar .breadcrumb {
   color: #8797ad;
 }
-.business-app-dashboard .breadcrumb strong {
+.business-app .breadcrumb strong {
   color: #edf3fb;
 }
-.business-app-dashboard .topbar-actions .demo-label {
+.business-app .topbar-actions .demo-label {
   color: #e5bd73;
   background: #2e2412;
 }
-.business-app-dashboard .wallet-connect {
+.business-app .wallet-connect {
   color: #dce7f4;
   border-color: #334156;
   background: #0a1422;
 }
-.business-app-dashboard .wallet-connect:hover {
+.business-app .wallet-connect:hover {
   background: #101d2e;
 }
-.business-app-dashboard .business-content {
+.business-app .business-content {
   max-width: 1580px;
   background-image: radial-gradient(
     circle at 1px 1px,
@@ -1852,7 +1852,7 @@ p {
   );
   background-size: 18px 18px;
 }
-.business-app-dashboard .workspace-footer {
+.business-app .workspace-footer {
   color: #77879c;
   border-top-color: #253146;
   background: #050d18;
@@ -2278,6 +2278,725 @@ p {
   color: #a9b8ca;
   border-color: #2c394d;
 }
+
+/* Shared Business surfaces */
+.business-app .page-heading-row h1,
+.business-app .section-heading h2,
+.business-app .section-heading-row h2,
+.business-app .contractor-profile h2,
+.business-app .invoice-summary h2 {
+  color: #f5f8fc;
+}
+.business-app .page-heading-row p,
+.business-app .section-heading p,
+.business-app .contractor-profile p,
+.business-app .field small,
+.business-app .empty-state,
+.business-app .empty-state p {
+  color: #8594a9;
+}
+.business-app .business-secondary-button {
+  color: #dce7f4;
+  border-color: #344156;
+  background: #0a1422;
+  box-shadow: none;
+}
+.business-app .business-secondary-button:hover {
+  color: #ffffff;
+  border-color: #53647c;
+  background: #101d2e;
+}
+.business-app .sidebar-quick-actions {
+  display: grid;
+  gap: 3px;
+  margin-top: 13px;
+  padding-top: 10px;
+  border-top: 1px solid #273448;
+}
+.business-app .sidebar-quick-actions .sidebar-create {
+  margin: 0;
+}
+.business-app .invoice-table-section {
+  padding-top: 18px;
+  border-top: 1px solid #2a374a;
+}
+.business-app .table-toolbar {
+  border-bottom-color: #2c394d;
+}
+.business-app .table-tabs > button {
+  color: #8796aa;
+}
+.business-app .table-tabs > button.active {
+  color: #72a7f8;
+  border-bottom-color: #2d7ff9;
+}
+.business-app .search-input {
+  color: #8495ab;
+  border-color: #334156;
+  background: #081321;
+}
+.business-app .search-input input {
+  color: #dbe5f2;
+}
+.business-app .search-input input::placeholder {
+  color: #6f7f95;
+}
+.business-app .data-table th {
+  color: #78889d;
+  border-bottom-color: #2b384c;
+}
+.business-app .data-table td {
+  color: #cbd5e2;
+  border-bottom-color: #202d40;
+}
+.business-app .data-table tbody tr:hover {
+  background: #0a1625;
+}
+.business-app .invoice-link {
+  color: #dce5f0;
+}
+.business-app .invoice-link small,
+.business-app .table-person,
+.business-app .table-pagination {
+  color: #8291a5;
+}
+.business-app .file-icon {
+  color: #9ab3d4;
+  border-color: #334156;
+  background: #0a1625;
+}
+.business-app .status-badge.success {
+  color: #71caa7;
+  background: #10281f;
+}
+.business-app .status-badge.warning {
+  color: #dfb369;
+  background: #2e2413;
+}
+.business-app .status-badge.neutral {
+  color: #aab8ca;
+  background: #172334;
+}
+.business-app .table-pagination .icon-button {
+  color: #a9b8ca;
+  border-color: #2c394d;
+}
+.business-app .empty-state h3 {
+  color: #dce5f0;
+}
+.business-app .contractor-toolbar select {
+  color: #bdc9d8;
+  border-color: #334156;
+  background: #081321;
+  color-scheme: dark;
+}
+.business-app .contractor-card {
+  position: relative;
+  overflow: hidden;
+  color: #cbd5e2;
+  border-color: #2c394d;
+  background: #07111fe8;
+}
+.business-app .contractor-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: #2d7ff9;
+  opacity: 0.65;
+}
+.business-app .contractor-profile > i {
+  color: #b7cae2;
+  border: 1px solid #344156;
+  background: #122238;
+}
+.business-app .verification-list {
+  color: #9baabd;
+  border-color: #2b384c;
+}
+.business-app .verification-list svg,
+.business-app .ready-text {
+  color: #66c99f;
+}
+.business-app .attention-text {
+  color: #e2b568;
+}
+.business-app .invoice-form-main {
+  color: #dce5f0;
+}
+.business-app .section-heading > svg {
+  color: #72a7f8;
+}
+.business-app .field > span {
+  color: #a9b7c8;
+}
+.business-app .field input,
+.business-app .field select,
+.business-app .field textarea,
+.business-app .amount-field {
+  color: #e5edf7;
+  border-color: #344156;
+  background: #081321;
+  color-scheme: dark;
+}
+.business-app .field input::placeholder,
+.business-app .field textarea::placeholder {
+  color: #66778e;
+}
+.business-app .field input[readonly] {
+  color: #8493a8;
+  background: #0b1625;
+}
+.business-app .amount-field input {
+  border: 0;
+  background: transparent;
+}
+.business-app .amount-field strong {
+  color: #78aaf5;
+}
+.business-app .field-with-icon svg {
+  color: #7f90a6;
+}
+.business-app .invoice-summary {
+  color: #cbd5e2;
+  border-color: #2c394d;
+  background: #07111f;
+}
+.business-app .invoice-summary dl > div {
+  border-color: #2b384c;
+}
+.business-app .invoice-summary dt {
+  color: #8291a5;
+}
+.business-app .invoice-summary dd {
+  color: #dfe7f2;
+}
+.business-app .invoice-summary .summary-assurance {
+  color: #91a5bf;
+  border-top: 1px solid #2b384c;
+}
+.business-app .form-error,
+.business-auth-page .form-error,
+.business-login-page .form-error {
+  color: #f0a19a;
+  border: 1px solid #66342f;
+  background: #2a1718;
+}
+
+/* Job opportunity operations */
+.jobs-view {
+  color: #eef3fa;
+}
+.jobs-command-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 1fr)) minmax(210px, 0.9fr);
+  margin-bottom: 24px;
+  border: 1px solid #2d3a4f;
+  background: #07111fe8;
+}
+.jobs-command-strip > article,
+.mobile-delivery-status {
+  min-width: 0;
+  min-height: 84px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 17px;
+  border-right: 1px solid #2d3a4f;
+}
+.mobile-delivery-status {
+  border-right: 0;
+}
+.jobs-command-strip > article > span:last-child,
+.mobile-delivery-status > span {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+.jobs-command-strip small,
+.mobile-delivery-status small {
+  color: #718198;
+  font-family: Consolas, monospace;
+  font-size: 9px;
+}
+.jobs-command-strip strong,
+.mobile-delivery-status strong {
+  overflow: hidden;
+  color: #e5ecf5;
+  font-size: 12px;
+  font-weight: 560;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jobs-command-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #344156;
+  background: #0b1726;
+}
+.jobs-command-icon.blue {
+  color: #78aaf5;
+}
+.jobs-command-icon.green {
+  color: #66c99f;
+}
+.jobs-command-icon.amber {
+  color: #e2b568;
+}
+.mobile-delivery-status > i {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #d39b43;
+  box-shadow: 0 0 0 5px #d39b4317;
+  animation: job-status-pulse 2.4s ease-in-out infinite;
+}
+.jobs-list-section {
+  border-top: 1px solid #2a374a;
+}
+.jobs-toolbar {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #2c394d;
+}
+.job-post-list {
+  display: grid;
+}
+.job-post-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 42px minmax(260px, 1fr) minmax(315px, 0.8fr) 34px;
+  align-items: center;
+  gap: 15px;
+  padding: 20px 0;
+  border-bottom: 1px solid #202d40;
+  transition: background 0.18s ease;
+}
+.job-post-row:hover {
+  background: #07111fa6;
+}
+.job-post-mark {
+  width: 38px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: #9ab3d4;
+  border: 1px solid #334156;
+  background: #0a1625;
+}
+.job-post-copy {
+  min-width: 0;
+}
+.job-post-title-line {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.job-post-title-line > button {
+  overflow: hidden;
+  padding: 0;
+  color: #e7eef8;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 590;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.job-post-copy > p {
+  overflow: hidden;
+  margin: 7px 0 10px;
+  color: #8291a5;
+  font-size: 11px;
+  line-height: 1.55;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.job-skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.job-skill-list > span {
+  padding: 4px 6px;
+  color: #9fb1c7;
+  border: 1px solid #2e3b50;
+  border-radius: 4px;
+  background: #0b1726;
+  font-family: Consolas, monospace;
+  font-size: 9px;
+}
+.job-post-metrics {
+  display: grid;
+  grid-template-columns: 1.25fr 0.55fr 0.85fr;
+  margin: 0;
+}
+.job-post-metrics > div {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  padding: 3px 12px;
+  border-left: 1px solid #29364a;
+}
+.job-post-metrics dt {
+  color: #718198;
+  font-family: Consolas, monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+}
+.job-post-metrics dd {
+  overflow: hidden;
+  margin: 0;
+  color: #c7d2e0;
+  font-size: 10px;
+  font-weight: 520;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.job-row-action {
+  color: #8da0b8;
+  border-color: #2d3a4f;
+}
+.job-detail-dialog .job-detail-budget {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px;
+  border: 1px solid #2d3a4f;
+  background: #0a1625;
+}
+.job-detail-budget > span {
+  display: grid;
+  gap: 3px;
+}
+.job-detail-budget small {
+  color: #718198;
+  font-family: Consolas, monospace;
+  font-size: 8px;
+}
+.job-detail-budget strong {
+  color: #eef4fc;
+  font-size: 14px;
+}
+.job-detail-dialog dl {
+  margin: 14px 0;
+}
+.job-detail-dialog dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 9px 0;
+  border-bottom: 1px solid #273448;
+}
+.job-detail-dialog dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.job-detail-dialog dd {
+  margin: 0;
+  color: #d7e0eb;
+  text-align: right;
+}
+.job-post-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(285px, 0.68fr);
+  align-items: start;
+  gap: 28px;
+  margin-top: 32px;
+}
+.job-form-main {
+  padding: 26px;
+  color: #dce5f0;
+  border: 1px solid #2c394d;
+  background: #07111fe8;
+}
+.job-form-main .section-heading > svg {
+  color: #78aaf5;
+}
+.job-form-divider {
+  height: 1px;
+  margin: 28px 0;
+  background: #2b384c;
+}
+.job-budget-field {
+  display: flex;
+  align-items: center;
+  color: #e5edf7;
+  border: 1px solid #344156;
+  border-radius: 5px;
+  background: #081321;
+}
+.business-app .job-budget-field input {
+  border: 0;
+  background: transparent;
+}
+.job-budget-field strong {
+  padding-right: 12px;
+  color: #78aaf5;
+  font-size: 11px;
+}
+.job-notify-check {
+  min-height: 68px;
+  align-items: center;
+  padding: 13px;
+  color: #a9b7c8;
+  border: 1px solid #344156;
+  background: #0a1625;
+}
+.job-notify-check > svg {
+  color: #e2b568;
+}
+.job-notify-check > span {
+  display: grid;
+  gap: 4px;
+}
+.job-notify-check strong {
+  color: #dce5f0;
+  font-size: 12px;
+}
+.job-notify-check small {
+  color: #7f90a6;
+  font-size: 10px;
+}
+.job-publish-panel {
+  position: sticky;
+  top: 22px;
+  padding: 22px;
+  color: #cbd5e2;
+  border: 1px solid #2c394d;
+  background: #07111f;
+}
+.job-preview-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 20px;
+  color: #718198;
+  font-family: Consolas, monospace;
+  font-size: 9px;
+}
+.job-preview-status i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #2d7ff9;
+}
+.job-publish-panel h2 {
+  margin: 0 0 7px;
+  color: #f5f8fc;
+  font-size: 19px;
+  line-height: 1.35;
+}
+.job-publish-panel > p {
+  margin: 0;
+  color: #8291a5;
+  font-size: 11px;
+}
+.job-preview-budget {
+  display: block;
+  margin: 22px 0;
+  color: #eef4fc;
+  font-size: 20px;
+  font-weight: 590;
+}
+.job-publish-panel dl {
+  margin: 0;
+}
+.job-publish-panel dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid #2b384c;
+  font-size: 10px;
+}
+.job-publish-panel dt {
+  color: #8291a5;
+}
+.job-publish-panel dd {
+  margin: 0;
+  color: #dfe7f2;
+  text-align: right;
+}
+.job-publish-assurance {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 18px 0;
+  color: #8fa4bf;
+  font-size: 10px;
+  line-height: 1.55;
+}
+.job-publish-assurance > svg {
+  color: #66c99f;
+}
+.job-publish-panel .business-secondary-button {
+  margin-top: 9px;
+}
+@keyframes job-status-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* Business authentication */
+.business-auth-page,
+.business-login-page {
+  --canvas: #020817;
+  --surface: #07111f;
+  --ink: #f5f8fc;
+  --muted: #8c9aae;
+  --border: #273448;
+  color: var(--ink);
+  background-color: var(--canvas);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    #9aabc214 1px,
+    transparent 1.2px
+  );
+  background-size: 18px 18px;
+}
+.business-auth-page .business-auth-header {
+  color: #e8eef7;
+  border-bottom-color: #273448;
+  background: #050d18e8;
+  backdrop-filter: blur(16px);
+}
+.business-auth-page .business-auth-brand > span {
+  color: #9aa9bc;
+  border-color: #344156;
+}
+.business-auth-page .back-link,
+.business-auth-page .text-button {
+  color: #9cabbf;
+}
+.business-auth-page .register-context h1,
+.business-auth-page .register-heading h2,
+.business-login-page .login-form-heading h1 {
+  color: #f5f8fc;
+}
+.business-auth-page .register-context > p:not(.eyebrow),
+.business-auth-page .register-heading > span,
+.business-login-page .login-form-heading > p:last-child,
+.business-login-page .register-link,
+.business-login-page .login-options {
+  color: #8c9aae;
+}
+.business-auth-page .register-context-icon {
+  color: #8db7f7;
+  border-color: #344156;
+  background: #102342;
+}
+.business-auth-page .register-trust {
+  color: #71caa7;
+}
+.business-auth-page .register-demo-note {
+  color: #c7a76b;
+  border-color: #6c5126;
+}
+.business-auth-page .register-form-panel {
+  padding: 30px;
+  color: #dce5f0;
+  border: 1px solid #2c394d;
+  background: #07111fe8;
+}
+.business-auth-page .step-indicator span {
+  color: #8493a8;
+  background: #162235;
+}
+.business-auth-page .step-indicator span.active {
+  color: #ffffff;
+  background: #2d7ff9;
+}
+.business-auth-page .step-indicator span:not(:last-child)::after {
+  background: #344156;
+}
+.business-auth-page .field > span,
+.business-login-page .field > span {
+  color: #a9b7c8;
+}
+.business-auth-page .field input,
+.business-auth-page .field select,
+.business-auth-page .field textarea,
+.business-login-page .auth-input {
+  color: #e5edf7;
+  border-color: #344156;
+  background: #081321;
+  color-scheme: dark;
+}
+.business-auth-page .field input[readonly] {
+  color: #8493a8;
+  background: #0b1625;
+}
+.business-auth-page .field input::placeholder,
+.business-auth-page .field textarea::placeholder,
+.business-login-page .auth-input input::placeholder {
+  color: #66778e;
+}
+.business-auth-page .check-field {
+  color: #98a8bc;
+}
+.business-login-page .login-brand-panel {
+  border-right: 1px solid #273448;
+  background: #050d18;
+}
+.business-login-page .login-form-panel {
+  color: #dce5f0;
+  background: #07111fe8;
+}
+.business-login-page .auth-input > svg,
+.business-login-page .auth-input button {
+  color: #8495ab;
+}
+.business-login-page .auth-input input {
+  color: #e5edf7;
+  border: 0;
+  background: transparent;
+}
+.business-login-page .register-link a,
+.business-login-page .login-options button {
+  color: #78aaf5;
+}
+.business-login-page .demo-access {
+  border-color: #476586;
+  background: #0a1728;
+}
+.business-login-page .demo-access strong {
+  color: #b8c9de;
+}
+.business-login-page .demo-access span {
+  color: #8091a7;
+}
+
+/* Portals render outside the Business shell. */
+.portal-dialog {
+  color: #e7eef8;
+  border-color: #344156;
+  background: #07111f;
+  box-shadow: 0 28px 100px #00000080;
+}
+.portal-dialog > p,
+.portal-dialog .dialog-body {
+  color: #93a3b7;
+}
+.portal-dialog .detail-amount {
+  color: #f5f8fc;
+}
+.portal-dialog .network-badge {
+  color: #b9c7d9;
+  border-color: #344156;
+  background: #0b1625;
+}
 @keyframes dashboard-orbit {
   to {
     transform: rotate(360deg);
@@ -2298,6 +3017,32 @@ p {
   }
 }
 @media (max-width: 1120px) {
+  .jobs-command-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .jobs-command-strip > article:nth-child(2),
+  .mobile-delivery-status {
+    border-right: 0;
+  }
+  .jobs-command-strip > article:nth-child(-n + 2) {
+    border-bottom: 1px solid #2d3a4f;
+  }
+  .job-post-row {
+    grid-template-columns: 42px minmax(0, 1fr) 34px;
+  }
+  .job-post-metrics {
+    grid-column: 2;
+  }
+  .job-row-action {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+  .job-post-form {
+    grid-template-columns: 1fr;
+  }
+  .job-publish-panel {
+    position: static;
+  }
   .dashboard-ops-grid {
     grid-template-columns: 1fr;
   }
@@ -2322,7 +3067,7 @@ p {
   }
 }
 @media (max-width: 760px) {
-  .business-app-dashboard .business-sidebar {
+  .business-app .business-sidebar {
     background: #050d18;
   }
   .dashboard-network-strip dl > div {
@@ -2341,8 +3086,75 @@ p {
   .route-step {
     grid-template-columns: 24px 36px minmax(0, 1fr) auto;
   }
+  .jobs-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 0;
+  }
+  .jobs-toolbar .table-tabs {
+    min-height: 42px;
+    overflow-x: auto;
+  }
+  .jobs-toolbar .search-input {
+    max-width: none;
+  }
+  .jobs-toolbar .search-input input {
+    width: 100%;
+  }
+  .job-post-row {
+    grid-template-columns: 36px minmax(0, 1fr) 30px;
+    gap: 10px;
+  }
+  .job-post-mark {
+    width: 34px;
+    height: 38px;
+  }
+  .job-post-metrics {
+    grid-template-columns: 1fr 0.65fr;
+  }
+  .job-post-metrics > div {
+    padding-inline: 8px;
+  }
+  .job-post-metrics > div:last-child {
+    display: none;
+  }
+  .job-form-main,
+  .job-publish-panel {
+    padding: 18px;
+  }
 }
 @media (max-width: 430px) {
+  .jobs-command-strip {
+    grid-template-columns: 1fr;
+  }
+  .jobs-command-strip > article,
+  .mobile-delivery-status {
+    min-height: 70px;
+    border-right: 0;
+    border-bottom: 1px solid #2d3a4f;
+  }
+  .mobile-delivery-status {
+    border-bottom: 0;
+  }
+  .job-post-title-line {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .job-post-title-line > button,
+  .job-post-copy > p {
+    white-space: normal;
+  }
+  .job-post-metrics {
+    grid-template-columns: 1fr;
+  }
+  .job-post-metrics > div:nth-child(2),
+  .job-post-metrics > div:last-child {
+    display: none;
+  }
+  .job-form-main .form-grid {
+    grid-template-columns: 1fr;
+  }
   .dashboard-tech .page-heading-row h1 {
     font-size: 25px;
   }
