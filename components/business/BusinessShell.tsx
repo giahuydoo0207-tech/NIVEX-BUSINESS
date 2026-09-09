@@ -52,7 +52,7 @@ export function BusinessShell({
     "wallet" | "help" | "notifications" | null
   >(null);
   return (
-    <div className="business-app">
+    <div className={`business-app business-app-${active}`}>
       <aside
         className={menu ? "business-sidebar sidebar-open" : "business-sidebar"}
       >

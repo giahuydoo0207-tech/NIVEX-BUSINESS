@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  Activity,
   ArrowDownLeft,
   ArrowUpRight,
   CalendarDays,
@@ -11,13 +12,99 @@ import {
   FilePlus2,
   FileText,
   Info,
+  Network,
+  ShieldCheck,
+  UserCheck,
   UsersRound,
+  WalletCards,
 } from "lucide-react";
 import { useInvoices } from "@/components/business/useInvoices";
 import { InvoiceTable } from "@/components/business/InvoiceTable";
 import { formatUsdc } from "@/lib/money";
 import { formatDate, sumMinor } from "@/lib/portal-data";
 import { demoContractors } from "@/lib/business-demo-data";
+
+function PaymentRoutePanel({
+  invoiceCount,
+  pendingCount,
+  paidCount,
+}: {
+  invoiceCount: number;
+  pendingCount: number;
+  paidCount: number;
+}) {
+  const readyRecipients = demoContractors.filter(
+    (item) => item.payoutReadiness === "READY",
+  ).length;
+  const steps = [
+    {
+      key: "01",
+      label: "Hóa đơn",
+      value: `${invoiceCount} yêu cầu`,
+      note: "Đã ghi nhận trong kỳ",
+      icon: FileText,
+    },
+    {
+      key: "02",
+      label: "Ví doanh nghiệp",
+      value: `${pendingCount} chờ ký`,
+      note: "Ký bên ngoài NIVEX",
+      icon: WalletCards,
+    },
+    {
+      key: "03",
+      label: "Solana",
+      value: `${paidCount} confirmed`,
+      note: "Devnet · dữ liệu mô phỏng",
+      icon: Network,
+    },
+    {
+      key: "04",
+      label: "Người nhận",
+      value: `${readyRecipients} sẵn sàng`,
+      note: "Thông tin đã đối chiếu",
+      icon: UserCheck,
+    },
+  ];
+  return (
+    <aside className="payment-route-panel" aria-label="Luồng thanh toán">
+      <div className="section-heading-row route-heading">
+        <div>
+          <h2>
+            Luồng vận hành
+            <Activity size={14} />
+          </h2>
+          <p>Một đường đi, bốn điểm kiểm soát</p>
+        </div>
+        <span className="route-live">
+          <i /> LIVE DEMO
+        </span>
+      </div>
+      <div className="payment-route-map">
+        <span className="route-spine" aria-hidden="true">
+          <i />
+        </span>
+        {steps.map(({ key, label, value, note, icon: Icon }) => (
+          <div className="route-step" key={key}>
+            <span className="route-index">{key}</span>
+            <span className="route-step-icon">
+              <Icon size={18} />
+            </span>
+            <span className="route-step-copy">
+              <strong>{label}</strong>
+              <small>{note}</small>
+            </span>
+            <b>{value}</b>
+          </div>
+        ))}
+      </div>
+      <div className="route-assurance">
+        <ShieldCheck size={16} />
+        NIVEX không lưu seed phrase hoặc private key
+      </div>
+    </aside>
+  );
+}
 
 export function Dashboard() {
   const { invoices, storageError } = useInvoices();
@@ -109,7 +196,7 @@ export function Dashboard() {
     );
   }
   return (
-    <>
+    <div className="dashboard-tech">
       <div className="page-heading-row">
         <div>
           <h1>Tổng quan</h1>
@@ -120,6 +207,34 @@ export function Dashboard() {
           Tạo hóa đơn
         </Link>
       </div>
+      <section className="dashboard-network-strip" aria-label="Trạng thái mạng">
+        <div className="network-identity">
+          <span className="network-orbit-mark">
+            <Network size={20} />
+            <i />
+          </span>
+          <span>
+            <small>PAYMENT NETWORK</small>
+            <strong>Solana Devnet</strong>
+          </span>
+        </div>
+        <dl>
+          <div>
+            <dt>RPC</dt>
+            <dd>
+              <i /> Sẵn sàng
+            </dd>
+          </div>
+          <div>
+            <dt>Finality</dt>
+            <dd>confirmed</dd>
+          </div>
+          <div>
+            <dt>Chế độ</dt>
+            <dd>Mô phỏng</dd>
+          </div>
+        </dl>
+      </section>
       <div className="dashboard-controls">
         <div className="date-controls">
           <label className="period-select">
@@ -258,114 +373,123 @@ export function Dashboard() {
           </span>
         </article>
       </section>
-      <section className="activity-section">
-        <div className="section-heading-row">
-          <div>
-            <h2>
-              Hoạt động thanh toán
-              <Info size={14} />
-            </h2>
-            <p>Hóa đơn được tạo trong khoảng thời gian đã chọn</p>
-          </div>
-          <div className="chart-legend">
-            <span>
-              <i />
-              Kỳ hiện tại
-            </span>
-            {compare && (
+      <div className="dashboard-ops-grid">
+        <section className="activity-section dashboard-panel">
+          <div className="section-heading-row">
+            <div>
+              <h2>
+                Hoạt động thanh toán
+                <Info size={14} />
+              </h2>
+              <p>Hóa đơn được tạo trong khoảng thời gian đã chọn</p>
+            </div>
+            <div className="chart-legend">
               <span>
-                <i className="previous" />
-                Kỳ trước
+                <i />
+                Kỳ hiện tại
               </span>
+              {compare && (
+                <span>
+                  <i className="previous" />
+                  Kỳ trước
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="heatmap-layout">
+            <div className="chart-y-labels">
+              <span>{maxCount}</span>
+              <span>{Math.round(maxCount / 2)}</span>
+              <span>0</span>
+            </div>
+            <div className="heatmap-main">
+              <div className="heatmap" onMouseLeave={() => setHover(null)}>
+                {days.map((day, index) => (
+                  <button
+                    key={day.day}
+                    className={
+                      "heatmap-column" + (hover === index ? " is-hovered" : "")
+                    }
+                    style={{ gridTemplateRows: `repeat(${16}, 1fr)` }}
+                    aria-label={
+                      formatDate(day.day) +
+                      (day.lastDay !== day.day
+                        ? " đến " + formatDate(day.lastDay)
+                        : "") +
+                      ": " +
+                      day.count +
+                      " hóa đơn, " +
+                      formatUsdc(day.amount)
+                    }
+                    onMouseEnter={() => setHover(index)}
+                    onFocus={() => setHover(index)}
+                    onBlur={() => setHover(null)}
+                    onClick={() => setHover(hover === index ? null : index)}
+                  >
+                    {Array.from({ length: 16 }, (_, row) => (
+                      <span
+                        key={row}
+                        className={
+                          16 - row <= Math.ceil((day.count / maxCount) * 16)
+                            ? "filled"
+                            : compare &&
+                                16 - row <=
+                                  Math.ceil((day.previous / maxCount) * 16)
+                              ? "previous"
+                              : ""
+                        }
+                      />
+                    ))}
+                  </button>
+                ))}
+              </div>
+              <div className="chart-x-labels">
+                {days
+                  .filter(
+                    (_, i) =>
+                      i === 0 ||
+                      i === Math.floor(days.length / 3) ||
+                      i === Math.floor((days.length * 2) / 3) ||
+                      i === days.length - 1,
+                  )
+                  .map((day) => (
+                    <span key={day.day}>{formatDate(day.day).slice(0, 5)}</span>
+                  ))}
+              </div>
+            </div>
+          </div>
+          <div className="chart-readout" aria-live="polite">
+            {hover !== null && days[hover] ? (
+              <>
+                <strong>
+                  {formatDate(days[hover].day)}
+                  {days[hover].lastDay !== days[hover].day
+                    ? " đến " + formatDate(days[hover].lastDay)
+                    : ""}
+                </strong>
+                <span>{days[hover].count} hóa đơn</span>
+                <span>{formatUsdc(days[hover].amount)}</span>
+                {compare && (
+                  <span>Kỳ trước: {days[hover].previous} hóa đơn</span>
+                )}
+              </>
+            ) : (
+              <>
+                <span className="chart-summary">
+                  <ArrowDownLeft size={14} />
+                  {filtered.length} hóa đơn trong kỳ
+                </span>
+                <span>Dữ liệu minh họa · Solana Devnet</span>
+              </>
             )}
           </div>
-        </div>
-        <div className="heatmap-layout">
-          <div className="chart-y-labels">
-            <span>{maxCount}</span>
-            <span>{Math.round(maxCount / 2)}</span>
-            <span>0</span>
-          </div>
-          <div className="heatmap-main">
-            <div className="heatmap" onMouseLeave={() => setHover(null)}>
-              {days.map((day, index) => (
-                <button
-                  key={day.day}
-                  className={
-                    "heatmap-column" + (hover === index ? " is-hovered" : "")
-                  }
-                  style={{ gridTemplateRows: `repeat(${16}, 1fr)` }}
-                  aria-label={
-                    formatDate(day.day) +
-                    (day.lastDay !== day.day
-                      ? " đến " + formatDate(day.lastDay)
-                      : "") +
-                    ": " +
-                    day.count +
-                    " hóa đơn, " +
-                    formatUsdc(day.amount)
-                  }
-                  onMouseEnter={() => setHover(index)}
-                  onFocus={() => setHover(index)}
-                  onBlur={() => setHover(null)}
-                  onClick={() => setHover(hover === index ? null : index)}
-                >
-                  {Array.from({ length: 16 }, (_, row) => (
-                    <span
-                      key={row}
-                      className={
-                        16 - row <= Math.ceil((day.count / maxCount) * 16)
-                          ? "filled"
-                          : compare &&
-                              16 - row <=
-                                Math.ceil((day.previous / maxCount) * 16)
-                            ? "previous"
-                            : ""
-                      }
-                    />
-                  ))}
-                </button>
-              ))}
-            </div>
-            <div className="chart-x-labels">
-              {days
-                .filter(
-                  (_, i) =>
-                    i === 0 ||
-                    i === Math.floor(days.length / 3) ||
-                    i === Math.floor((days.length * 2) / 3) ||
-                    i === days.length - 1,
-                )
-                .map((day) => (
-                  <span key={day.day}>{formatDate(day.day).slice(0, 5)}</span>
-                ))}
-            </div>
-          </div>
-        </div>
-        <div className="chart-readout" aria-live="polite">
-          {hover !== null && days[hover] ? (
-            <>
-              <strong>
-                {formatDate(days[hover].day)}
-                {days[hover].lastDay !== days[hover].day
-                  ? " đến " + formatDate(days[hover].lastDay)
-                  : ""}
-              </strong>
-              <span>{days[hover].count} hóa đơn</span>
-              <span>{formatUsdc(days[hover].amount)}</span>
-              {compare && <span>Kỳ trước: {days[hover].previous} hóa đơn</span>}
-            </>
-          ) : (
-            <>
-              <span className="chart-summary">
-                <ArrowDownLeft size={14} />
-                {filtered.length} hóa đơn trong kỳ
-              </span>
-              <span>Dữ liệu minh họa · Solana Devnet</span>
-            </>
-          )}
-        </div>
-      </section>
+        </section>
+        <PaymentRoutePanel
+          invoiceCount={filtered.length}
+          pendingCount={pending.length}
+          paidCount={paid.length}
+        />
+      </div>
       <div className="workspace-notice">
         <span>
           <Check size={16} />
@@ -378,6 +502,6 @@ export function Dashboard() {
         </Link>
       </div>
       <InvoiceTable invoices={filtered} compact />
-    </>
+    </div>
   );
 }
