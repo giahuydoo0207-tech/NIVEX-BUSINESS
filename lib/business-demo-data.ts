@@ -9,6 +9,30 @@ export const demoOrganization = {
 
 export const demoContractors: ContractorSummary[] = [
   {
+    id: "contractor-quoc-bao",
+    displayName: "Trần Quốc Bảo",
+    role: "Frontend Developer",
+    countryCode: "VN",
+    verificationStatus: "IDENTITY_VERIFIED",
+    payoutReadiness: "READY",
+  },
+  {
+    id: "contractor-ha-linh",
+    displayName: "Phạm Hà Linh",
+    role: "Brand Designer",
+    countryCode: "VN",
+    verificationStatus: "IDENTITY_VERIFIED",
+    payoutReadiness: "READY",
+  },
+  {
+    id: "contractor-duc-huy",
+    displayName: "Lê Đức Huy",
+    role: "Product Manager",
+    countryCode: "VN",
+    verificationStatus: "BASIC_VERIFIED",
+    payoutReadiness: "READY",
+  },
+  {
     id: "contractor-minh-anh",
     displayName: "Nguyễn Minh Anh",
     role: "Flutter Developer",

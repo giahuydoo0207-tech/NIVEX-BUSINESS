@@ -21,7 +21,11 @@ export type NivexLogoProps = {
   className?: string;
 };
 
-export function NivexMark({ size = 96, variant = "tile", className }: NivexMarkProps) {
+export function NivexMark({
+  size = 96,
+  variant = "tile",
+  className,
+}: NivexMarkProps) {
   const tileStyle: CSSProperties = {
     display: "block",
     width: size,
@@ -40,22 +44,25 @@ export function NivexMark({ size = 96, variant = "tile", className }: NivexMarkP
       role="img"
       aria-label="Nivex"
     >
-      {variant === "tile" && <rect width="112" height="112" rx="30" fill="#EEF2FF" />}
+      {variant === "tile" && (
+        <rect width="112" height="112" rx="22" fill="#EAF2FF" />
+      )}
       <path
         d="M31 79V34.5C31 28.5 38.3 25.5 42.5 29.8L72.8 60.2C77 64.5 84.3 61.5 84.3 55.5V27"
-        stroke="url(#nivex-route-gradient)"
+        stroke="#146EF5"
         strokeWidth="11"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="31" cy="79" r="10" fill={variant === "tile" ? "#EEF2FF" : "#F7F9FC"} stroke="#2563EB" strokeWidth="5" />
-      <circle cx="84.3" cy="27" r="9" fill="#6366F1" />
-      <defs>
-        <linearGradient id="nivex-route-gradient" x1="27" y1="31" x2="88" y2="77" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#2563EB" />
-          <stop offset="1" stopColor="#6366F1" />
-        </linearGradient>
-      </defs>
+      <circle
+        cx="31"
+        cy="79"
+        r="10"
+        fill={variant === "tile" ? "#EAF2FF" : "#F7F9FC"}
+        stroke="#146EF5"
+        strokeWidth="5"
+      />
+      <circle cx="84.3" cy="27" r="9" fill="#146EF5" />
     </svg>
   );
 }
@@ -64,18 +71,35 @@ export function NivexWordmark({ size = 34, className }: NivexWordmarkProps) {
   return (
     <span
       className={className}
-      style={{ color: "#172033", fontFamily: '"Segoe UI Variable", "Segoe UI", Arial, sans-serif', fontSize: size, fontWeight: 700, letterSpacing: 0, lineHeight: 1 }}
+      style={{
+        color: "inherit",
+        fontFamily: "inherit",
+        fontSize: size,
+        fontWeight: 750,
+        letterSpacing: 0,
+        lineHeight: 1,
+      }}
     >
       NIVEX
     </span>
   );
 }
 
-export function NivexLogo({ size = 96, variant = "tile", layout = "horizontal", className }: NivexLogoProps) {
+export function NivexLogo({
+  size = 96,
+  variant = "tile",
+  layout = "horizontal",
+  className,
+}: NivexLogoProps) {
   return (
     <div
       className={className}
-      style={{ display: "inline-flex", flexDirection: layout === "stacked" ? "column" : "row", alignItems: "center", gap: layout === "stacked" ? 14 : 18 }}
+      style={{
+        display: "inline-flex",
+        flexDirection: layout === "stacked" ? "column" : "row",
+        alignItems: "center",
+        gap: layout === "stacked" ? 14 : 18,
+      }}
       aria-label="Nivex"
     >
       <NivexMark size={size} variant={variant} />

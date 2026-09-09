@@ -1,20 +1,28 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "@fontsource-variable/geist";
+import "./redesign.css";
+import "./landing.css";
 
 export const metadata: Metadata = {
   title: "NIVEX Business",
-  description: "Cross-border invoice and USDC payment operations for modern teams.",
+  description:
+    "Cross-border invoice and USDC payment operations for modern teams.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#2563EB",
+  themeColor: "#146EF5",
   width: "device-width",
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="vi">
+    <html lang="vi" data-scroll-behavior="smooth">
       <body>{children}</body>
     </html>
   );
