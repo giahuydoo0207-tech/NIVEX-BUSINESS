@@ -171,8 +171,13 @@
 }
 
 .hero-system-scene .scene-connector i {
-  animation: connector-packet 1s ease-in-out calc(var(--scene-delay) + 0.48s) 2
-    both;
+  animation: connector-packet 3.2s ease-in-out calc(var(--scene-delay) + 0.48s)
+    infinite both;
+}
+
+.hero-system-scene .scene-node-icon {
+  animation: scene-icon-pulse 4.8s ease-in-out calc(var(--scene-delay) + 0.7s)
+    infinite;
 }
 
 .tech-scene {
@@ -225,8 +230,39 @@
 }
 
 .story-chapter.is-visible .tech-scene .scene-connector i {
-  animation: connector-packet 1s ease-in-out
-    calc(var(--scene-delay, 0.2s) + 0.48s) 2 both;
+  animation: connector-packet 3.2s ease-in-out
+    calc(var(--scene-delay, 0.2s) + 0.48s) infinite both;
+}
+
+.story-chapter.is-visible .tech-scene .scene-node-icon {
+  animation: scene-icon-pulse 4.8s ease-in-out
+    calc(var(--scene-delay, 0.08s) + 0.7s) infinite;
+}
+
+.story-chapter.is-visible .verification-gate .gate-ring {
+  animation: scene-orbit 8s linear infinite;
+}
+
+.story-chapter.is-visible .wallet-account-mark,
+.story-chapter.is-visible .signed-node > svg {
+  animation: scene-icon-pulse 4.6s ease-in-out infinite;
+}
+
+.story-chapter.is-visible .approval-stamp {
+  animation: approval-ready-cycle 4.6s ease-in-out infinite;
+}
+
+.story-chapter.is-visible .solana-node-map .orbit-one {
+  animation: scene-orbit 9s linear infinite;
+}
+
+.story-chapter.is-visible .solana-node-map .orbit-two {
+  animation: scene-orbit-reverse 6s linear infinite;
+}
+
+.story-chapter.is-visible .solana-node-map > svg,
+.solana-core-cell.is-visible .core-cell-icon {
+  animation: scene-icon-pulse 4.6s ease-in-out infinite;
 }
 
 .story-chapter.is-visible .tech-scene .verification-gate,
@@ -669,7 +705,7 @@
 }
 
 .story-chapter.is-visible .finality-rail span {
-  animation: status-highlight 0.48s ease both;
+  animation: status-highlight 4.2s ease-in-out infinite both;
 }
 
 .story-chapter.is-visible .finality-rail span:nth-child(1) {
@@ -815,7 +851,11 @@
 }
 
 .core-capability.is-visible .identity-check {
-  animation: status-highlight 0.45s ease both;
+  animation: status-highlight 4.2s ease-in-out infinite both;
+}
+
+.core-capability.is-visible .identity-ring.ring-b {
+  animation: scene-orbit-centered 12s linear infinite;
 }
 
 .core-capability.is-visible .check-a {
@@ -871,7 +911,12 @@
 }
 
 .core-capability.is-visible .money-bars i {
-  animation: meter-fill 0.6s ease both;
+  animation: meter-fill 4.6s ease-in-out infinite both;
+}
+
+.core-capability.is-visible .capability-control .scene-connector i {
+  animation: connector-packet 3.2s ease-in-out
+    calc(var(--scene-delay, 0.2s) + 0.48s) infinite both;
 }
 
 .core-capability.is-visible .money-bars i:nth-child(1) {
@@ -1018,7 +1063,7 @@
 }
 
 .solana-core-cell.is-visible .rpc-wave {
-  animation: wave-expand 1.1s ease-out 0.2s 2 both;
+  animation: wave-expand 3.4s ease-out 0.2s infinite both;
 }
 
 .solana-core-cell.is-visible .wave-two {
@@ -1055,7 +1100,7 @@
 }
 
 .solana-core-cell.is-visible .rpc-endpoint {
-  animation: status-highlight 0.45s ease both;
+  animation: status-highlight 4.2s ease-in-out infinite both;
 }
 
 .solana-core-cell.is-visible .endpoint-one {
@@ -1099,7 +1144,7 @@
 }
 
 .solana-core-cell.is-visible .transaction-layer {
-  animation: layer-lock 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: layer-lock 4.8s cubic-bezier(0.16, 1, 0.3, 1) infinite both;
 }
 
 .solana-core-cell.is-visible .layer-one {
@@ -1132,7 +1177,7 @@
 }
 
 .solana-core-cell.is-visible .signature-stream i {
-  animation: signature-bit 0.42s steps(2, end) both;
+  animation: signature-bit 3.6s steps(2, end) infinite both;
 }
 
 .solana-core-cell.is-visible .signature-stream i:nth-child(1) {
@@ -1196,7 +1241,7 @@
 }
 
 .solana-core-cell.is-visible .finality-steps span {
-  animation: status-highlight 0.48s ease both;
+  animation: status-highlight 4.2s ease-in-out infinite both;
 }
 
 .solana-core-cell.is-visible .finality-steps span:nth-child(1) {
@@ -1304,13 +1349,18 @@
 }
 
 .lifecycle-step.is-visible .lifecycle-node {
-  animation: node-activate 0.68s cubic-bezier(0.16, 1, 0.3, 1)
-    var(--scene-delay) both;
+  animation: node-activate 5.8s cubic-bezier(0.16, 1, 0.3, 1) var(--scene-delay)
+    infinite both;
 }
 
 .lifecycle-step.is-visible .lifecycle-node::before,
 .lifecycle-step.is-visible .lifecycle-node::after {
-  animation: lifecycle-line 0.55s ease calc(var(--scene-delay) + 0.18s) both;
+  animation: lifecycle-line 5.8s ease calc(var(--scene-delay) + 0.18s) infinite
+    both;
+}
+
+.lifecycle-status.is-visible svg {
+  animation: scene-icon-pulse 4.8s ease-in-out infinite;
 }
 
 .lifecycle-status {
@@ -1377,13 +1427,63 @@
     left: 0;
     opacity: 0;
   }
-  18%,
-  82% {
+  8%,
+  40% {
     opacity: 1;
   }
+  48%,
   100% {
     left: calc(100% - 5px);
     opacity: 0;
+  }
+}
+
+@keyframes scene-icon-pulse {
+  0%,
+  100% {
+    color: #9aabba;
+    border-color: #71809655;
+    background: #ffffff05;
+  }
+  38%,
+  56% {
+    color: #edf4fd;
+    border-color: #aab9cc99;
+    background: #ffffff0c;
+  }
+}
+
+@keyframes scene-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes scene-orbit-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes scene-orbit-centered {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes approval-ready-cycle {
+  0%,
+  100% {
+    color: #7f8ea1;
+    opacity: 0.62;
+  }
+  28%,
+  62% {
+    color: #e3ebf5;
+    opacity: 1;
   }
 }
 
@@ -1418,24 +1518,33 @@
 }
 
 @keyframes status-highlight {
-  from {
-    opacity: 0;
+  0%,
+  100% {
+    opacity: 0.38;
     color: #718095;
     background: #07111f;
   }
-  to {
+  16%,
+  48% {
     opacity: 1;
     color: #e0e8f2;
     background: #ffffff0b;
   }
+  66% {
+    opacity: 0.62;
+    color: #91a0b3;
+    background: #091523;
+  }
 }
 
 @keyframes meter-fill {
-  from {
+  0%,
+  100% {
     height: 8%;
-    opacity: 0;
+    opacity: 0.35;
   }
-  to {
+  18%,
+  72% {
     height: var(--meter-height);
     opacity: 1;
   }
@@ -1456,34 +1565,40 @@
 }
 
 @keyframes layer-lock {
-  from {
-    opacity: 0;
+  0%,
+  100% {
+    opacity: 0.3;
     transform: translate(-50%, -14px);
   }
-  to {
+  16%,
+  72% {
     opacity: 1;
     transform: translate(-50%, 0);
   }
 }
 
 @keyframes signature-bit {
-  from {
-    opacity: 0;
+  0%,
+  100% {
+    opacity: 0.25;
     background: transparent;
   }
-  to {
+  14%,
+  46% {
     opacity: 1;
     background: #a8b7c933;
   }
 }
 
 @keyframes node-activate {
-  from {
-    opacity: 0;
+  0%,
+  100% {
+    opacity: 0.55;
     transform: translateY(12px);
     border-color: #455264;
   }
-  to {
+  15%,
+  72% {
     opacity: 1;
     transform: translateY(0);
     border-color: #8997aa;
@@ -1491,10 +1606,12 @@
 }
 
 @keyframes lifecycle-line {
-  from {
+  0%,
+  100% {
     transform: scaleX(0);
   }
-  to {
+  14%,
+  72% {
     transform: scaleX(1);
   }
 }

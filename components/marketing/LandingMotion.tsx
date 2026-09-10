@@ -57,10 +57,11 @@ export function LandingMotion() {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
+          } else {
+            entry.target.classList.remove("is-visible");
           }
         }),
-      { threshold: 0.08 },
+      { threshold: 0.06, rootMargin: "-4% 0px -4%" },
     );
     const elements = document.querySelectorAll(".reveal");
     elements.forEach((element) => {

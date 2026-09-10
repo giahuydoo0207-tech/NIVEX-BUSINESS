@@ -283,7 +283,7 @@
   top: 55%;
 }
 .product-section.is-visible .product-focus {
-  animation: product-focus 0.7s ease both;
+  animation: product-focus 5.4s ease-in-out infinite both;
 }
 .product-section.is-visible .product-focus-invoices {
   animation-delay: 0.35s;
@@ -518,15 +518,22 @@
   }
 }
 @keyframes product-focus {
-  from {
+  0%,
+  100% {
     opacity: 0;
     transform: translateY(8px);
   }
-  45% {
+  10%,
+  72% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  18%,
+  26% {
     border-color: #d4deea;
   }
-  to {
-    opacity: 1;
+  82% {
+    opacity: 0.45;
     transform: translateY(0);
   }
 }
