@@ -6,6 +6,8 @@
   color: var(--ink);
   background: #07111f;
   overflow: clip;
+  width: 100%;
+  max-width: 100%;
 }
 .landing-signal {
   position: relative;
@@ -54,6 +56,9 @@
   align-items: center;
   font-size: 13px;
 }
+.mobile-nav-auth {
+  display: none;
+}
 .landing-links a {
   color: #b9c1cf;
   transition: color 0.18s;
@@ -63,6 +68,38 @@
 }
 .landing-nav-actions {
   gap: 22px;
+}
+.landing-language-switch {
+  height: 30px;
+  display: inline-grid;
+  grid-template-columns: repeat(2, 32px);
+  align-items: stretch;
+  border: 1px solid #ffffff26;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.landing-language-switch button {
+  border: 0;
+  border-right: 1px solid #ffffff1a;
+  background: transparent;
+  color: #8290a3;
+  font-family: Consolas, monospace;
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.landing-language-switch button:last-child {
+  border-right: 0;
+}
+.landing-language-switch button.active {
+  background: #f8fafc;
+  color: #07111f;
+}
+.landing-language-switch button:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid #8fbaff;
+  outline-offset: -2px;
 }
 .landing-nav-actions .business-primary-button {
   min-height: 38px;
@@ -124,6 +161,7 @@
   font-size: 15px;
   color: #b8c5d7;
   line-height: 1.65;
+  overflow-wrap: anywhere;
 }
 .hero-actions {
   display: flex;
@@ -156,13 +194,14 @@
   right: 5%;
   bottom: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   border: 1px solid #ffffff1c;
   border-bottom: 0;
   background: #020817d9;
   backdrop-filter: blur(12px);
 }
 .hero-story-track span {
+  min-width: 0;
   min-height: 46px;
   display: grid;
   place-items: center;
@@ -587,10 +626,30 @@
     flex-direction: column;
     align-items: flex-start;
   }
+  .landing-links.open .mobile-nav-auth {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding-top: 16px;
+    border-top: 1px solid #ffffff17;
+  }
+  .mobile-nav-auth a {
+    min-height: 40px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #ffffff24;
+    border-radius: 4px;
+  }
+  .mobile-nav-auth a:last-child {
+    border-color: #146ef5;
+    background: #146ef5;
+    color: white;
+  }
   .landing-nav .menu-button {
     display: grid;
   }
-  .landing-nav-actions > a:first-child {
+  .landing-nav-actions > a[href="/business/login"] {
     font-size: 12px;
   }
   .brand-lockup {
@@ -660,19 +719,31 @@
   }
   .landing-nav {
     padding-inline: 16px;
+    gap: 8px;
   }
   .landing-nav .brand-lockup > span {
     display: none;
   }
   .landing-nav-actions {
-    gap: 12px;
+    gap: 6px;
   }
-  .landing-nav-actions > a:first-child {
+  .landing-nav-actions > a[href="/business/login"] {
     display: none;
   }
+  .landing-nav-actions > .business-primary-button {
+    display: none;
+  }
+  .landing-language-switch {
+    grid-template-columns: repeat(2, 29px);
+  }
   .landing-nav-actions .business-primary-button {
-    padding-inline: 10px;
-    font-size: 11px;
+    min-height: 36px;
+    padding-inline: 8px;
+    font-size: 10px;
+  }
+  .landing-nav .menu-button {
+    width: 34px;
+    height: 34px;
   }
   .landing-hero {
     min-height: 680px;
@@ -683,7 +754,7 @@
     padding: 45px 18px 0;
   }
   .hero-copy h1 {
-    font-size: 31px;
+    font-size: 27px;
     line-height: 1.04;
     margin-top: 20px;
   }

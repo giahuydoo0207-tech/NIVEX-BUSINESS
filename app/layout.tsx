@@ -6,9 +6,9 @@ import "./landing.css";
 import "./landing-scenes.css";
 
 export const metadata: Metadata = {
-  title: "NIVEX Business",
+  title: "NIVEX Business | Quy trình chi trả USDC rõ ràng",
   description:
-    "Cross-border invoice and USDC payment operations for modern teams.",
+    "Tạo yêu cầu, đối chiếu người nhận và theo dõi trạng thái chi trả USDC trong bản thử nghiệm NIVEX Business trên Solana Devnet.",
 };
 
 export const viewport: Viewport = {

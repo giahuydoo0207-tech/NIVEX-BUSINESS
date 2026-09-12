@@ -3,42 +3,73 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { NivexLogo } from "@/components/ui/NivexLogo";
-export function LandingNavigation() {
+import type { LandingCopy, LandingLocale } from "@/lib/landing-copy";
+
+export function LandingNavigation({
+  locale,
+  onLocaleChange,
+  copy,
+}: {
+  locale: LandingLocale;
+  onLocaleChange: (locale: LandingLocale) => void;
+  copy: LandingCopy["navigation"];
+}) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <div className="landing-signal">
-        <span>Hạ tầng thanh toán cho đội ngũ toàn cầu</span>
-        <span>Bản trải nghiệm trên Solana Devnet</span>
+        <span>{copy.signal}</span>
+        <span>{copy.environment}</span>
       </div>
       <header className="landing-nav">
         <Link
           href="/"
           className="brand-lockup"
-          aria-label="NIVEX Business trang chủ"
+          aria-label={copy.homeLabel}
         >
           <NivexLogo size={32} variant="plain" />
           <span>Business</span>
         </Link>
         <nav
           className={open ? "landing-links open" : "landing-links"}
-          aria-label="Điều hướng chính"
+          aria-label={copy.ariaLabel}
           onClick={() => setOpen(false)}
         >
-          <a href="#product">Sản phẩm</a>
-          <a href="#solana">Core & Solana</a>
-          <a href="#workflow">Quy trình</a>
-          <a href="#faq">FAQ</a>
+          <a href="#product">{copy.product}</a>
+          <a href="#solana">{copy.solana}</a>
+          <a href="#workflow">{copy.workflow}</a>
+          <a href="#faq">{copy.faq}</a>
+          <div className="mobile-nav-auth">
+            <Link href="/business/login">{copy.login}</Link>
+            <Link href="/business/register">{copy.register}</Link>
+          </div>
         </nav>
         <div className="landing-nav-actions">
-          <Link href="/business/login">Đăng nhập</Link>
+          <div
+            className="landing-language-switch"
+            role="group"
+            aria-label={copy.languageLabel}
+          >
+            {(["vi", "en"] as const).map((option) => (
+              <button
+                type="button"
+                className={locale === option ? "active" : undefined}
+                aria-pressed={locale === option}
+                onClick={() => onLocaleChange(option)}
+                key={option}
+              >
+                {option.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <Link href="/business/login">{copy.login}</Link>
           <Link href="/business/register" className="business-primary-button">
-            Đăng ký
+            {copy.register}
             <ArrowUpRight size={16} />
           </Link>
           <button
             className="icon-button menu-button"
-            aria-label={open ? "Đóng menu" : "Mở menu"}
+            aria-label={open ? copy.closeMenu : copy.openMenu}
             aria-expanded={open}
             onClick={() => setOpen(!open)}
           >
