@@ -69,10 +69,16 @@ export function JobsView() {
           <h1>Cơ hội việc làm</h1>
           <p>Đăng công việc remote và quản lý lượt ứng tuyển từ NIVEX.</p>
         </div>
-        <Link className="business-primary-button" href="/business/jobs/new">
-          <FilePlus2 size={17} />
-          Đăng cơ hội
-        </Link>
+        <div className="jobs-heading-actions">
+          <Link className="business-secondary-button" href="/business/applications">
+            <UsersRound size={17} />
+            Xem ứng viên
+          </Link>
+          <Link className="business-primary-button" href="/business/jobs/new">
+            <FilePlus2 size={17} />
+            Đăng cơ hội
+          </Link>
+        </div>
       </div>
 
       <section className="jobs-command-strip" aria-label="Tổng quan tuyển dụng">

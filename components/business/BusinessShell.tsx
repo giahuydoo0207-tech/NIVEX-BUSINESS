@@ -13,7 +13,9 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessagesSquare,
   Plus,
+  UserRoundCheck,
   UsersRound,
   WalletCards,
   X,
@@ -35,6 +37,18 @@ const navigation = [
     icon: BriefcaseBusiness,
   },
   {
+    key: "applications",
+    href: "/business/applications",
+    label: "Ứng viên",
+    icon: UserRoundCheck,
+  },
+  {
+    key: "messages",
+    href: "/business/messages",
+    label: "Tin nhắn",
+    icon: MessagesSquare,
+  },
+  {
     key: "invoices",
     href: "/business/invoices",
     label: "Hóa đơn",
@@ -52,7 +66,13 @@ export function BusinessShell({
   active,
 }: {
   children: React.ReactNode;
-  active: "dashboard" | "jobs" | "contractors" | "invoices";
+  active:
+    | "dashboard"
+    | "jobs"
+    | "applications"
+    | "messages"
+    | "contractors"
+    | "invoices";
 }) {
   const [menu, setMenu] = useState(false);
   const [dialog, setDialog] = useState<
@@ -93,6 +113,8 @@ export function BusinessShell({
               <span>{label}</span>
               {key === "invoices" && <span className="nav-count">USDC</span>}
               {key === "jobs" && <span className="nav-count">NEW</span>}
+              {key === "applications" && <span className="nav-count">3</span>}
+              {key === "messages" && <span className="nav-count unread">2</span>}
             </Link>
           ))}
         </nav>
