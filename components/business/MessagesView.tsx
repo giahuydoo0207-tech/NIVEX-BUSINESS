@@ -116,14 +116,6 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
 
   return (
     <div className="messages-view">
-      <div className="page-heading-row messages-page-heading">
-        <div>
-          <h1>Tin nhắn</h1>
-          <p>Trao đổi trực tiếp với ứng viên trong từng hồ sơ ứng tuyển.</p>
-        </div>
-        <span className="application-session-label"><span />UI PROTOTYPE · CHƯA ĐỒNG BỘ</span>
-      </div>
-
       <section className={`messages-workspace ${showContext ? "context-open" : ""} ${mobileThreadOpen ? "mobile-thread-open" : ""}`}>
         <aside className="conversation-rail" aria-label="Danh sách hội thoại">
           <div className="conversation-rail-head">
@@ -158,6 +150,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                 <button type="button" className="icon-button thread-back" aria-label="Quay lại danh sách" onClick={() => setMobileThreadOpen(false)}><ArrowLeft size={18} /></button>
                 <span className="application-avatar">{selected.initials}<i /></span>
                 <div><strong>{selected.candidateName}</strong><small>Đang hoạt động · {selected.headline}</small></div>
+                <span className="message-prototype-tag"><i />PROTOTYPE</span>
                 <button type="button" className="icon-button" title="Thông tin ứng viên" aria-label="Thông tin ứng viên" onClick={() => setShowContext((value) => !value)}><Info size={18} /></button>
                 <button type="button" className="icon-button" title="Tùy chọn" aria-label="Tùy chọn hội thoại"><MoreHorizontal size={18} /></button>
               </header>
