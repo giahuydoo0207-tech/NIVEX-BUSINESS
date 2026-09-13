@@ -4041,6 +4041,10 @@ p {
   border-left: 1px solid #28364a;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.message-context::-webkit-scrollbar {
+  display: none;
 }
 
 .business-app-messages {
@@ -4056,6 +4060,10 @@ p {
 .business-app-messages .business-sidebar {
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.business-app-messages .business-sidebar::-webkit-scrollbar {
+  display: none;
 }
 .business-app-messages .business-workspace {
   overflow: hidden;
