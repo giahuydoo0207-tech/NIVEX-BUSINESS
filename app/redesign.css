@@ -2849,6 +2849,231 @@ p {
   }
 }
 
+/* ImageUpload Component */
+.image-upload-wrapper {
+  display: grid;
+  gap: 7px;
+  width: 100%;
+}
+.image-upload-label {
+  color: #9cb0c7;
+  font-size: 11px;
+  font-weight: 500;
+}
+.image-upload-dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  border: 1px dashed #344156;
+  border-radius: 6px;
+  background: #081321;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+  text-align: center;
+}
+.image-upload-dropzone:hover,
+.image-upload-dropzone.dragging {
+  border-color: #60a5fa;
+  background: #0c1a2e;
+}
+.image-upload-dropzone.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.image-upload-dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.image-upload-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(96, 165, 250, 0.12);
+  color: #78aaf5;
+  margin-bottom: 4px;
+}
+.image-upload-placeholder {
+  margin: 0;
+  color: #dce5f0;
+  font-size: 13px;
+  font-weight: 500;
+}
+.image-upload-helper {
+  color: #718198;
+  font-size: 11px;
+}
+.image-upload-preview-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border: 1px solid #344156;
+  border-radius: 6px;
+  background: #081321;
+}
+.image-upload-thumbnail {
+  position: relative;
+  width: 72px;
+  height: 48px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #030812;
+  border: 1px solid #233042;
+  flex-shrink: 0;
+}
+.image-upload-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.image-upload-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.image-upload-filename {
+  color: #e5edf7;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.image-upload-hint {
+  color: #718198;
+  font-size: 10px;
+}
+.image-upload-remove-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 4px;
+  background: rgba(239, 68, 68, 0.08);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.image-upload-remove-button:hover {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* ChipInput Component */
+.chip-input-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: 42px;
+  padding: 5px 8px;
+  border: 1px solid #344156;
+  border-radius: 5px;
+  background: #081321;
+  cursor: text;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.chip-input-container:focus-within {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 1px #60a5fa;
+}
+.chip-input-container.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.chip-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+.chip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid #2e3b50;
+  border-radius: 4px;
+  background: #0b1726;
+  color: #dce5f0;
+  font-size: 12px;
+}
+.chip-text {
+  font-size: 12px;
+  line-height: 1.2;
+}
+.chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #718198;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.chip-remove:hover {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.15);
+}
+.chip-native-input {
+  flex: 1;
+  min-width: 120px;
+  border: 0 !important;
+  outline: none !important;
+  background: transparent !important;
+  color: #e5edf7 !important;
+  font-size: 12px !important;
+  padding: 3px 4px !important;
+  box-shadow: none !important;
+}
+.chip-native-input::placeholder {
+  color: #5d6f85;
+}
+
+/* Job Preview Panel Additions */
+.job-preview-cover {
+  width: calc(100% + 44px);
+  margin: -22px -22px 18px -22px;
+  max-height: 130px;
+  overflow: hidden;
+  border-bottom: 1px solid #2c394d;
+  background: #040913;
+}
+.job-preview-cover img {
+  width: 100%;
+  height: 100%;
+  max-height: 130px;
+  object-fit: cover;
+  display: block;
+}
+.job-preview-hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: -12px 0 16px 0;
+}
+.job-preview-hashtag-item {
+  color: #78aaf5;
+  font-size: 11px;
+  font-family: Consolas, monospace;
+}
+
+
 /* Candidate review workspace */
 .applications-view {
   color: #eef3fa;

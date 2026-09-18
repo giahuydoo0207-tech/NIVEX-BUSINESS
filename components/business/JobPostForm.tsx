@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { demoOrganization } from "@/lib/business-demo-data";
 import { formatMinorAmount, parseUsdcToMinor } from "@/lib/money";
+import { ChipInput } from "@/components/ui/ChipInput";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 import type {
   JobEngagement,
   JobPaymentType,
@@ -20,11 +22,43 @@ import type {
   JobPostStatus,
 } from "@/types/job";
 
+function normalizeSkill(raw: string) {
+  return raw.trim().replace(/\s+/g, " ");
+}
+
+function validateSkill(item: string, current: string[]) {
+  if (!item) return "Kỹ năng không được để trống.";
+  if (current.some((s) => s.toLowerCase() === item.toLowerCase())) {
+    return "Kỹ năng này đã được thêm.";
+  }
+  return null;
+}
+
+function normalizeHashtag(raw: string) {
+  return raw
+    .trim()
+    .replace(/^#+/, "")
+    .toLowerCase();
+}
+
+function validateHashtag(item: string, current: string[]) {
+  if (!item) return "Hashtag không được để trống.";
+  if (!/^[a-z0-9_]{2,30}$/.test(item)) {
+    return "Hashtag chỉ gồm chữ, số hoặc dấu gạch dưới (2-30 ký tự).";
+  }
+  if (current.includes(item)) return "Hashtag này đã được thêm.";
+  if (current.length >= 5) return "Chỉ được thêm tối đa 5 hashtag.";
+  return null;
+}
+
 const initialForm = {
   title: "",
   category: "Mobile Development",
   summary: "",
-  skills: "Flutter, Dart, Firebase",
+  coverPreviewUrl: "" as string | undefined,
+  coverFileName: "" as string | undefined,
+  skills: ["Flutter", "Dart", "Firebase"] as string[],
+  hashtags: [] as string[],
   locationScope: "Việt Nam",
   engagement: "PROJECT" as JobEngagement,
   paymentType: "MILESTONE" as JobPaymentType,
@@ -64,14 +98,10 @@ export function JobPostForm() {
   async function save(status: "DRAFT" | "PUBLISHED") {
     const minimum = parseUsdcToMinor(form.budgetMin);
     const maximum = parseUsdcToMinor(form.budgetMax);
-    const skills = form.skills
-      .split(",")
-      .map((skill) => skill.trim())
-      .filter(Boolean);
 
     if (!form.title.trim()) return setError("Nhập tên vị trí cần tuyển.");
     if (!form.summary.trim()) return setError("Nhập mô tả công việc.");
-    if (skills.length === 0) return setError("Thêm ít nhất một kỹ năng.");
+    if (form.skills.length === 0) return setError("Vui lòng thêm ít nhất 1 kỹ năng.");
     if (!minimum.ok) return setError("Ngân sách tối thiểu: " + minimum.message);
     if (!maximum.ok) return setError("Ngân sách tối đa: " + maximum.message);
     if (BigInt(maximum.minor) < BigInt(minimum.minor)) {
@@ -89,7 +119,10 @@ export function JobPostForm() {
       title: form.title.trim(),
       category: form.category,
       summary: form.summary.trim(),
-      skills,
+      coverImageUrl: undefined,
+      coverImageName: form.coverFileName,
+      skills: form.skills,
+      hashtags: form.hashtags,
       workMode: "REMOTE",
       locationScope: form.locationScope,
       engagement: form.engagement,
@@ -181,15 +214,49 @@ export function JobPostForm() {
               placeholder="Mô tả kết quả cần bàn giao và trách nhiệm chính..."
             />
           </label>
-          <label className="field full">
-            <span>Kỹ năng</span>
-            <input
-              value={form.skills}
-              onChange={(event) => update("skills", event.target.value)}
-              placeholder="Flutter, Dart, Firebase"
+          <div className="field full">
+            <ImageUpload
+              label="Ảnh bìa"
+              value={form.coverPreviewUrl}
+              fileName={form.coverFileName}
+              onChange={(url, fileName) => {
+                setForm((current) => ({
+                  ...current,
+                  coverPreviewUrl: url,
+                  coverFileName: fileName,
+                }));
+              }}
+              onError={(msg) => setError(msg)}
             />
-            <small>Phân tách kỹ năng bằng dấu phẩy.</small>
-          </label>
+          </div>
+          <div className="field full">
+            <span>Kỹ năng</span>
+            <ChipInput
+              values={form.skills}
+              onChange={(skills) => update("skills", skills)}
+              placeholder="Ví dụ: Flutter, Dart, Firebase..."
+              normalizeItem={normalizeSkill}
+              validateItem={validateSkill}
+              onError={(msg) => setError(msg)}
+            />
+            <small>Nhấn Enter hoặc dấu phẩy để tạo từng kỹ năng.</small>
+          </div>
+          <div className="field full">
+            <span>Hashtag</span>
+            <ChipInput
+              values={form.hashtags}
+              onChange={(hashtags) => update("hashtags", hashtags)}
+              placeholder="Ví dụ: mobiledev, remote, solana..."
+              prefix="#"
+              maxItems={5}
+              normalizeItem={normalizeHashtag}
+              validateItem={validateHashtag}
+              onError={(msg) => setError(msg)}
+            />
+            <small>
+              Tối đa 5 hashtag · dùng để hiển thị trên Cộng đồng, không dùng để ghép việc
+            </small>
+          </div>
         </div>
 
         <div className="job-form-divider" />
@@ -289,12 +356,27 @@ export function JobPostForm() {
       </section>
 
       <aside className="job-publish-panel">
+        {form.coverPreviewUrl && (
+          <div className="job-preview-cover">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={form.coverPreviewUrl} alt="Ảnh bìa bài đăng" />
+          </div>
+        )}
         <div className="job-preview-status">
           <i /> BẢN XEM TRƯỚC
         </div>
         <h2>{form.title.trim() || "Tên vị trí công việc"}</h2>
         <p>{form.category} · Remote</p>
         <strong className="job-preview-budget">{previewBudget}</strong>
+        {form.hashtags.length > 0 && (
+          <div className="job-preview-hashtags">
+            {form.hashtags.map((tag) => (
+              <span className="job-preview-hashtag-item" key={tag}>
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
         <dl>
           <div>
             <dt>Cộng tác</dt>

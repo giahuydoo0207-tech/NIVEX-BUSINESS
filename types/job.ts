@@ -10,7 +10,10 @@ export interface JobPost {
   title: string;
   category: string;
   summary: string;
+  coverImageUrl?: string;
+  coverImageName?: string;
   skills: string[];
+  hashtags?: string[];
   workMode: "REMOTE";
   locationScope: string;
   engagement: JobEngagement;
