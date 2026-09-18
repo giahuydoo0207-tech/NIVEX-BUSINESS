@@ -22,14 +22,14 @@ export const demoApplications: CandidateApplication[] = [
       {
         id: "message-bao-system",
         role: "SYSTEM",
-        senderName: "NIVEX",
-        body: "Hồ sơ đã được gửi đến NIVEX Labs.",
+        senderName: "Nova",
+        body: "Hồ sơ đã được gửi đến Nova Labs.",
         sentAt: "15:20",
       },
       {
         id: "message-bao-business",
         role: "BUSINESS",
-        senderName: "NIVEX Labs",
+        senderName: "Nova Labs",
         body: "Chào Bảo, đội ngũ đã nhận hồ sơ và đang xem phần kinh nghiệm Flutter của bạn.",
         sentAt: "16:05",
         deliveryStatus: "SEEN",
@@ -57,7 +57,7 @@ export const demoApplications: CandidateApplication[] = [
     matchScore: 91,
     skills: ["Flutter", "Dart", "REST API"],
     coverNote:
-      "Mình quan tâm đến cách NIVEX kết nối trải nghiệm nhận việc với luồng chi trả USDC trên mobile.",
+      "Mình quan tâm đến cách Nova kết nối trải nghiệm nhận việc với luồng chi trả USDC trên mobile.",
     portfolioLabel: "github.com/minhanh-dev",
     availability: "Sẵn sàng từ 18/09/2026",
     status: "SUBMITTED",
@@ -66,8 +66,8 @@ export const demoApplications: CandidateApplication[] = [
       {
         id: "message-anh-system",
         role: "SYSTEM",
-        senderName: "NIVEX",
-        body: "Hồ sơ đã được gửi đến NIVEX Labs.",
+        senderName: "Nova",
+        body: "Hồ sơ đã được gửi đến Nova Labs.",
         sentAt: "09:42",
       },
       {
@@ -101,7 +101,7 @@ export const demoApplications: CandidateApplication[] = [
       {
         id: "message-linh-system",
         role: "SYSTEM",
-        senderName: "NIVEX",
+        senderName: "Nova",
         body: "Hồ sơ đã được duyệt. Hai bên có thể tiếp tục trao đổi.",
         sentAt: "14:30",
       },

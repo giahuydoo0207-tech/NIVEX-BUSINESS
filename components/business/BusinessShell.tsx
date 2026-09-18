@@ -92,7 +92,7 @@ export function BusinessShell({
             <Building2 size={19} />
           </span>
           <span>
-            <strong>NIVEX Labs</strong>
+            <strong>Nova Labs</strong>
             <small>Không gian thử nghiệm</small>
           </span>
           <ChevronDown size={15} />
@@ -136,7 +136,7 @@ export function BusinessShell({
             </span>
             <p>Khám phá quy trình với dữ liệu minh họa.</p>
             <Link href="/">
-              Tìm hiểu NIVEX
+              Tìm hiểu Nova
               <ArrowUpRight size={15} />
             </Link>
           </div>
@@ -203,7 +203,7 @@ export function BusinessShell({
         </header>
         <main className="business-content">{children}</main>
         <footer className="workspace-footer">
-          <span>NIVEX Business</span>
+          <span>Nova Business</span>
           <span>
             <Globe2 size={13} />
             Solana Devnet · Không chuyển tiền thật
@@ -226,7 +226,7 @@ export function BusinessShell({
           dialog === "wallet"
             ? "Kết nối ví đang ở chế độ trải nghiệm."
             : dialog === "help"
-              ? "Các bước để khám phá NIVEX Business."
+              ? "Các bước để khám phá Nova Business."
               : "Cập nhật trong không gian thử nghiệm."
         }
       >

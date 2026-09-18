@@ -2,8 +2,8 @@ import type { ContractorSummary } from "@/types/business";
 
 export const demoOrganization = {
   id: "org-nivex-demo",
-  legalName: "NIVEX Labs",
-  tradingName: "NIVEX",
+  legalName: "Nova Labs",
+  tradingName: "Nova",
   verificationStatus: "UNDER_REVIEW" as const,
 };
 

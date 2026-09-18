@@ -24,7 +24,7 @@ export const demoInvoices: Invoice[] = Array.from({ length: 72 }, (_, day) => {
         dueDate: new Date(date.getTime() + 7 * 86400000)
           .toISOString()
           .slice(0, 10),
-        invoiceNumber: `NVX-2026-${String(day * 20 + index + 1).padStart(4, "0")}`,
+        invoiceNumber: `NOVA-2026-${String(day * 20 + index + 1).padStart(4, "0")}`,
         paymentRequestId: `sample-${day}-${index}`,
         status,
         createdAt: date.toISOString(),

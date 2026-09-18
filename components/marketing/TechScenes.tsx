@@ -38,7 +38,7 @@ const sceneCopy = {
     approval: {
       amount: "SỐ TIỀN",
       wallet: "Ví doanh nghiệp",
-      external: "Ký bên ngoài NIVEX",
+      external: "Ký bên ngoài Nova",
       connected: "VÍ ĐÃ KẾT NỐI",
       pending: "CHỜ XÁC NHẬN",
       signed: "Đã ký",
@@ -60,14 +60,14 @@ const sceneCopy = {
       },
       {
         title: "Bạn là người ký",
-        body: "NIVEX chuẩn bị nội dung để xem lại; ví doanh nghiệp giữ khóa và quyền xác nhận.",
+        body: "Nova chuẩn bị nội dung để xem lại; ví doanh nghiệp giữ khóa và quyền xác nhận.",
       },
     ],
     signInWallet: "KÝ TRONG VÍ",
     core: [
       {
         title: "Đọc trạng thái mạng",
-        body: "Trong hướng tích hợp, NIVEX dùng RPC để đọc trạng thái giao dịch; Devnet là môi trường thử nghiệm hiện tại.",
+        body: "Trong hướng tích hợp, Nova dùng RPC để đọc trạng thái giao dịch; Devnet là môi trường thử nghiệm hiện tại.",
       },
       {
         title: "Một giao dịch, đủ ngữ cảnh",
@@ -96,7 +96,7 @@ const sceneCopy = {
       },
       {
         title: "Theo dõi kết quả",
-        description: "NIVEX dùng chữ ký để đưa trạng thái giao dịch về dashboard.",
+        description: "Nova dùng chữ ký để đưa trạng thái giao dịch về dashboard.",
         state: "HOÀN TẤT",
       },
     ],
@@ -119,7 +119,7 @@ const sceneCopy = {
     approval: {
       amount: "AMOUNT",
       wallet: "Company wallet",
-      external: "Signed outside NIVEX",
+      external: "Signed outside Nova",
       connected: "WALLET CONNECTED",
       pending: "AWAITING APPROVAL",
       signed: "Signed",
@@ -141,14 +141,14 @@ const sceneCopy = {
       },
       {
         title: "You remain the signer",
-        body: "NIVEX prepares the details for review; the company wallet keeps the keys and approval.",
+        body: "Nova prepares the details for review; the company wallet keeps the keys and approval.",
       },
     ],
     signInWallet: "SIGN IN WALLET",
     core: [
       {
         title: "Read network status",
-        body: "In the intended integration, NIVEX uses RPC to read transaction status; Devnet is the current test environment.",
+        body: "In the intended integration, Nova uses RPC to read transaction status; Devnet is the current test environment.",
       },
       {
         title: "One transaction, full context",
@@ -177,7 +177,7 @@ const sceneCopy = {
       },
       {
         title: "Follow the outcome",
-        description: "NIVEX uses the signature to bring transaction status back to the dashboard.",
+        description: "Nova uses the signature to bring transaction status back to the dashboard.",
         state: "FINALIZED",
       },
     ],

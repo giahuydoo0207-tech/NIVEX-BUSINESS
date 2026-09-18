@@ -1,6 +1,6 @@
 {
-  "name": "NIVEX Business",
-  "short_name": "NIVEX Business",
+  "name": "Nova Business",
+  "short_name": "Nova Business",
   "description": "Cross-border invoice and USDC payment operations for modern teams.",
   "start_url": "/",
   "display": "standalone",

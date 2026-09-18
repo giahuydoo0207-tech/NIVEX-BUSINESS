@@ -86,7 +86,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
     const outgoing: ApplicationMessage = {
       id: messageId,
       role: "BUSINESS",
-      senderName: "NIVEX Labs",
+      senderName: "Nova Labs",
       body,
       sentAt: nowLabel(),
       deliveryStatus: "SENDING",

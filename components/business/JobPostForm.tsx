@@ -131,7 +131,7 @@ export function JobPostForm() {
           <BriefcaseBusiness size={20} />
           <div>
             <h2>Nội dung công việc</h2>
-            <p>Thông tin người tìm việc sẽ thấy trong ứng dụng NIVEX.</p>
+            <p>Thông tin người tìm việc sẽ thấy trong ứng dụng Nova.</p>
           </div>
         </div>
         <div className="form-grid">

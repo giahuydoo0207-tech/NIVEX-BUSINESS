@@ -134,7 +134,7 @@ export function BusinessRegisterForm() {
         <div className="register-context-icon">
           <Building2 size={28} />
         </div>
-        <p className="eyebrow">NIVEX BUSINESS</p>
+        <p className="eyebrow">NOVA BUSINESS</p>
         <h1>Tạo không gian thanh toán cho tổ chức</h1>
         <p>
           Quản lý contractor, hóa đơn USDC và biên nhận trong một quy trình có
@@ -314,7 +314,7 @@ export function BusinessRegisterForm() {
               />
               <span>
                 Tôi đồng ý với Điều khoản sử dụng và Chính sách dữ liệu của
-                NIVEX.
+                Nova.
               </span>
             </label>
           </div>

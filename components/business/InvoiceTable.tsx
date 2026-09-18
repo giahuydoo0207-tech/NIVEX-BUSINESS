@@ -172,7 +172,7 @@ export function InvoiceTable({
     );
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "nivex-hoa-don.csv";
+    anchor.download = "nova-hoa-don.csv";
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }

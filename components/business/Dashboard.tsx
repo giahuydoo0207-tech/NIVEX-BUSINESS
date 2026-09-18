@@ -48,7 +48,7 @@ function PaymentRoutePanel({
       key: "02",
       label: "Ví doanh nghiệp",
       value: `${pendingCount} chờ ký`,
-      note: "Ký bên ngoài NIVEX",
+      note: "Ký bên ngoài Nova",
       icon: WalletCards,
     },
     {
@@ -100,7 +100,7 @@ function PaymentRoutePanel({
       </div>
       <div className="route-assurance">
         <ShieldCheck size={16} />
-        NIVEX không lưu seed phrase hoặc private key
+        Nova không lưu seed phrase hoặc private key
       </div>
     </aside>
   );

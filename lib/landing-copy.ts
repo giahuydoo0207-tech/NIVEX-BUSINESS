@@ -3,14 +3,14 @@ export type LandingLocale = "vi" | "en";
 export const landingCopy = {
   vi: {
     meta: {
-      title: "NIVEX Business | Quy trình chi trả USDC rõ ràng",
+      title: "Nova Business | Quy trình chi trả USDC rõ ràng",
       description:
-        "Tạo yêu cầu, đối chiếu người nhận và theo dõi trạng thái chi trả USDC trong bản thử nghiệm NIVEX Business trên Solana Devnet.",
+        "Tạo yêu cầu, đối chiếu người nhận và theo dõi trạng thái chi trả USDC trong bản thử nghiệm Nova Business trên Solana Devnet.",
     },
     navigation: {
       signal: "Dành cho đội ngũ trả công bằng USDC",
       environment: "Bản thử nghiệm trên Solana Devnet",
-      homeLabel: "Trang chủ NIVEX Business",
+      homeLabel: "Trang chủ Nova Business",
       ariaLabel: "Điều hướng chính",
       product: "Sản phẩm",
       solana: "Solana",
@@ -23,7 +23,7 @@ export const landingCopy = {
       closeMenu: "Đóng menu",
     },
     hero: {
-      kicker: "NIVEX BUSINESS · SOLANA DEVNET",
+      kicker: "NOVA BUSINESS · SOLANA DEVNET",
       title: "Chi trả USDC",
       titleAccent: "Rõ từ đầu đến cuối",
       body: "Đặt công việc, người nhận và yêu cầu thanh toán trong cùng một luồng để đội ngũ biết điều gì đang chờ xử lý.",
@@ -38,7 +38,7 @@ export const landingCopy = {
     },
     story: {
       title: "Một công việc kết thúc.\nMột khoản chi bắt đầu.",
-      body: "NIVEX nối những quyết định thường nằm rời rạc, từ lúc xác nhận công việc đến khi hai phía nhìn thấy kết quả.",
+      body: "Nova nối những quyết định thường nằm rời rạc, từ lúc xác nhận công việc đến khi hai phía nhìn thấy kết quả.",
       chapters: [
         {
           eyebrow: "TRƯỚC KHI TẠO YÊU CẦU",
@@ -50,12 +50,12 @@ export const landingCopy = {
           eyebrow: "TRƯỚC KHI KÝ",
           title: "Xem lại khoản chi trong đúng ngữ cảnh.",
           body: "Số USDC, người nhận và nội dung công việc luôn đi cùng nhau để người duyệt không phải đoán mình đang xác nhận điều gì.",
-          caption: "Khóa ví luôn nằm trong ví doanh nghiệp, không nằm trong NIVEX.",
+          caption: "Khóa ví luôn nằm trong ví doanh nghiệp, không nằm trong Nova.",
         },
         {
           eyebrow: "SAU KHI GỬI",
           title: "Hai phía cùng nhìn thấy một trạng thái.",
-          body: "Solana xử lý giao dịch; NIVEX đưa trạng thái trở lại quy trình để doanh nghiệp và người nhận cùng theo dõi.",
+          body: "Solana xử lý giao dịch; Nova đưa trạng thái trở lại quy trình để doanh nghiệp và người nhận cùng theo dõi.",
           caption: "Bản demo hiện dùng Solana Devnet và mô phỏng bước kết nối ví.",
         },
       ],
@@ -66,8 +66,8 @@ export const landingCopy = {
     },
     solana: {
       eyebrow: "VAI TRÒ CỦA SOLANA",
-      title: "Solana xác nhận giao dịch.\nNIVEX giải thích trạng thái.",
-      body: "Ví doanh nghiệp tạo chữ ký. Solana ghi nhận giao dịch. NIVEX biến tín hiệu kỹ thuật thành bước tiếp theo dễ hiểu.",
+      title: "Solana xác nhận giao dịch.\nNova giải thích trạng thái.",
+      body: "Ví doanh nghiệp tạo chữ ký. Solana ghi nhận giao dịch. Nova biến tín hiệu kỹ thuật thành bước tiếp theo dễ hiểu.",
     },
     workflow: {
       title: "Ba bước.\nMỗi bước một quyết định.",
@@ -76,8 +76,8 @@ export const landingCopy = {
     product: {
       title: "Biết điều gì\ncần bạn xử lý",
       body: "Khoản chờ duyệt, người liên quan và trạng thái mới nhất được đặt trong cùng một tầm nhìn.",
-      previewLabel: "Mở bản demo NIVEX Business",
-      imageAlt: "Tổng quan NIVEX Business với các khoản cần xử lý, người nhận và trạng thái thanh toán",
+      previewLabel: "Mở bản demo Nova Business",
+      imageAlt: "Tổng quan Nova Business với các khoản cần xử lý, người nhận và trạng thái thanh toán",
       focus: ["Cần xử lý", "Đúng người", "Đã cập nhật"],
       facts: [
         {
@@ -96,7 +96,7 @@ export const landingCopy = {
     },
     trust: {
       title: "Tiền vẫn ở phía bạn.",
-      body: "NIVEX trình bày thông tin cần thiết để phối hợp; quyền chia sẻ và quyền ký vẫn thuộc về hai phía.",
+      body: "Nova trình bày thông tin cần thiết để phối hợp; quyền chia sẻ và quyền ký vẫn thuộc về hai phía.",
       items: [
         {
           title: "Chia sẻ có chủ đích",
@@ -104,7 +104,7 @@ export const landingCopy = {
         },
         {
           title: "Khóa ví không rời khỏi ví",
-          body: "NIVEX không yêu cầu seed phrase hay private key. Việc ký diễn ra trong ví doanh nghiệp.",
+          body: "Nova không yêu cầu seed phrase hay private key. Việc ký diễn ra trong ví doanh nghiệp.",
         },
         {
           title: "Số tiền rõ trước khi ký",
@@ -121,12 +121,12 @@ export const landingCopy = {
       body: "Năm điều cần biết về bản thử nghiệm.",
       items: [
         {
-          question: "NIVEX Business dành cho ai?",
+          question: "Nova Business dành cho ai?",
           answer: "Dành cho doanh nghiệp, agency và tổ chức muốn thử một quy trình quản lý người nhận, yêu cầu thanh toán USDC và đội ngũ từ xa.",
         },
         {
-          question: "Người nhận có cần dùng NIVEX không?",
-          answer: "Trong luồng sản phẩm, người nhận dùng ứng dụng NIVEX để xem công việc và chủ động chia sẻ thông tin cơ bản cần cho việc đối chiếu.",
+          question: "Người nhận có cần dùng Nova không?",
+          answer: "Trong luồng sản phẩm, người nhận dùng ứng dụng Nova để xem công việc và chủ động chia sẻ thông tin cơ bản cần cho việc đối chiếu.",
         },
         {
           question: "Tôi có thể nhập số USDC bất kỳ không?",
@@ -137,34 +137,34 @@ export const landingCopy = {
           answer: "Chưa. Dữ liệu hiện là dữ liệu minh họa, còn kết nối ví và thanh toán trên Solana Devnet đang được mô phỏng.",
         },
         {
-          question: "NIVEX có giữ khóa ví không?",
-          answer: "Không. NIVEX không yêu cầu seed phrase hoặc private key. Hướng tích hợp là người dùng xác nhận giao dịch trong ví của mình.",
+          question: "Nova có giữ khóa ví không?",
+          answer: "Không. Nova không yêu cầu seed phrase hoặc private key. Hướng tích hợp là người dùng xác nhận giao dịch trong ví của mình.",
         },
       ],
     },
     cta: {
       title: "Thử quy trình.\nTrước khi chuyển tiền thật.",
-      body: "Tạo không gian tổ chức và khám phá NIVEX Business bằng dữ liệu demo trên Solana Devnet.",
+      body: "Tạo không gian tổ chức và khám phá Nova Business bằng dữ liệu demo trên Solana Devnet.",
       action: "Tạo tài khoản tổ chức",
     },
     footer: {
       tagline: "Công việc rõ. Khoản chi rõ.",
       faq: "Câu hỏi thường gặp",
       login: "Đăng nhập",
-      note: "© 2026 NIVEX · Bản thử nghiệm trên Solana Devnet",
+      note: "© 2026 Nova · Bản thử nghiệm trên Solana Devnet",
       ariaLabel: "Liên kết cuối trang",
     },
   },
   en: {
     meta: {
-      title: "NIVEX Business | Clearer USDC payment workflows",
+      title: "Nova Business | Clearer USDC payment workflows",
       description:
-        "Create requests, verify recipients, and follow USDC payment status in the NIVEX Business prototype on Solana Devnet.",
+        "Create requests, verify recipients, and follow USDC payment status in the Nova Business prototype on Solana Devnet.",
     },
     navigation: {
       signal: "Built for teams paying in USDC",
       environment: "Prototype on Solana Devnet",
-      homeLabel: "NIVEX Business home",
+      homeLabel: "Nova Business home",
       ariaLabel: "Main navigation",
       product: "Product",
       solana: "Solana",
@@ -177,7 +177,7 @@ export const landingCopy = {
       closeMenu: "Close menu",
     },
     hero: {
-      kicker: "NIVEX BUSINESS · SOLANA DEVNET",
+      kicker: "NOVA BUSINESS · SOLANA DEVNET",
       title: "Pay in USDC",
       titleAccent: "Know every step",
       body: "Keep the work, recipient, and payment request in one flow, so your team always knows what needs attention.",
@@ -192,7 +192,7 @@ export const landingCopy = {
     },
     story: {
       title: "When the work ends.\nThe payment starts.",
-      body: "NIVEX connects decisions that usually live in separate places, from confirming the work to giving both sides a shared outcome.",
+      body: "Nova connects decisions that usually live in separate places, from confirming the work to giving both sides a shared outcome.",
       chapters: [
         {
           eyebrow: "BEFORE THE REQUEST",
@@ -204,12 +204,12 @@ export const landingCopy = {
           eyebrow: "BEFORE SIGNING",
           title: "Review the payment in context.",
           body: "The USDC amount, recipient, and work stay together, so approvers never have to guess what they are confirming.",
-          caption: "Wallet keys stay inside the company wallet, never inside NIVEX.",
+          caption: "Wallet keys stay inside the company wallet, never inside Nova.",
         },
         {
           eyebrow: "AFTER SENDING",
           title: "Give both sides the same status.",
-          body: "Solana processes the transaction while NIVEX brings its status back into the workflow for both sides to follow.",
+          body: "Solana processes the transaction while Nova brings its status back into the workflow for both sides to follow.",
           caption: "The current demo uses Solana Devnet and simulates wallet connection.",
         },
       ],
@@ -220,8 +220,8 @@ export const landingCopy = {
     },
     solana: {
       eyebrow: "SOLANA'S ROLE",
-      title: "Solana confirms the transaction.\nNIVEX explains the status.",
-      body: "The company wallet creates the signature. Solana records the transaction. NIVEX turns technical signals into a clear next step.",
+      title: "Solana confirms the transaction.\nNova explains the status.",
+      body: "The company wallet creates the signature. Solana records the transaction. Nova turns technical signals into a clear next step.",
     },
     workflow: {
       title: "Three steps.\nOne decision at a time.",
@@ -230,8 +230,8 @@ export const landingCopy = {
     product: {
       title: "Know what\nneeds your attention",
       body: "Pending approvals, the people involved, and the latest status stay visible in one view.",
-      previewLabel: "Open the NIVEX Business demo",
-      imageAlt: "NIVEX Business overview showing items that need attention, recipients, and payment status",
+      previewLabel: "Open the Nova Business demo",
+      imageAlt: "Nova Business overview showing items that need attention, recipients, and payment status",
       focus: ["Needs review", "Right recipient", "Status updated"],
       facts: [
         {
@@ -250,7 +250,7 @@ export const landingCopy = {
     },
     trust: {
       title: "Your funds stay with you.",
-      body: "NIVEX presents the information needed to coordinate; sharing and signing remain under each party's control.",
+      body: "Nova presents the information needed to coordinate; sharing and signing remain under each party's control.",
       items: [
         {
           title: "Intentional sharing",
@@ -258,7 +258,7 @@ export const landingCopy = {
         },
         {
           title: "Keys stay in the wallet",
-          body: "NIVEX never asks for a seed phrase or private key. Signing takes place in the company wallet.",
+          body: "Nova never asks for a seed phrase or private key. Signing takes place in the company wallet.",
         },
         {
           title: "See the amount before signing",
@@ -275,12 +275,12 @@ export const landingCopy = {
       body: "Five things to know about the prototype.",
       items: [
         {
-          question: "Who is NIVEX Business for?",
+          question: "Who is Nova Business for?",
           answer: "Companies, agencies, and organizations that want to explore a workflow for remote recipients and USDC payment requests.",
         },
         {
-          question: "Does the recipient need NIVEX?",
-          answer: "In the product flow, recipients use the NIVEX app to view work and choose which basic details to share for review.",
+          question: "Does the recipient need Nova?",
+          answer: "In the product flow, recipients use the Nova app to view work and choose which basic details to share for review.",
         },
         {
           question: "Can I enter any USDC amount?",
@@ -291,21 +291,21 @@ export const landingCopy = {
           answer: "Not yet. The current data is illustrative, while wallet connection and payment on Solana Devnet are simulated.",
         },
         {
-          question: "Does NIVEX hold wallet keys?",
-          answer: "No. NIVEX never asks for a seed phrase or private key. The intended integration has users approve transactions inside their own wallet.",
+          question: "Does Nova hold wallet keys?",
+          answer: "No. Nova never asks for a seed phrase or private key. The intended integration has users approve transactions inside their own wallet.",
         },
       ],
     },
     cta: {
       title: "Try the workflow.\nBefore moving real funds.",
-      body: "Create an organization workspace and explore NIVEX Business with demo data on Solana Devnet.",
+      body: "Create an organization workspace and explore Nova Business with demo data on Solana Devnet.",
       action: "Create an organization",
     },
     footer: {
       tagline: "Clear work. Clear payments.",
       faq: "Frequently asked questions",
       login: "Log in",
-      note: "© 2026 NIVEX · Prototype on Solana Devnet",
+      note: "© 2026 Nova · Prototype on Solana Devnet",
       ariaLabel: "Footer links",
     },
   },

@@ -40,7 +40,7 @@ export function InvoiceAmountForm({
       sourceAmountMinor: parsedAmount.minor,
       sourceCurrency: "USDC",
       dueDate,
-      invoiceNumber: `NVX-${new Date().getFullYear()}-${randomPart.slice(0, 5)}`,
+      invoiceNumber: `NOVA-${new Date().getFullYear()}-${randomPart.slice(0, 5)}`,
       paymentRequestId: `pay-${randomPart.toLowerCase()}`,
       status: "AWAITING_PAYMENT",
       createdAt: new Date().toISOString(),

@@ -6,9 +6,9 @@ import "./landing.css";
 import "./landing-scenes.css";
 
 export const metadata: Metadata = {
-  title: "NIVEX Business | Quy trình chi trả USDC rõ ràng",
+  title: "Nova Business | Quy trình chi trả USDC rõ ràng",
   description:
-    "Tạo yêu cầu, đối chiếu người nhận và theo dõi trạng thái chi trả USDC trong bản thử nghiệm NIVEX Business trên Solana Devnet.",
+    "Tạo yêu cầu, đối chiếu người nhận và theo dõi trạng thái chi trả USDC trong bản thử nghiệm Nova Business trên Solana Devnet.",
 };
 
 export const viewport: Viewport = {

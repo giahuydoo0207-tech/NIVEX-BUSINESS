@@ -99,7 +99,7 @@ export function PaymentCheckout({
           <div className="invoice-disclosure">
             <h2>Thông tin được chia sẻ</h2>
             <p>
-              NIVEX chỉ hiển thị thông tin người nhận đã đồng ý chia sẻ. Dữ liệu
+              Nova chỉ hiển thị thông tin người nhận đã đồng ý chia sẻ. Dữ liệu
               giấy tờ và tài khoản ngân hàng không được cung cấp cho người trả.
             </p>
           </div>

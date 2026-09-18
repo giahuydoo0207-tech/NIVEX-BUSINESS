@@ -42,7 +42,7 @@ export function NivexMark({
       viewBox="0 0 112 112"
       fill="none"
       role="img"
-      aria-label="Nivex"
+      aria-label="Nova"
     >
       {variant === "tile" && (
         <rect width="112" height="112" rx="22" fill="#EAF2FF" />
@@ -80,7 +80,7 @@ export function NivexWordmark({ size = 34, className }: NivexWordmarkProps) {
         lineHeight: 1,
       }}
     >
-      NIVEX
+      Nova
     </span>
   );
 }
@@ -100,7 +100,7 @@ export function NivexLogo({
         alignItems: "center",
         gap: layout === "stacked" ? 14 : 18,
       }}
-      aria-label="Nivex"
+      aria-label="Nova"
     >
       <NivexMark size={size} variant={variant} />
       <NivexWordmark size={Math.max(22, Math.round(size * 0.34))} />

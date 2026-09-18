@@ -67,7 +67,7 @@ export function JobsView() {
       <div className="page-heading-row">
         <div>
           <h1>Cơ hội việc làm</h1>
-          <p>Đăng công việc remote và quản lý lượt ứng tuyển từ NIVEX.</p>
+          <p>Đăng công việc remote và quản lý lượt ứng tuyển từ Nova.</p>
         </div>
         <div className="jobs-heading-actions">
           <Link className="business-secondary-button" href="/business/applications">

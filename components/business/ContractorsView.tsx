@@ -18,7 +18,7 @@ export function ContractorsView() {
       <div className="page-heading-row">
         <div>
           <h1>Nhân sự</h1>
-          <p>Đội ngũ của bạn, kết nối qua NIVEX.</p>
+          <p>Đội ngũ của bạn, kết nối qua Nova.</p>
         </div>
         <span className="status-badge neutral">
           <UsersRound size={14} />

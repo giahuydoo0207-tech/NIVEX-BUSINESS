@@ -20,17 +20,16 @@ export default function BusinessLoginPage() {
         </Link>
         <div className="login-brand-copy">
           <h2>
-            Công việc toàn cầu.
+            Kết nối tài năng.
             <br />
-            Thanh toán kết nối.
+            Thanh toán minh bạch.
           </h2>
           <p>
-            Một nơi để quản lý người nhận, hóa đơn và từng bước thanh toán của
-            đội ngũ.
+            Tìm freelancer đã xác minh, đăng bài & cơ hội việc làm, quản lý invoice và thanh toán (mô phỏng) — tất cả trong một nơi.
           </p>
         </div>
         <div className="login-network">
-          NIVEX Business · Môi trường trải nghiệm Solana Devnet
+          Nova Business · Môi trường trải nghiệm Solana Devnet
         </div>
       </section>
       <section className="login-form-panel">
