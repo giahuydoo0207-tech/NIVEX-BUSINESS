@@ -49,6 +49,12 @@ const navigation = [
     icon: MessagesSquare,
   },
   {
+    key: "community",
+    href: "/business/community",
+    label: "Cộng đồng",
+    icon: Globe2,
+  },
+  {
     key: "invoices",
     href: "/business/invoices",
     label: "Hóa đơn",
@@ -71,6 +77,7 @@ export function BusinessShell({
     | "jobs"
     | "applications"
     | "messages"
+    | "community"
     | "contractors"
     | "invoices";
 }) {
