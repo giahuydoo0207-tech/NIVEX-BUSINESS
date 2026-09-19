@@ -1747,6 +1747,7 @@ p {
   --ink: #f5f8fc;
   --muted: #8c9aae;
   --border: #273448;
+  --app-accent: #78aaf5;
   color: var(--ink);
   background: var(--canvas);
 }
@@ -2895,7 +2896,7 @@ p {
   height: 44px;
   border-radius: 50%;
   background: rgba(96, 165, 250, 0.12);
-  color: #78aaf5;
+  color: var(--app-accent, #78aaf5);
   margin-bottom: 4px;
 }
 .image-upload-placeholder {
@@ -3068,7 +3069,7 @@ p {
   margin: -12px 0 16px 0;
 }
 .job-preview-hashtag-item {
-  color: #78aaf5;
+  color: var(--app-accent, #78aaf5);
   font-size: 11px;
   font-family: Consolas, monospace;
 }
