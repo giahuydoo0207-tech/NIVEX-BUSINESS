@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { demoApplications } from "@/lib/application-demo-data";
+import { statusCopy } from "@/lib/application-status";
 import type { ApplicationMessage, CandidateApplication } from "@/types/application";
 
 function nowLabel() {
@@ -203,7 +204,9 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
               <span className="application-avatar context-avatar">{selected.initials}</span>
               <h2>{selected.candidateName}</h2>
               <p>{selected.headline}</p>
-              <span className={`application-status ${selected.status === "APPROVED" ? "approved" : selected.status === "IN_REVIEW" ? "review" : "new"}`}>{selected.status === "APPROVED" ? "Đã duyệt" : selected.status === "IN_REVIEW" ? "Đang xem xét" : "Mới gửi"}</span>
+              <span className={`application-status ${statusCopy[selected.status].tone}`}>
+                {statusCopy[selected.status].label}
+              </span>
               <dl>
                 <div><dt>Vị trí</dt><dd>{selected.jobTitle}</dd></div>
                 <div><dt>Phù hợp</dt><dd>{selected.matchScore}%</dd></div>

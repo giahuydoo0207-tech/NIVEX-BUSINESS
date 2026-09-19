@@ -6,6 +6,7 @@ import {
   Check,
   Clock3,
   ExternalLink,
+  FilterX,
   Mail,
   MapPin,
   MessageCircle,
@@ -15,96 +16,146 @@ import {
   UserRoundCheck,
   X,
 } from "lucide-react";
-import { demoApplications } from "@/lib/application-demo-data";
-import type { ApplicationStatus, CandidateApplication } from "@/types/application";
-
-const statusCopy: Record<
+import { useApplications } from "@/components/business/useApplications";
+import { useJobs } from "@/components/business/useJobs";
+import { NEXT_ACTIONS, statusCopy } from "@/lib/application-status";
+import type {
   ApplicationStatus,
-  { label: string; description: string; tone: string }
-> = {
-  SUBMITTED: {
-    label: "Mới gửi",
-    description: "Chờ đội ngũ mở hồ sơ",
-    tone: "new",
-  },
-  IN_REVIEW: {
-    label: "Đang xem xét",
-    description: "Đội ngũ đang đánh giá",
-    tone: "review",
-  },
-  APPROVED: {
-    label: "Đã duyệt",
-    description: "Sẵn sàng trao đổi bước tiếp theo",
-    tone: "approved",
-  },
-  REJECTED: {
-    label: "Đã từ chối",
-    description: "Hồ sơ đã được khép lại",
-    tone: "rejected",
-  },
-};
+  CandidateApplication,
+  PortfolioPreviewItem,
+} from "@/types/application";
 
 type ApplicationFilter = "ALL" | ApplicationStatus;
 
 const filters: Array<{ value: ApplicationFilter; label: string }> = [
   { value: "ALL", label: "Tất cả" },
-  { value: "SUBMITTED", label: "Mới" },
-  { value: "IN_REVIEW", label: "Đang xem" },
-  { value: "APPROVED", label: "Đã duyệt" },
+  { value: "submitted", label: "Mới gửi" },
+  { value: "viewed", label: "Đang xem" },
+  { value: "shortlisted", label: "Shortlist" },
+  { value: "interview", label: "Phỏng vấn" },
+  { value: "accepted", label: "Đã nhận" },
+  { value: "rejected", label: "Từ chối" },
+  { value: "withdrawn", label: "Đã rút" },
 ];
 
-export function ApplicationsView({ initialCandidateId }: { initialCandidateId?: string }) {
-  const [applications, setApplications] = useState<CandidateApplication[]>(
-    () => structuredClone(demoApplications),
+function PortfolioItemCard({ item }: { item: PortfolioPreviewItem }) {
+  const [imgError, setImgError] = useState(false);
+  const initials =
+    item.title
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "PF";
+
+  const showThumb = Boolean(item.thumbnailUrl) && !imgError;
+
+  return (
+    <a
+      href={item.url || "#"}
+      target={item.url ? "_blank" : undefined}
+      rel={item.url ? "noopener noreferrer" : undefined}
+      className="portfolio-preview-card"
+    >
+      <div className="portfolio-card-thumb-wrapper">
+        {showThumb ? (
+          <img
+            src={item.thumbnailUrl}
+            alt={item.title}
+            className="portfolio-preview-thumbnail"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div className="portfolio-preview-fallback">
+            <span>{initials}</span>
+          </div>
+        )}
+      </div>
+      <div className="portfolio-preview-meta">
+        <strong className="portfolio-preview-title">
+          <span>{item.title}</span>
+          {item.url && <ExternalLink size={13} />}
+        </strong>
+        {item.description && (
+          <p className="portfolio-preview-desc">{item.description}</p>
+        )}
+      </div>
+    </a>
   );
-  const [selectedId, setSelectedId] = useState(
-    initialCandidateId && demoApplications.some((item) => item.id === initialCandidateId)
-      ? initialCandidateId
-      : demoApplications[0]?.id ?? "",
-  );
+}
+
+interface ApplicationsViewProps {
+  initialCandidateId?: string;
+  filterJobId?: string;
+}
+
+export function ApplicationsView({
+  initialCandidateId,
+  filterJobId,
+}: ApplicationsViewProps) {
+  const { applications, updateStatus } = useApplications();
+  const { jobs } = useJobs();
   const [filter, setFilter] = useState<ApplicationFilter>("ALL");
   const [query, setQuery] = useState("");
 
+  const filteredJob = useMemo(() => {
+    if (!filterJobId) return null;
+    return jobs.find((j) => j.id === filterJobId) ?? null;
+  }, [jobs, filterJobId]);
+
+  const jobApplications = useMemo(() => {
+    if (!filterJobId) return applications;
+    return applications.filter((app) => app.jobId === filterJobId);
+  }, [applications, filterJobId]);
+
+  const [selectedId, setSelectedId] = useState(() => {
+    if (
+      initialCandidateId &&
+      applications.some((app) => app.id === initialCandidateId)
+    ) {
+      return initialCandidateId;
+    }
+    if (filterJobId) {
+      const match = applications.find((app) => app.jobId === filterJobId);
+      if (match) return match.id;
+    }
+    return applications[0]?.id ?? "";
+  });
+
   const visibleApplications = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("vi");
-    return applications.filter(
-      (application) =>
-        (filter === "ALL" || application.status === filter) &&
-        (!normalizedQuery ||
-          `${application.candidateName} ${application.jobTitle} ${application.headline}`
-            .toLocaleLowerCase("vi")
-            .includes(normalizedQuery)),
-    );
-  }, [applications, filter, query]);
+    return jobApplications.filter((application) => {
+      const matchStatus = filter === "ALL" || application.status === filter;
+      const matchQuery =
+        !normalizedQuery ||
+        `${application.candidateName} ${application.jobTitle} ${application.headline} ${application.skills.join(" ")}`
+          .toLocaleLowerCase("vi")
+          .includes(normalizedQuery);
+      return matchStatus && matchQuery;
+    });
+  }, [jobApplications, filter, query]);
 
-  const selected =
-    applications.find((application) => application.id === selectedId) ??
-    visibleApplications[0] ??
-    null;
-  const newCount = applications.filter(
-    (application) => application.status === "SUBMITTED",
-  ).length;
-  const reviewCount = applications.filter(
-    (application) => application.status === "IN_REVIEW",
-  ).length;
-  const approvedCount = applications.filter(
-    (application) => application.status === "APPROVED",
-  ).length;
-
-  function updateStatus(status: ApplicationStatus) {
-    if (!selected) return;
-    setApplications((current) =>
-      current.map((application) => {
-        if (application.id !== selected.id || application.status === status) {
-          return application;
-        }
-        return {
-          ...application,
-          status,
-        };
-      }),
+  const selected = useMemo(() => {
+    return (
+      jobApplications.find((app) => app.id === selectedId) ??
+      visibleApplications[0] ??
+      null
     );
-  }
+  }, [jobApplications, selectedId, visibleApplications]);
+
+  const newCount = jobApplications.filter(
+    (app) => app.status === "submitted",
+  ).length;
+  const reviewCount = jobApplications.filter(
+    (app) => app.status === "viewed" || app.status === "shortlisted",
+  ).length;
+  const interviewCount = jobApplications.filter(
+    (app) => app.status === "interview",
+  ).length;
+  const acceptedCount = jobApplications.filter(
+    (app) => app.status === "accepted",
+  ).length;
 
   return (
     <div className="applications-view">
@@ -113,30 +164,63 @@ export function ApplicationsView({ initialCandidateId }: { initialCandidateId?: 
           <h1>Ứng viên</h1>
           <p>Đánh giá năng lực, kinh nghiệm và mức độ phù hợp của từng hồ sơ.</p>
         </div>
-        <span className="application-session-label">
-          <span />
-          UI PROTOTYPE · CHƯA ĐỒNG BỘ
-        </span>
       </div>
 
       <section className="application-command-strip" aria-label="Tổng quan ứng viên">
         <article>
-          <span className="jobs-command-icon blue"><Sparkles size={18} /></span>
-          <span><small>HỒ SƠ MỚI</small><strong>{newCount} cần mở</strong></span>
+          <span className="jobs-command-icon blue">
+            <Sparkles size={18} />
+          </span>
+          <span>
+            <small>HỒ SƠ MỚI</small>
+            <strong>{newCount} cần mở</strong>
+          </span>
         </article>
         <article>
-          <span className="jobs-command-icon amber"><Clock3 size={18} /></span>
-          <span><small>ĐANG XEM XÉT</small><strong>{reviewCount} hồ sơ</strong></span>
+          <span className="jobs-command-icon amber">
+            <Clock3 size={18} />
+          </span>
+          <span>
+            <small>ĐANG XEM & SHORTLIST</small>
+            <strong>{reviewCount} hồ sơ</strong>
+          </span>
         </article>
         <article>
-          <span className="jobs-command-icon green"><UserRoundCheck size={18} /></span>
-          <span><small>ĐÃ DUYỆT</small><strong>{approvedCount} ứng viên</strong></span>
+          <span className="jobs-command-icon blue">
+            <MessagesSquare size={18} />
+          </span>
+          <span>
+            <small>PHỎNG VẤN</small>
+            <strong>{interviewCount} ứng viên</strong>
+          </span>
         </article>
         <article>
-          <span className="jobs-command-icon blue"><MessagesSquare size={18} /></span>
-          <span><small>TIN NHẮN</small><strong>2 hội thoại chưa đọc</strong></span>
+          <span className="jobs-command-icon green">
+            <UserRoundCheck size={18} />
+          </span>
+          <span>
+            <small>ĐÃ NHẬN (HIRED)</small>
+            <strong>{acceptedCount} người</strong>
+          </span>
         </article>
       </section>
+
+      {filterJobId && (
+        <div className="application-filter-banner">
+          <div>
+            <span>Đang lọc ứng viên cho vị trí: </span>
+            <strong>
+              {filteredJob?.title ??
+                visibleApplications[0]?.jobTitle ??
+                filterJobId}
+            </strong>
+          </div>
+          <Link href="/business/applications" className="clear-filter-button">
+            <FilterX size={15} />
+            <span>Xem tất cả ứng viên</span>
+          </Link>
+        </div>
+      )}
 
       <section className="application-workbench">
         <aside className="application-queue" aria-label="Danh sách ứng viên">
@@ -155,7 +239,11 @@ export function ApplicationsView({ initialCandidateId }: { initialCandidateId?: 
               />
             </label>
           </div>
-          <div className="application-tabs" role="tablist" aria-label="Lọc hồ sơ">
+          <div
+            className="application-tabs"
+            role="tablist"
+            aria-label="Lọc hồ sơ"
+          >
             {filters.map((item) => (
               <button
                 type="button"
@@ -175,11 +263,15 @@ export function ApplicationsView({ initialCandidateId }: { initialCandidateId?: 
               return (
                 <button
                   type="button"
-                  className={application.id === selected?.id ? "active" : undefined}
+                  className={
+                    application.id === selected?.id ? "active" : undefined
+                  }
                   onClick={() => setSelectedId(application.id)}
                   key={application.id}
                 >
-                  <span className="application-avatar">{application.initials}</span>
+                  <span className="application-avatar">
+                    {application.initials}
+                  </span>
                   <span className="application-list-copy">
                     <span>
                       <strong>{application.candidateName}</strong>
@@ -187,7 +279,9 @@ export function ApplicationsView({ initialCandidateId }: { initialCandidateId?: 
                     </span>
                     <b>{application.headline}</b>
                     <small>{application.jobTitle}</small>
-                    <i className={`application-status ${status.tone}`}>{status.label}</i>
+                    <i className={`application-status ${status.tone}`}>
+                      {status.label}
+                    </i>
                   </span>
                 </button>
               );
@@ -206,7 +300,9 @@ export function ApplicationsView({ initialCandidateId }: { initialCandidateId?: 
           <div className="candidate-workspace">
             <header className="candidate-header">
               <div className="candidate-identity">
-                <span className="application-avatar large">{selected.initials}</span>
+                <span className="application-avatar large">
+                  {selected.initials}
+                </span>
                 <span>
                   <small>ỨNG TUYỂN · {selected.jobTitle}</small>
                   <strong>{selected.candidateName}</strong>
@@ -224,7 +320,9 @@ export function ApplicationsView({ initialCandidateId }: { initialCandidateId?: 
                   <span>Nhắn tin</span>
                 </Link>
                 <div>
-                  <span className={`application-status ${statusCopy[selected.status].tone}`}>
+                  <span
+                    className={`application-status ${statusCopy[selected.status].tone}`}
+                  >
                     {statusCopy[selected.status].label}
                   </span>
                   <small>{statusCopy[selected.status].description}</small>
@@ -233,26 +331,57 @@ export function ApplicationsView({ initialCandidateId }: { initialCandidateId?: 
             </header>
 
             <div className="candidate-body candidate-body-profile-only">
-              <section className="candidate-profile" aria-label="Thông tin ứng viên">
+              <section
+                className="candidate-profile"
+                aria-label="Thông tin ứng viên"
+              >
                 <div className="candidate-contact-grid">
-                  <span><Mail size={14} />{selected.email}</span>
-                  <span><MapPin size={14} />{selected.location}</span>
-                  <span><ExternalLink size={14} />{selected.portfolioLabel}</span>
+                  <span>
+                    <Mail size={14} />
+                    {selected.email}
+                  </span>
+                  <span>
+                    <MapPin size={14} />
+                    {selected.location}
+                  </span>
+                  {selected.portfolioLabel && (
+                    <span>
+                      <ExternalLink size={14} />
+                      <a
+                        href={
+                          selected.portfolioLabel.startsWith("http")
+                            ? selected.portfolioLabel
+                            : `https://${selected.portfolioLabel}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {selected.portfolioLabel}
+                      </a>
+                    </span>
+                  )}
                 </div>
                 <div className="candidate-match-row">
-                  <span><Sparkles size={16} />Mức phù hợp hồ sơ</span>
+                  <span>
+                    <Sparkles size={16} />
+                    Mức phù hợp hồ sơ
+                  </span>
                   <strong>{selected.matchScore}%</strong>
-                  <i><span style={{ width: `${selected.matchScore}%` }} /></i>
+                  <i>
+                    <span style={{ width: `${selected.matchScore}%` }} />
+                  </i>
                 </div>
                 <div className="candidate-copy-block">
                   <small>LỜI NHẮN ỨNG TUYỂN</small>
-                  <p>{selected.coverNote}</p>
+                  <p>{selected.coverNote || selected.coverLetter}</p>
                 </div>
                 <div className="candidate-copy-block split">
                   <span>
                     <small>KỸ NĂNG</small>
                     <span className="job-skill-list">
-                      {selected.skills.map((skill) => <span key={skill}>{skill}</span>)}
+                      {selected.skills.map((skill) => (
+                        <span key={skill}>{skill}</span>
+                      ))}
                     </span>
                   </span>
                   <span>
@@ -260,35 +389,72 @@ export function ApplicationsView({ initialCandidateId }: { initialCandidateId?: 
                     <p>{selected.availability}</p>
                   </span>
                 </div>
-                <div className="candidate-review-actions">
-                  <button
-                    type="button"
-                    className="business-secondary-button"
-                    onClick={() => updateStatus("REJECTED")}
-                    disabled={selected.status === "REJECTED"}
-                  >
-                    <X size={16} /> Từ chối
-                  </button>
-                  {selected.status === "SUBMITTED" && (
-                    <button
-                      type="button"
-                      className="business-secondary-button"
-                      onClick={() => updateStatus("IN_REVIEW")}
-                    >
-                      <Clock3 size={16} /> Bắt đầu xem xét
-                    </button>
+
+                {selected.portfolioPreview &&
+                  selected.portfolioPreview.length > 0 && (
+                    <div className="candidate-copy-block portfolio-section">
+                      <small>DỰ ÁN / PORTFOLIO TIÊU BIỂU</small>
+                      <div className="portfolio-preview-grid">
+                        {selected.portfolioPreview.map((item) => (
+                          <PortfolioItemCard key={item.id} item={item} />
+                        ))}
+                      </div>
+                    </div>
                   )}
-                  <button
-                    type="button"
-                    className="business-primary-button"
-                    onClick={() => updateStatus("APPROVED")}
-                    disabled={selected.status === "APPROVED"}
-                  >
-                    <Check size={16} /> Duyệt hồ sơ
-                  </button>
+
+                <div className="candidate-review-actions">
+                  {selected.status === "withdrawn" && (
+                    <div className="application-status-notice withdrawn">
+                      <span>Ứng viên đã chủ động rút hồ sơ ứng tuyển.</span>
+                    </div>
+                  )}
+
+                  {selected.status === "rejected" && (
+                    <div className="application-status-notice rejected">
+                      <span>Hồ sơ đã được đánh dấu từ chối.</span>
+                    </div>
+                  )}
+
+                  {selected.status === "accepted" && (
+                    <div className="application-status-notice accepted">
+                      <Check size={16} />
+                      <span>Ứng viên đã được nhận chính thức (Hired).</span>
+                    </div>
+                  )}
+
+                  {selected.status !== "withdrawn" &&
+                    selected.status !== "rejected" &&
+                    selected.status !== "accepted" && (
+                      <>
+                        <button
+                          type="button"
+                          className="business-secondary-button button-danger"
+                          onClick={() => updateStatus(selected.id, "rejected")}
+                        >
+                          <X size={16} /> Từ chối
+                        </button>
+
+                        {NEXT_ACTIONS[selected.status]?.map((action) => (
+                          <button
+                            type="button"
+                            key={action.next}
+                            className={
+                              action.tone === "primary"
+                                ? "business-primary-button"
+                                : "business-secondary-button"
+                            }
+                            onClick={() =>
+                              updateStatus(selected.id, action.next)
+                            }
+                          >
+                            {action.next === "accepted" && <Check size={16} />}
+                            {action.label}
+                          </button>
+                        ))}
+                      </>
+                    )}
                 </div>
               </section>
-
             </div>
           </div>
         ) : (

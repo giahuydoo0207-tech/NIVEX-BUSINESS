@@ -4,12 +4,12 @@ import { BusinessShell } from "@/components/business/BusinessShell";
 export default async function BusinessApplicationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ candidate?: string }>;
+  searchParams: Promise<{ candidate?: string; jobId?: string }>;
 }) {
-  const { candidate } = await searchParams;
+  const { candidate, jobId } = await searchParams;
   return (
     <BusinessShell active="applications">
-      <ApplicationsView initialCandidateId={candidate} />
+      <ApplicationsView initialCandidateId={candidate} filterJobId={jobId} />
     </BusinessShell>
   );
 }

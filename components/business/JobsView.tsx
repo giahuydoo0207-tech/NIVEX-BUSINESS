@@ -6,16 +6,13 @@ import {
   ArrowUpRight,
   BellRing,
   BriefcaseBusiness,
-  CalendarDays,
-  Coins,
   FilePlus2,
-  MapPin,
   Radio,
   Search,
   UsersRound,
 } from "lucide-react";
-import { PortalDialog } from "@/components/ui/PortalDialog";
 import { useJobs } from "@/components/business/useJobs";
+import { useApplications } from "@/components/business/useApplications";
 import { jobStatusLabels, jobStatusTone } from "@/lib/jobs";
 import { formatMinorAmount } from "@/lib/money";
 import { formatDate } from "@/lib/portal-data";
@@ -36,9 +33,9 @@ function budgetLabel(job: JobPost) {
 
 export function JobsView() {
   const { jobs, storageError } = useJobs();
+  const { getJobApplicationCount } = useApplications();
   const [status, setStatus] = useState<"ALL" | JobPostStatus>("ALL");
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<JobPost | null>(null);
 
   const rows = useMemo(
     () =>
@@ -54,7 +51,7 @@ export function JobsView() {
 
   const published = jobs.filter((job) => job.status === "PUBLISHED");
   const applicants = published.reduce(
-    (sum, job) => sum + job.applicantCount,
+    (sum, job) => sum + getJobApplicationCount(job.id),
     0,
   );
   const matches = published.reduce(
@@ -163,9 +160,9 @@ export function JobsView() {
               </span>
               <div className="job-post-copy">
                 <div className="job-post-title-line">
-                  <button type="button" onClick={() => setSelected(job)}>
+                  <Link href={`/business/jobs/${job.id}`} className="job-post-title-link">
                     {job.title}
-                  </button>
+                  </Link>
                   <span className={`status-badge ${jobStatusTone(job.status)}`}>
                     <i />
                     {jobStatusLabels[job.status]}
@@ -185,21 +182,20 @@ export function JobsView() {
                 </div>
                 <div>
                   <dt>Ứng viên</dt>
-                  <dd>{job.applicantCount}</dd>
+                  <dd>{getJobApplicationCount(job.id)}</dd>
                 </div>
                 <div>
                   <dt>Hạn ứng tuyển</dt>
                   <dd>{formatDate(job.applicationDeadline)}</dd>
                 </div>
               </dl>
-              <button
-                type="button"
+              <Link
+                href={`/business/jobs/${job.id}`}
                 className="icon-button job-row-action"
-                aria-label={`Xem ${job.title}`}
-                onClick={() => setSelected(job)}
+                aria-label={`Xem chi tiết ${job.title}`}
               >
                 <ArrowUpRight size={17} />
-              </button>
+              </Link>
             </article>
           ))}
         </div>
@@ -212,62 +208,6 @@ export function JobsView() {
           </div>
         )}
       </section>
-
-      <PortalDialog
-        open={selected !== null}
-        onOpenChange={(open) => {
-          if (!open) setSelected(null);
-        }}
-        title={selected?.title ?? "Chi tiết công việc"}
-        description={selected?.summary ?? ""}
-      >
-        {selected && (
-          <div className="dialog-body job-detail-dialog">
-            <div className="job-detail-budget">
-              <Coins size={18} />
-              <span>
-                <small>NGÂN SÁCH</small>
-                <strong>{budgetLabel(selected)}</strong>
-              </span>
-            </div>
-            <dl>
-              <div>
-                <dt>
-                  <MapPin size={14} /> Phạm vi
-                </dt>
-                <dd>{selected.locationScope} · Remote</dd>
-              </div>
-              <div>
-                <dt>
-                  <CalendarDays size={14} /> Thời lượng
-                </dt>
-                <dd>{selected.duration}</dd>
-              </div>
-              <div>
-                <dt>
-                  <UsersRound size={14} /> Ứng tuyển
-                </dt>
-                <dd>{selected.applicantCount} hồ sơ</dd>
-              </div>
-              <div>
-                <dt>
-                  <BellRing size={14} /> Thông báo
-                </dt>
-                <dd>
-                  {selected.notifyMatchingTalent
-                    ? "Đã bật matching"
-                    : "Đang tắt"}
-                </dd>
-              </div>
-            </dl>
-            <div className="job-skill-list">
-              {selected.skills.map((skill) => (
-                <span key={skill}>{skill}</span>
-              ))}
-            </div>
-          </div>
-        )}
-      </PortalDialog>
     </div>
   );
 }
