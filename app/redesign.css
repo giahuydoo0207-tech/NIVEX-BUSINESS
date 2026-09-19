@@ -2600,7 +2600,9 @@ p {
   align-items: center;
   gap: 9px;
 }
-.job-post-title-line > button {
+.job-post-title-line > button,
+.job-post-title-line > a,
+.job-post-title-link {
   overflow: hidden;
   padding: 0;
   color: #e7eef8;
@@ -2611,7 +2613,13 @@ p {
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-decoration: none;
   cursor: pointer;
+  transition: color 140ms ease;
+}
+.job-post-title-line > a:hover,
+.job-post-title-link:hover {
+  color: #60a5fa;
 }
 .job-post-copy > p {
   overflow: hidden;
@@ -5118,6 +5126,8 @@ p {
     flex-direction: column;
   }
   .job-post-title-line > button,
+  .job-post-title-line > a,
+  .job-post-title-link,
   .job-post-copy > p {
     white-space: normal;
   }

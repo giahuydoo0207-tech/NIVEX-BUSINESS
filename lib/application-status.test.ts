@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   canTransition,
   NEXT_ACTIONS,
+  normalizeApplicationStatus,
   TRANSITIONS,
   updateApplicationStatus,
 } from "./application-status.ts";
@@ -93,3 +94,25 @@ test("NEXT_ACTIONS returns BOTH options (shortlist + hired) for submitted and vi
   const viewedNext = NEXT_ACTIONS.viewed.map((a) => a.next);
   assert.deepEqual(viewedNext, ["shortlisted", "accepted"]);
 });
+
+test("normalizeApplicationStatus safely migrates legacy uppercase statuses and preserves valid lowercase statuses", () => {
+  assert.equal(normalizeApplicationStatus("SUBMITTED"), "submitted");
+  assert.equal(normalizeApplicationStatus("IN_REVIEW"), "viewed");
+  assert.equal(normalizeApplicationStatus("APPROVED"), "shortlisted");
+  assert.equal(normalizeApplicationStatus("REJECTED"), "rejected");
+
+  assert.equal(normalizeApplicationStatus("submitted"), "submitted");
+  assert.equal(normalizeApplicationStatus("viewed"), "viewed");
+  assert.equal(normalizeApplicationStatus("shortlisted"), "shortlisted");
+  assert.equal(normalizeApplicationStatus("interview"), "interview");
+  assert.equal(normalizeApplicationStatus("accepted"), "accepted");
+  assert.equal(normalizeApplicationStatus("rejected"), "rejected");
+  assert.equal(normalizeApplicationStatus("withdrawn"), "withdrawn");
+
+  assert.equal(normalizeApplicationStatus("UNKNOWN_STATUS"), null);
+  assert.equal(normalizeApplicationStatus(""), null);
+  assert.equal(normalizeApplicationStatus(null), null);
+  assert.equal(normalizeApplicationStatus(undefined), null);
+  assert.equal(normalizeApplicationStatus(123), null);
+});
+

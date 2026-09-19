@@ -10,6 +10,36 @@ export const TRANSITIONS: Record<ApplicationStatus, ApplicationStatus[]> = {
   withdrawn: [],
 };
 
+export const VALID_STATUSES: Set<ApplicationStatus> = new Set([
+  "submitted",
+  "viewed",
+  "shortlisted",
+  "interview",
+  "accepted",
+  "rejected",
+  "withdrawn",
+]);
+
+export const LEGACY_STATUS_MAP: Record<string, ApplicationStatus> = {
+  SUBMITTED: "submitted",
+  IN_REVIEW: "viewed",
+  APPROVED: "shortlisted",
+  REJECTED: "rejected",
+};
+
+export function normalizeApplicationStatus(
+  raw: unknown,
+): ApplicationStatus | null {
+  if (typeof raw !== "string") return null;
+  if (VALID_STATUSES.has(raw as ApplicationStatus)) {
+    return raw as ApplicationStatus;
+  }
+  if (LEGACY_STATUS_MAP[raw]) {
+    return LEGACY_STATUS_MAP[raw];
+  }
+  return null;
+}
+
 export function canTransition(
   from: ApplicationStatus,
   to: ApplicationStatus,

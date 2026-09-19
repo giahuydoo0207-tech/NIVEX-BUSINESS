@@ -2,11 +2,42 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { demoApplications } from "@/lib/application-demo-data";
-import { updateApplicationStatus } from "@/lib/application-status";
+import {
+  normalizeApplicationStatus,
+  updateApplicationStatus,
+} from "@/lib/application-status";
 import type { ApplicationStatus, CandidateApplication } from "@/types/application";
 
 const STORAGE_KEY = "nivex.demo.applications";
 const SYNC_EVENT = "nova:applications-updated";
+
+function sanitizeAndMigrateApplications(
+  rawList: unknown,
+): CandidateApplication[] | null {
+  if (!Array.isArray(rawList) || rawList.length === 0) return null;
+
+  const sanitized: CandidateApplication[] = [];
+
+  for (const item of rawList) {
+    if (!item || typeof item !== "object" || !item.id || !item.jobId) {
+      return null;
+    }
+
+    const normalizedStatus = normalizeApplicationStatus(
+      (item as { status?: unknown }).status,
+    );
+    if (!normalizedStatus) {
+      return null;
+    }
+
+    sanitized.push({
+      ...(item as CandidateApplication),
+      status: normalizedStatus,
+    });
+  }
+
+  return sanitized;
+}
 
 function getInitialApplications(): CandidateApplication[] {
   if (typeof window === "undefined") return demoApplications;
@@ -14,8 +45,9 @@ function getInitialApplications(): CandidateApplication[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+      const sanitized = sanitizeAndMigrateApplications(parsed);
+      if (sanitized) {
+        return sanitized;
       }
     }
   } catch {
@@ -35,8 +67,16 @@ export function useApplications() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            setApplications(parsed);
+          const sanitized = sanitizeAndMigrateApplications(parsed);
+          if (sanitized) {
+            if (JSON.stringify(sanitized) !== raw) {
+              try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+              } catch {
+                /* ignore */
+              }
+            }
+            setApplications(sanitized);
             return;
           }
         }
