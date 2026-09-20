@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: nova-business-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nova
+      POSTGRES_USER: nova
+      POSTGRES_PASSWORD: nova_dev_only
+    ports:
+      - "5433:5432"
+    volumes:
+      - nova_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  nova_postgres_data:
