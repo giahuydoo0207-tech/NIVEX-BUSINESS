@@ -89,6 +89,7 @@ export function BusinessShell({
   const [dialog, setDialog] = useState<
     "wallet" | "help" | "notifications" | null
   >(null);
+  const hasActiveQuickAction = activeAction !== undefined;
   return (
     <div className={`business-app business-app-${active}`}>
       <aside
@@ -113,21 +114,31 @@ export function BusinessShell({
           className="business-navigation"
           aria-label="Điều hướng doanh nghiệp"
         >
-          {navigation.map(({ key, href, label, icon: Icon }) => (
-            <Link
-              key={key}
-              href={href}
-              className={active === key ? "active" : undefined}
-              aria-current={active === key ? "page" : undefined}
-            >
-              <Icon size={18} />
-              <span>{label}</span>
-              {key === "invoices" && <span className="nav-count">USDC</span>}
-              {key === "jobs" && <span className="nav-count">NEW</span>}
-              {key === "applications" && <span className="nav-count">3</span>}
-              {key === "messages" && <span className="nav-count unread">2</span>}
-            </Link>
-          ))}
+          {navigation.map(({ key, href, label, icon: Icon }) => {
+            const isNavActive = active === key;
+            const navClassName = isNavActive
+              ? hasActiveQuickAction
+                ? "parent-active"
+                : "active"
+              : undefined;
+            return (
+              <Link
+                key={key}
+                href={href}
+                className={navClassName}
+                aria-current={
+                  isNavActive && !hasActiveQuickAction ? "page" : undefined
+                }
+              >
+                <Icon size={18} />
+                <span>{label}</span>
+                {key === "invoices" && <span className="nav-count">USDC</span>}
+                {key === "jobs" && <span className="nav-count">NEW</span>}
+                {key === "applications" && <span className="nav-count">3</span>}
+                {key === "messages" && <span className="nav-count unread">2</span>}
+              </Link>
+            );
+          })}
         </nav>
         <div className="sidebar-quick-actions">
           <Link

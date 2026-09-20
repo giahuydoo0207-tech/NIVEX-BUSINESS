@@ -123,22 +123,30 @@ p {
 .business-brand > div {
   gap: 8px !important;
 }
+html:has(.business-app),
+body:has(.business-app) {
+  height: 100%;
+  overflow: hidden;
+}
 .business-app {
   display: grid;
   grid-template-columns: 224px minmax(0, 1fr);
-  min-height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   background: #fff;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 .business-sidebar {
   position: sticky;
   top: 0;
-  height: 100vh;
-  max-height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-gutter: auto;
   min-width: 0;
   padding: 27px 17px 14px;
   background: #f5f6f8;
@@ -146,6 +154,11 @@ p {
   display: flex;
   flex-direction: column;
   z-index: 30;
+}
+.business-sidebar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 .business-brand {
   gap: 8px;
@@ -226,6 +239,12 @@ p {
   background: #e7effd;
   color: #146ef5;
   font-weight: 550;
+  box-shadow: none;
+}
+.business-navigation a.parent-active {
+  background: rgba(20, 110, 245, 0.06);
+  color: #606c7c;
+  font-weight: 500;
   box-shadow: none;
 }
 .nav-count {
@@ -321,14 +340,20 @@ p {
   color: var(--ink);
 }
 .business-workspace {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow-y: auto;
+  overflow-x: clip;
   min-width: 0;
   max-width: 100%;
-  overflow-x: clip;
   display: flex;
   flex-direction: column;
   background: #fff;
 }
 .business-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   height: 72px;
   min-height: 72px;
   padding: 0 32px;
@@ -1786,6 +1811,14 @@ p {
   color: #dfe7f2;
   background: #050d18;
   border-right-color: #263247;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-gutter: auto;
+}
+.business-app .business-sidebar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 .business-app .business-brand {
   color: #f8fafc;
@@ -1828,11 +1861,23 @@ p {
   background: #102342;
   box-shadow: inset 2px 0 #2d7ff9;
 }
+.business-app .business-navigation a.parent-active {
+  background: rgba(20, 110, 245, 0.06);
+  color: #95a4b8;
+  box-shadow: none;
+  font-weight: 500;
+}
+.business-app .business-navigation a.parent-active:hover {
+  background: #101c2c;
+  color: #eef4fc;
+}
 .sidebar-create.active,
 .business-app .sidebar-create.active {
   color: #ffffff;
-  background: rgba(20, 110, 245, 0.18);
-  border: 1px solid rgba(20, 110, 245, 0.45);
+  background: rgba(20, 110, 245, 0.24);
+  border: 1px solid rgba(20, 110, 245, 0.65);
+  box-shadow: inset 3px 0 0 #2d7ff9;
+  font-weight: 600;
 }
 .business-app .nav-count {
   color: #78aaf5;
