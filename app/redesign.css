@@ -774,6 +774,11 @@ body:has(.business-app) {
   gap: 6px;
   align-items: center;
 }
+/* Business pages use the shell as the full workspace; a footer inside the
+   scrolling column can cut across long feeds and composer forms. */
+.business-app .workspace-footer {
+  display: none;
+}
 .invoice-table-section {
   padding: 0;
 }
@@ -4454,11 +4459,11 @@ body:has(.business-app) {
   white-space: nowrap;
 }
 .message-thread-head strong {
-  font-size: 12px;
+  font-size: 14px;
 }
 .message-thread-head small {
   color: #8092a9;
-  font-size: 9px;
+  font-size: 11px;
 }
 .thread-back {
   display: none;
@@ -4558,8 +4563,8 @@ body:has(.business-app) {
 }
 .message-bubble p {
   margin: 0;
-  font-size: 11px;
-  line-height: 1.55;
+  font-size: 14px;
+  line-height: 1.5;
   white-space: pre-wrap;
 }
 .message-bubble footer {
@@ -4574,7 +4579,7 @@ body:has(.business-app) {
 .message-delivery {
   color: #8fa3bd;
   font-family: Consolas, monospace;
-  font-size: 7px;
+  font-size: 9px;
 }
 .outgoing .message-bubble time,
 .outgoing .message-delivery {
@@ -4692,8 +4697,8 @@ body:has(.business-app) {
   outline: 0;
   background: transparent;
   font: inherit;
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.45;
 }
 .message-composer > small {
   display: block;
@@ -4969,7 +4974,7 @@ body:has(.business-app) {
     display: none;
   }
   .message-bubble p {
-    font-size: 10px;
+    font-size: 13px;
   }
   .message-delivery {
     font-size: 0;
