@@ -1867,25 +1867,28 @@ body:has(.business-app) {
 
 /* 2. Nova Banking / defaultTheme (Light Modern Banking) */
 .business-app[data-theme="defaultTheme"] {
-  --canvas: #f8f9fa;
-  --surface: #ffffff;
-  --surface-subtle: #f1f4f6;
-  --surface-hover: #f1f5f9;
-  --surface-active: #e2e8f0;
-  --surface-popover: #ffffff;
-  --ink: #0f172a;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --border-subtle: #cbd5e1;
-  --border-popover: #cbd5e1;
-  --app-accent: #1e60d5;
-  --sidebar-bg: #ffffff;
-  --sidebar-border: #e2e8f0;
-  --topbar-bg: #fffffffa;
-  --topbar-border: #e2e8f0;
-  --card-bg: #ffffff;
-  --card-border: #e2e8f0;
-  --dot-grid-color: rgba(0, 0, 0, 0.04);
+  --canvas: #f3f6fb;
+  --surface: #fbfcfe;
+  --surface-subtle: #eaf0f8;
+  --surface-hover: #e2ebf7;
+  --surface-active: #d8e6f8;
+  --surface-popover: #fbfcfe;
+  --ink: #13233a;
+  --muted: #5e718b;
+  --border: #d7e1ee;
+  --border-subtle: #c2d0e0;
+  --border-popover: #b4c5d9;
+  --accent: #1463c9;
+  --accent-hover: #0f4f9f;
+  --accent-soft: #e1edfc;
+  --app-accent: #1463c9;
+  --sidebar-bg: #f8faff;
+  --sidebar-border: #d7e1ee;
+  --topbar-bg: #fbfcfef2;
+  --topbar-border: #d7e1ee;
+  --card-bg: #fbfcfe;
+  --card-border: #d7e1ee;
+  --dot-grid-color: rgba(20, 99, 201, 0.045);
   color: var(--ink);
   background: var(--canvas);
 }
@@ -1917,25 +1920,28 @@ body:has(.business-app) {
 
 /* 4. Vietnam Future (Warm Ivory & Gold Light) */
 .business-app[data-theme="vietnamFuture"] {
-  --canvas: #faf7f2;
-  --surface: #ffffff;
-  --surface-subtle: #fbf4e4;
-  --surface-hover: #f5ede0;
-  --surface-active: #ebe0cc;
-  --surface-popover: #ffffff;
-  --ink: #1c1917;
-  --muted: #78716c;
-  --border: #ebe2cf;
-  --border-subtle: #dfd4be;
-  --border-popover: #d5c8ad;
-  --app-accent: #a16b0a;
+  --canvas: #f4f0e8;
+  --surface: #fcfaf5;
+  --surface-subtle: #eee5d3;
+  --surface-hover: #e8dcc6;
+  --surface-active: #e0cfb3;
+  --surface-popover: #fcfaf5;
+  --ink: #252018;
+  --muted: #6d6253;
+  --border: #ddd0bb;
+  --border-subtle: #cbb99e;
+  --border-popover: #bca789;
+  --accent: #96610a;
+  --accent-hover: #754905;
+  --accent-soft: #f4e7c9;
+  --app-accent: #96610a;
   --sidebar-bg: #f7f3eb;
-  --sidebar-border: #ebe2cf;
-  --topbar-bg: #faf7f2fa;
-  --topbar-border: #ebe2cf;
-  --card-bg: #ffffff;
-  --card-border: #ebe2cf;
-  --dot-grid-color: rgba(161, 107, 10, 0.05);
+  --sidebar-border: #ddd0bb;
+  --topbar-bg: #fcfaf5f2;
+  --topbar-border: #ddd0bb;
+  --card-bg: #fcfaf5;
+  --card-border: #ddd0bb;
+  --dot-grid-color: rgba(150, 97, 10, 0.042);
   color: var(--ink);
   background: var(--canvas);
 }
@@ -8163,6 +8169,278 @@ body:has(.business-app) {
   font-size: 12px;
   color: var(--muted);
   margin-top: 4px;
+}
+
+/* Light-theme reconciliation: every business surface inherits the same calm
+   banking palette instead of falling back to legacy dark command-center rules. */
+.business-app[data-theme="defaultTheme"],
+.business-app[data-theme="vietnamFuture"] {
+  color-scheme: light;
+}
+
+.business-app[data-theme="defaultTheme"] .dashboard-tech,
+.business-app[data-theme="vietnamFuture"] .dashboard-tech,
+.business-app[data-theme="defaultTheme"] .jobs-view,
+.business-app[data-theme="vietnamFuture"] .jobs-view,
+.business-app[data-theme="defaultTheme"] .job-detail-page-container,
+.business-app[data-theme="vietnamFuture"] .job-detail-page-container,
+.business-app[data-theme="defaultTheme"] .invoice-form-main,
+.business-app[data-theme="vietnamFuture"] .invoice-form-main,
+.business-app[data-theme="defaultTheme"] .candidate-workspace,
+.business-app[data-theme="vietnamFuture"] .candidate-workspace {
+  color: var(--ink);
+}
+
+.business-app[data-theme="defaultTheme"] .dashboard-tech .data-table th,
+.business-app[data-theme="vietnamFuture"] .dashboard-tech .data-table th,
+.business-app[data-theme="defaultTheme"] .data-table th,
+.business-app[data-theme="vietnamFuture"] .data-table th,
+.business-app[data-theme="defaultTheme"] .table-person,
+.business-app[data-theme="vietnamFuture"] .table-person,
+.business-app[data-theme="defaultTheme"] .table-pagination,
+.business-app[data-theme="vietnamFuture"] .table-pagination,
+.business-app[data-theme="defaultTheme"] .field > span,
+.business-app[data-theme="vietnamFuture"] .field > span,
+.business-app[data-theme="defaultTheme"] .field small,
+.business-app[data-theme="vietnamFuture"] .field small {
+  color: var(--muted);
+}
+
+.business-app[data-theme="defaultTheme"] .dashboard-tech .data-table td,
+.business-app[data-theme="vietnamFuture"] .dashboard-tech .data-table td,
+.business-app[data-theme="defaultTheme"] .invoice-link,
+.business-app[data-theme="vietnamFuture"] .invoice-link,
+.business-app[data-theme="defaultTheme"] .empty-state h3,
+.business-app[data-theme="vietnamFuture"] .empty-state h3,
+.business-app[data-theme="defaultTheme"] .job-detail-title-group h1,
+.business-app[data-theme="vietnamFuture"] .job-detail-title-group h1,
+.business-app[data-theme="defaultTheme"] .metric-box strong,
+.business-app[data-theme="vietnamFuture"] .metric-box strong,
+.business-app[data-theme="defaultTheme"] .job-detail-section h2,
+.business-app[data-theme="vietnamFuture"] .job-detail-section h2,
+.business-app[data-theme="defaultTheme"] .job-detail-summary,
+.business-app[data-theme="vietnamFuture"] .job-detail-summary {
+  color: var(--ink);
+}
+
+.business-app[data-theme="defaultTheme"] .dashboard-tech .data-table th,
+.business-app[data-theme="vietnamFuture"] .dashboard-tech .data-table th,
+.business-app[data-theme="defaultTheme"] .dashboard-tech .data-table td,
+.business-app[data-theme="vietnamFuture"] .dashboard-tech .data-table td,
+.business-app[data-theme="defaultTheme"] .invoice-table-section,
+.business-app[data-theme="vietnamFuture"] .invoice-table-section,
+.business-app[data-theme="defaultTheme"] .table-toolbar,
+.business-app[data-theme="vietnamFuture"] .table-toolbar,
+.business-app[data-theme="defaultTheme"] .table-pagination .icon-button,
+.business-app[data-theme="vietnamFuture"] .table-pagination .icon-button {
+  border-color: var(--border);
+}
+
+.business-app[data-theme="defaultTheme"] .dashboard-tech .data-table tbody tr:hover,
+.business-app[data-theme="vietnamFuture"] .dashboard-tech .data-table tbody tr:hover {
+  background: var(--surface-subtle);
+}
+
+.business-app[data-theme="defaultTheme"] .file-icon,
+.business-app[data-theme="vietnamFuture"] .file-icon,
+.business-app[data-theme="defaultTheme"] .contractor-toolbar select,
+.business-app[data-theme="vietnamFuture"] .contractor-toolbar select,
+.business-app[data-theme="defaultTheme"] .job-detail-metrics-grid,
+.business-app[data-theme="vietnamFuture"] .job-detail-metrics-grid,
+.business-app[data-theme="defaultTheme"] .job-detail-card,
+.business-app[data-theme="vietnamFuture"] .job-detail-card,
+.business-app[data-theme="defaultTheme"] .job-detail-not-found-card,
+.business-app[data-theme="vietnamFuture"] .job-detail-not-found-card,
+.business-app[data-theme="defaultTheme"] .portfolio-preview-card,
+.business-app[data-theme="vietnamFuture"] .portfolio-preview-card,
+.business-app[data-theme="defaultTheme"] .candidate-contact-grid,
+.business-app[data-theme="vietnamFuture"] .candidate-contact-grid {
+  color: var(--ink);
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.business-app[data-theme="defaultTheme"] .contractor-card,
+.business-app[data-theme="vietnamFuture"] .contractor-card {
+  color: var(--ink);
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.business-app[data-theme="defaultTheme"] .contractor-card::before,
+.business-app[data-theme="vietnamFuture"] .contractor-card::before {
+  background: var(--app-accent);
+}
+
+.business-app[data-theme="defaultTheme"] .contractor-profile > i,
+.business-app[data-theme="vietnamFuture"] .contractor-profile > i,
+.business-app[data-theme="defaultTheme"] .job-detail-cover,
+.business-app[data-theme="vietnamFuture"] .job-detail-cover,
+.business-app[data-theme="defaultTheme"] .portfolio-card-thumb-wrapper,
+.business-app[data-theme="vietnamFuture"] .portfolio-card-thumb-wrapper {
+  color: var(--app-accent);
+  border-color: var(--border);
+  background: var(--surface-subtle);
+}
+
+.business-app[data-theme="defaultTheme"] .verification-list,
+.business-app[data-theme="vietnamFuture"] .verification-list,
+.business-app[data-theme="defaultTheme"] .job-detail-divider,
+.business-app[data-theme="vietnamFuture"] .job-detail-divider {
+  border-color: var(--border);
+  background-color: var(--border);
+}
+
+.business-app[data-theme="defaultTheme"] .invoice-summary,
+.business-app[data-theme="vietnamFuture"] .invoice-summary,
+.business-app[data-theme="defaultTheme"] .invoice-summary dl > div,
+.business-app[data-theme="vietnamFuture"] .invoice-summary dl > div {
+  color: var(--ink);
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.business-app[data-theme="defaultTheme"] .invoice-summary dt,
+.business-app[data-theme="vietnamFuture"] .invoice-summary dt,
+.business-app[data-theme="defaultTheme"] .invoice-summary .summary-assurance,
+.business-app[data-theme="vietnamFuture"] .invoice-summary .summary-assurance,
+.business-app[data-theme="defaultTheme"] .invoice-summary dd,
+.business-app[data-theme="vietnamFuture"] .invoice-summary dd {
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+.business-app[data-theme="defaultTheme"] .invoice-summary h2,
+.business-app[data-theme="vietnamFuture"] .invoice-summary h2 {
+  color: var(--ink);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-header,
+.business-app[data-theme="vietnamFuture"] .candidate-header,
+.business-app[data-theme="defaultTheme"] .candidate-profile,
+.business-app[data-theme="vietnamFuture"] .candidate-profile,
+.business-app[data-theme="defaultTheme"] .candidate-contact-grid span,
+.business-app[data-theme="vietnamFuture"] .candidate-contact-grid span,
+.business-app[data-theme="defaultTheme"] .candidate-match-row,
+.business-app[data-theme="vietnamFuture"] .candidate-match-row,
+.business-app[data-theme="defaultTheme"] .candidate-copy-block,
+.business-app[data-theme="vietnamFuture"] .candidate-copy-block {
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-identity strong,
+.business-app[data-theme="vietnamFuture"] .candidate-identity strong,
+.business-app[data-theme="defaultTheme"] .candidate-match-row strong,
+.business-app[data-theme="vietnamFuture"] .candidate-match-row strong,
+.business-app[data-theme="defaultTheme"] .portfolio-preview-title,
+.business-app[data-theme="vietnamFuture"] .portfolio-preview-title {
+  color: var(--ink);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-identity p,
+.business-app[data-theme="vietnamFuture"] .candidate-identity p,
+.business-app[data-theme="defaultTheme"] .candidate-identity small,
+.business-app[data-theme="vietnamFuture"] .candidate-identity small,
+.business-app[data-theme="defaultTheme"] .candidate-contact-grid span,
+.business-app[data-theme="vietnamFuture"] .candidate-contact-grid span,
+.business-app[data-theme="defaultTheme"] .candidate-copy-block p,
+.business-app[data-theme="vietnamFuture"] .candidate-copy-block p,
+.business-app[data-theme="defaultTheme"] .candidate-copy-block > small,
+.business-app[data-theme="vietnamFuture"] .candidate-copy-block > small,
+.business-app[data-theme="defaultTheme"] .candidate-copy-block > span > small,
+.business-app[data-theme="vietnamFuture"] .candidate-copy-block > span > small,
+.business-app[data-theme="defaultTheme"] .portfolio-preview-desc,
+.business-app[data-theme="vietnamFuture"] .portfolio-preview-desc {
+  color: var(--muted);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-match-row > i,
+.business-app[data-theme="vietnamFuture"] .candidate-match-row > i {
+  background: var(--surface-subtle);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-match-row > i span,
+.business-app[data-theme="vietnamFuture"] .candidate-match-row > i span,
+.business-app[data-theme="defaultTheme"] .candidate-message-button,
+.business-app[data-theme="vietnamFuture"] .candidate-message-button {
+  color: #ffffff;
+  border-color: var(--app-accent);
+  background: var(--app-accent);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-message-button:hover,
+.business-app[data-theme="vietnamFuture"] .candidate-message-button:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.business-app[data-theme="defaultTheme"] .application-status,
+.business-app[data-theme="vietnamFuture"] .application-status {
+  color: var(--ink);
+  border-color: var(--border);
+  background: var(--surface-subtle);
+}
+
+.business-app[data-theme="defaultTheme"] .application-filter-banner,
+.business-app[data-theme="vietnamFuture"] .application-filter-banner {
+  color: var(--ink);
+  border-color: var(--border);
+  background: var(--accent-soft);
+}
+
+.business-app[data-theme="defaultTheme"] .application-filter-banner strong,
+.business-app[data-theme="vietnamFuture"] .application-filter-banner strong,
+.business-app[data-theme="defaultTheme"] .clear-filter-button,
+.business-app[data-theme="vietnamFuture"] .clear-filter-button {
+  color: #ffffff;
+  border-color: var(--app-accent);
+  background: var(--app-accent);
+}
+
+.business-app[data-theme="defaultTheme"] .message-bubble blockquote,
+.business-app[data-theme="vietnamFuture"] .message-bubble blockquote,
+.business-app[data-theme="defaultTheme"] .composer-reply,
+.business-app[data-theme="vietnamFuture"] .composer-reply {
+  color: var(--muted);
+  border-color: var(--app-accent);
+  background: var(--surface-subtle);
+}
+
+.business-app[data-theme="defaultTheme"] .message-bubble blockquote strong,
+.business-app[data-theme="vietnamFuture"] .message-bubble blockquote strong,
+.business-app[data-theme="defaultTheme"] .composer-reply strong,
+.business-app[data-theme="vietnamFuture"] .composer-reply strong {
+  color: var(--ink);
+}
+
+.business-app[data-theme="defaultTheme"] .composer-reply small,
+.business-app[data-theme="vietnamFuture"] .composer-reply small,
+.business-app[data-theme="defaultTheme"] .message-reply-button,
+.business-app[data-theme="vietnamFuture"] .message-reply-button {
+  color: var(--muted);
+  background: var(--surface-subtle);
+}
+
+.business-app[data-theme="defaultTheme"] .typing-indicator,
+.business-app[data-theme="vietnamFuture"] .typing-indicator,
+.business-app[data-theme="defaultTheme"] .application-chat,
+.business-app[data-theme="vietnamFuture"] .application-chat,
+.business-app[data-theme="defaultTheme"] .application-chat > header,
+.business-app[data-theme="vietnamFuture"] .application-chat > header {
+  color: var(--ink);
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.business-app[data-theme="defaultTheme"] .post-avatar-wrap.business,
+.business-app[data-theme="vietnamFuture"] .post-avatar-wrap.business,
+.business-app[data-theme="defaultTheme"] .composer-avatar.business,
+.business-app[data-theme="vietnamFuture"] .composer-avatar.business,
+.business-app[data-theme="defaultTheme"] .profile-detail-avatar.business,
+.business-app[data-theme="vietnamFuture"] .profile-detail-avatar.business {
+  color: var(--app-accent);
+  background: var(--accent-soft);
 }
 
 @media (prefers-reduced-motion: reduce) {
