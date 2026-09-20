@@ -9,3 +9,4 @@ npm-debug.log*
 tsconfig.tsbuildinfo
 tsconfig.tsbuildinfo
 .env*
+backend/target/

@@ -1,0 +1,18 @@
+server:
+  port: ${PORT:8080}
+  address: ${SERVER_ADDRESS:0.0.0.0}
+
+spring:
+  application:
+    name: nova-backend
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/nova}
+    username: ${DATABASE_USER:nova}
+    password: ${DATABASE_PASSWORD:nova_dev_only}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+nova:
+  network: ${SOLANA_NETWORK:devnet}
+  usdc-mint: ${SOLANA_USDC_MINT:}
