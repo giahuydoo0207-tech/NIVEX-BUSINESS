@@ -22,6 +22,13 @@ import {
 } from "lucide-react";
 import { NivexLogo } from "@/components/ui/NivexLogo";
 import { PortalDialog } from "@/components/ui/PortalDialog";
+import {
+  DEFAULT_BUSINESS_THEME_ID,
+  getInitialThemeId,
+  setStoredThemeId,
+  type BusinessThemeId,
+} from "@/types/theme";
+import { WorkspaceMenu } from "./WorkspaceMenu";
 
 const navigation = [
   {
@@ -88,10 +95,25 @@ export function BusinessShell({
   hideTopbar?: boolean;
 }) {
   const [menu, setMenu] = useState(false);
+  const [themeId, setThemeId] = useState<BusinessThemeId>(DEFAULT_BUSINESS_THEME_ID);
+  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
   const [dialog, setDialog] = useState<
     "wallet" | "help" | "notifications" | null
   >(null);
+
+  const handleSelectTheme = (newThemeId: BusinessThemeId) => {
+    setThemeId(newThemeId);
+    setStoredThemeId(newThemeId);
+  };
+
+  useEffect(() => {
+    const stored = getInitialThemeId();
+    if (stored && stored !== DEFAULT_BUSINESS_THEME_ID) {
+      setThemeId(stored);
+    }
+  }, []);
+
   useEffect(() => {
     const sidebar = sidebarRef.current;
     if (!sidebar) return;
@@ -113,7 +135,7 @@ export function BusinessShell({
     return () => sidebar.removeEventListener("scroll", rememberScroll);
   }, []);
   return (
-    <div className={`business-app business-app-${active}`}>
+    <div className={`business-app business-app-${active}`} data-theme={themeId}>
       <aside
         ref={sidebarRef}
         className={menu ? "business-sidebar sidebar-open" : "business-sidebar"}
@@ -122,15 +144,33 @@ export function BusinessShell({
           <NivexLogo size={32} variant="plain" />
           <span>Business</span>
         </Link>
-        <div className="organization-switcher">
-          <span className="organization-icon">
-            <Building2 size={19} />
-          </span>
-          <span>
-            <strong>Nova Labs</strong>
-            <small>Không gian thử nghiệm</small>
-          </span>
-          <ChevronDown size={15} />
+        <div className="organization-switcher-wrap">
+          <button
+            type="button"
+            className={`organization-switcher ${workspaceMenuOpen ? "open" : ""}`}
+            onClick={() => setWorkspaceMenuOpen((prev) => !prev)}
+            aria-expanded={workspaceMenuOpen}
+            aria-haspopup="dialog"
+            aria-label="Cài đặt không gian làm việc và giao diện"
+          >
+            <span className="organization-icon">
+              <Building2 size={19} />
+            </span>
+            <span>
+              <strong>Nova Labs</strong>
+              <small>Không gian thử nghiệm</small>
+            </span>
+            <ChevronDown
+              size={15}
+              className={`switcher-chevron ${workspaceMenuOpen ? "rotate" : ""}`}
+            />
+          </button>
+          <WorkspaceMenu
+            isOpen={workspaceMenuOpen}
+            currentThemeId={themeId}
+            onSelectTheme={handleSelectTheme}
+            onClose={() => setWorkspaceMenuOpen(false)}
+          />
         </div>
         <span className="nav-label">KHÔNG GIAN LÀM VIỆC</span>
         <nav

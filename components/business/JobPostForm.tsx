@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -137,6 +138,12 @@ export function JobPostForm() {
   return (
     <div className="job-post-form">
       <section className="job-form-main">
+        <div className="form-back-nav">
+          <Link href="/business/jobs" className="form-back-link">
+            <ArrowLeft size={16} />
+            <span>Quay lại danh sách cơ hội</span>
+          </Link>
+        </div>
         <div className="section-heading">
           <BriefcaseBusiness size={20} />
           <div>

@@ -8,14 +8,18 @@ import {
   determineGalleryLayout,
   getTopReactions,
 } from "@/lib/community-utils";
+import Link from "next/link";
 import {
+  ArrowUpRight,
   Bookmark,
+  BriefcaseBusiness,
   Building2,
   CheckCircle2,
   Copy,
   EyeOff,
   Globe2,
   MessageCircle,
+  MessagesSquare,
   MoreHorizontal,
   Pin,
   PinOff,
@@ -23,6 +27,7 @@ import {
   Send,
   ThumbsUp,
   User,
+  UserCheck,
 } from "lucide-react";
 import { ReactionPicker } from "./ReactionPicker";
 import { FullscreenImageViewer } from "./FullscreenImageViewer";
@@ -330,6 +335,57 @@ export function PostCard({
               #{t}
             </span>
           ))}
+        </div>
+      )}
+
+      {/* Flow Integration: Linked Context Cards */}
+      {Boolean(
+        post.topics?.some((t) =>
+          ["TuyểnDụng", "CơHội", "tuyendung", "cohoi", "vieclam", "Job"].includes(t)
+        ) ||
+        (post.author?.kind === "business" && post.author?.openings && post.author.openings.length > 0)
+      ) && (
+        <div className="post-context-card job-context-card">
+          <div className="post-context-header">
+            <BriefcaseBusiness size={15} />
+            <span>Cơ hội việc làm liên kết</span>
+          </div>
+          <div className="post-context-body">
+            <h4>Flutter Developer · Remote</h4>
+            <p>Nova Labs đang mở tuyển ứng viên phù hợp với ngân sách 1,500 - 2,500 USDC.</p>
+          </div>
+          <div className="post-context-actions">
+            <Link href="/business/jobs" className="post-context-btn primary">
+              <span>Xem danh sách cơ hội</span>
+              <ArrowUpRight size={13} />
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {post.author?.kind === "freelancer" && (
+        <div className="post-context-card freelancer-context-card">
+          <div className="post-context-header">
+            <UserCheck size={15} />
+            <span>Chuyên gia mở nhận dự án</span>
+          </div>
+          <div className="post-context-body">
+            <h4>{post.author.displayName} · {post.author.headline}</h4>
+            <p>{post.author.bio}</p>
+          </div>
+          <div className="post-context-actions">
+            <Link
+              href={`/business/messages?candidate=${post.author.handle}`}
+              className="post-context-btn primary"
+            >
+              <MessagesSquare size={13} />
+              <span>Nhắn tin trao đổi</span>
+            </Link>
+            <Link href="/business/applications" className="post-context-btn secondary">
+              <span>Xem danh sách ứng viên</span>
+              <ArrowUpRight size={13} />
+            </Link>
+          </div>
         </div>
       )}
 

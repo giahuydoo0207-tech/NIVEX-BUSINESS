@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, CalendarDays, FileText, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays, FileText, ShieldCheck } from "lucide-react";
 import { demoContractors, demoOrganization } from "@/lib/business-demo-data";
 import { formatUsdc, parseUsdcToMinor } from "@/lib/money";
 import type { Invoice } from "@/types/invoice";
@@ -62,6 +63,12 @@ export function InvoiceAmountForm({
   return (
     <form className="invoice-form" onSubmit={submit}>
       <section className="invoice-form-main">
+        <div className="form-back-nav">
+          <Link href="/business/invoices" className="form-back-link">
+            <ArrowLeft size={16} />
+            <span>Quay lại danh sách hóa đơn</span>
+          </Link>
+        </div>
         <div className="section-heading">
           <FileText size={20} />
           <div>

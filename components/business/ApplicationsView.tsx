@@ -304,7 +304,16 @@ export function ApplicationsView({
                   {selected.initials}
                 </span>
                 <span>
-                  <small>ỨNG TUYỂN · {selected.jobTitle}</small>
+                  <small>
+                    ỨNG TUYỂN ·{" "}
+                    <Link
+                      href={`/business/jobs/${selected.jobId}`}
+                      className="candidate-job-link"
+                      title="Xem chi tiết cơ hội việc làm"
+                    >
+                      {selected.jobTitle}
+                    </Link>
+                  </small>
                   <strong>{selected.candidateName}</strong>
                   <p>{selected.headline}</p>
                 </span>
