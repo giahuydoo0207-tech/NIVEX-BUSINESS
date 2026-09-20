@@ -418,9 +418,14 @@ body:has(.business-app) {
   margin: auto;
   flex: 1;
 }
+.business-app:not(.business-app-messages) .business-content::after {
+  content: "";
+  display: block;
+  height: 56px;
+}
 .business-app-jobs .business-content,
 .business-app-invoices .business-content {
-  padding-bottom: 96px;
+  padding-bottom: 112px;
 }
 .page-heading-row {
   display: flex;
@@ -2521,6 +2526,14 @@ body:has(.business-app) {
 }
 .business-app .invoice-form-main {
   color: #dce5f0;
+  padding-bottom: 48px;
+}
+.business-app .invoice-form-main .form-grid {
+  row-gap: 24px;
+}
+.invoice-form-main .invoice-amount-field,
+.invoice-form-main .invoice-due-date-field {
+  grid-column: auto;
 }
 .business-app .section-heading > svg {
   color: #72a7f8;
@@ -2828,13 +2841,16 @@ body:has(.business-app) {
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 26px;
+  padding: 26px 26px 56px;
   color: #dce5f0;
   border: 1px solid #2c394d;
   background: #07111fe8;
 }
 .job-form-main .section-heading > svg {
   color: #78aaf5;
+}
+.job-form-main .form-grid {
+  row-gap: 24px;
 }
 .job-form-divider {
   height: 1px;

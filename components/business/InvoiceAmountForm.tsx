@@ -96,7 +96,7 @@ export function InvoiceAmountForm({
               placeholder="Ví dụ: Phát triển ứng dụng Flutter tháng 09/2026"
             />
           </label>
-          <label className="field full">
+          <label className="field invoice-amount-field">
             <span>Số tiền</span>
             <div className="amount-field">
               <input
@@ -116,7 +116,7 @@ export function InvoiceAmountForm({
               Nhập số bất kỳ lớn hơn 0, tối đa 6 chữ số thập phân.
             </small>
           </label>
-          <label className="field full">
+          <label className="field invoice-due-date-field">
             <span>Hạn thanh toán</span>
             <div className="field-with-icon">
               <CalendarDays size={18} />
