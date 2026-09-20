@@ -38,10 +38,10 @@ export const BUSINESS_THEMES: Record<BusinessThemeId, BusinessThemeMeta> = {
     description: "Giao diện ngân hàng tinh giản hiện đại",
     mode: "light",
     swatch: {
-      background: "#F3F6FB",
-      surface: "#FBFCFE",
-      primary: "#1463C9",
-      border: "#D7E1EE",
+      background: "#F1F4F9",
+      surface: "#FFFFFF",
+      primary: "#1D4ED8",
+      border: "#CBD5E1",
     },
   },
   blockchainFlow: {
@@ -62,10 +62,10 @@ export const BUSINESS_THEMES: Record<BusinessThemeId, BusinessThemeMeta> = {
     description: "Bản sắc Việt Nam, tông sáng & vàng hoàng kim",
     mode: "light",
     swatch: {
-      background: "#F4F0E8",
-      surface: "#FCFAF5",
-      primary: "#96610A",
-      border: "#DDD0BB",
+      background: "#F7F4EE",
+      surface: "#FFFFFF",
+      primary: "#9A5B0D",
+      border: "#DCD3C1",
     },
   },
 };
