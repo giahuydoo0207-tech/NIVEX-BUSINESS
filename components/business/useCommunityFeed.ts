@@ -7,6 +7,7 @@ import {
   addCommentToPost,
   addReplyToPost,
   hidePost as hidePostUtil,
+  normalizeCommunityPost,
   restorePost as restorePostUtil,
   toggleCommentLikeInPost,
   togglePostPin as togglePinUtil,
@@ -18,56 +19,6 @@ const COMMUNITY_POSTS_STORAGE_KEY = "nivex.demo.community_posts";
 const COMMUNITY_UPDATE_EVENT = "nova:community-updated";
 const FOLLOWED_AUTHORS_STORAGE_KEY = "nivex.demo.community_followed_authors";
 const FOLLOWED_UPDATE_EVENT = "nova:community-followed-updated";
-
-function normalizePost(item: unknown): CommunityPost | null {
-  if (!item || typeof item !== "object") return null;
-  const raw = item as Record<string, unknown>;
-  if (typeof raw.id !== "string" || !raw.id) return null;
-
-  const validReactions: PostReactionType[] = [
-    "like",
-    "love",
-    "trust",
-    "build",
-    "insightful",
-    "deal",
-    "launch",
-  ];
-
-  return {
-    id: raw.id,
-    content: typeof raw.content === "string" ? raw.content : "",
-    images: Array.isArray(raw.images)
-      ? raw.images.filter((img): img is string => typeof img === "string")
-      : [],
-    timeLabel: typeof raw.timeLabel === "string" ? raw.timeLabel : "Vừa xong",
-    createdAt:
-      typeof raw.createdAt === "string" ? raw.createdAt : new Date().toISOString(),
-    isMine: Boolean(raw.isMine),
-    isPinned: Boolean(raw.isPinned),
-    isSaved: Boolean(raw.isSaved),
-    isHidden: Boolean(raw.isHidden),
-    reactionCount:
-      typeof raw.reactionCount === "number" && raw.reactionCount >= 0
-        ? raw.reactionCount
-        : 0,
-    myReaction:
-      typeof raw.myReaction === "string" &&
-      validReactions.includes(raw.myReaction as PostReactionType)
-        ? (raw.myReaction as PostReactionType)
-        : null,
-    comments: Array.isArray(raw.comments) ? (raw.comments as PostComment[]) : [],
-    topics: Array.isArray(raw.topics)
-      ? raw.topics.filter((t): t is string => typeof t === "string")
-      : [],
-    author:
-      raw.author && typeof raw.author === "object"
-        ? (raw.author as PublicProfileData)
-        : undefined,
-    isFollowingAuthor: Boolean(raw.isFollowingAuthor),
-    repostCount: typeof raw.repostCount === "number" ? raw.repostCount : 0,
-  };
-}
 
 function loadStoredPosts(): CommunityPost[] {
   if (typeof window === "undefined") return INITIAL_DEMO_POSTS;
@@ -85,7 +36,7 @@ function loadStoredPosts(): CommunityPost[] {
       return INITIAL_DEMO_POSTS;
     }
     const sanitized = parsed
-      .map(normalizePost)
+      .map(normalizeCommunityPost)
       .filter((p): p is CommunityPost => p !== null);
     return sanitized.length > 0 ? sanitized : INITIAL_DEMO_POSTS;
   } catch (err) {

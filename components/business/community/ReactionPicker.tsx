@@ -19,7 +19,6 @@ export function ReactionPicker({ onSelect, onClose }: ReactionPickerProps) {
       aria-label="Chọn phản ứng"
       onMouseLeave={() => {
         setHoveredKey(null);
-        onClose?.();
       }}
     >
       {REACTION_LIST.map((r) => {

@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   determineGalleryLayout,
+  getTopReactions,
+  normalizeCommunityPost,
   togglePostReaction,
   addCommentToPost,
   addReplyToPost,
@@ -225,4 +227,138 @@ test("restored post returns to exact chronological order based on createdAt", ()
   // Must be in middle position (new -> middle -> old), NOT jumped to top!
   assert.deepEqual(activeFeedAfter.map((p) => p.id), ["post-new", "post-middle", "post-old"]);
 });
+
+test("getTopReactions returns up to 2 top reactions sorted descending and ignores zero/negative counts", () => {
+  const postWithCounts: CommunityPost = {
+    ...mockPost,
+    reactionCount: 40,
+    reactionCounts: {
+      like: 10,
+      love: 25,
+      trust: 5,
+      deal: 0,
+    },
+  };
+  const top2 = getTopReactions(postWithCounts);
+  assert.deepEqual(top2, ["love", "like"]);
+
+  // Single reaction
+  const singlePost: CommunityPost = {
+    ...mockPost,
+    reactionCount: 3,
+    reactionCounts: {
+      insightful: 3,
+    },
+  };
+  assert.deepEqual(getTopReactions(singlePost), ["insightful"]);
+
+  // Fallback when reactionCounts is empty
+  const emptyCountsPost: CommunityPost = {
+    ...mockPost,
+    reactionCount: 4,
+    reactionCounts: {},
+    myReaction: "deal",
+  };
+  assert.deepEqual(getTopReactions(emptyCountsPost), ["deal"]);
+
+  const zeroReactionPost: CommunityPost = {
+    ...mockPost,
+    reactionCount: 0,
+    reactionCounts: {},
+    myReaction: null,
+  };
+  assert.deepEqual(getTopReactions(zeroReactionPost), []);
+});
+
+test("togglePostReaction maintains invariant reactionCount === sum(reactionCounts) across all 4 transitions", () => {
+  // Case 1: unreacted -> like
+  const post0: CommunityPost = {
+    ...mockPost,
+    reactionCount: 0,
+    myReaction: null,
+    reactionCounts: {},
+  };
+  const post1 = togglePostReaction(post0, "like");
+  assert.equal(post1.myReaction, "like");
+  assert.equal(post1.reactionCount, 1);
+  assert.equal(post1.reactionCounts?.like, 1);
+  const sum1 = Object.values(post1.reactionCounts || {}).reduce((a, b) => a + (b || 0), 0);
+  assert.equal(sum1, post1.reactionCount);
+
+  // Case 2: like -> love (switch)
+  const post2 = togglePostReaction(post1, "love");
+  assert.equal(post2.myReaction, "love");
+  assert.equal(post2.reactionCount, 1); // Total count unchanged!
+  assert.equal(post2.reactionCounts?.like ?? 0, 0); // Decremented old
+  assert.equal(post2.reactionCounts?.love, 1); // Incremented new
+  const sum2 = Object.values(post2.reactionCounts || {}).reduce((a, b) => a + (b || 0), 0);
+  assert.equal(sum2, post2.reactionCount);
+
+  // Case 3: love -> unreact (unlike)
+  const post3 = togglePostReaction(post2, "love");
+  assert.equal(post3.myReaction, null);
+  assert.equal(post3.reactionCount, 0);
+  assert.equal(post3.reactionCounts?.love ?? 0, 0);
+  const sum3 = Object.values(post3.reactionCounts || {}).reduce((a, b) => a + (b || 0), 0);
+  assert.equal(sum3, 0);
+  assert.equal(sum3, post3.reactionCount);
+
+  // Case 4: legacy post without reactionCounts
+  const legacyPost: CommunityPost = {
+    ...mockPost,
+    reactionCount: 15,
+    myReaction: null,
+    reactionCounts: undefined,
+  };
+  const postFromLegacy = togglePostReaction(legacyPost, "trust");
+  assert.equal(postFromLegacy.myReaction, "trust");
+  assert.equal(postFromLegacy.reactionCount, 16);
+  assert.equal(postFromLegacy.reactionCounts?.trust, 1);
+  assert.equal(postFromLegacy.reactionCounts?.like, 15);
+  const sumLegacy = Object.values(postFromLegacy.reactionCounts || {}).reduce((a, b) => a + (b || 0), 0);
+  assert.equal(sumLegacy, postFromLegacy.reactionCount);
+});
+
+test("normalizeCommunityPost safely migrates legacy localStorage data and enforces invariants", () => {
+  // Legacy item with no reactionCounts, no myReaction
+  const legacyItem1 = {
+    id: "legacy-1",
+    content: "Demo post",
+    reactionCount: 8,
+  };
+  const normalized1 = normalizeCommunityPost(legacyItem1);
+  assert.ok(normalized1);
+  assert.equal(normalized1.reactionCount, 8);
+  assert.deepEqual(normalized1.reactionCounts, { like: 8 });
+
+  // Legacy item with myReaction
+  const legacyItem2 = {
+    id: "legacy-2",
+    content: "Demo post 2",
+    reactionCount: 12,
+    myReaction: "deal",
+  };
+  const normalized2 = normalizeCommunityPost(legacyItem2);
+  assert.ok(normalized2);
+  assert.equal(normalized2.reactionCount, 12);
+  assert.deepEqual(normalized2.reactionCounts, { deal: 12 });
+
+  // Raw item with negative/invalid reaction counts
+  const rawWithInvalidCounts = {
+    id: "raw-invalid",
+    content: "Bad counts",
+    reactionCount: 100,
+    reactionCounts: {
+      like: 10,
+      love: -5,
+      invalidKey: 99,
+      trust: "notANumber",
+    },
+  };
+  const normalized3 = normalizeCommunityPost(rawWithInvalidCounts);
+  assert.ok(normalized3);
+  assert.deepEqual(normalized3.reactionCounts, { like: 10 });
+  assert.equal(normalized3.reactionCount, 10); // Calibrated to valid sum
+});
+
 

@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CommunityPost, PostReactionType } from "@/types/community";
 import { POST_REACTIONS } from "@/lib/community-constants";
 import {
   calculateTotalComments,
   determineGalleryLayout,
+  getTopReactions,
 } from "@/lib/community-utils";
 import {
   Bookmark,
@@ -53,7 +54,96 @@ export function PostCard({
   const [showPicker, setShowPicker] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPressTriggered = useRef<boolean>(false);
+
+  // Close picker on scroll or unmount
+  useEffect(() => {
+    const handleScroll = () => {
+      if (showPicker) {
+        setShowPicker(false);
+        if (closeTimeoutRef.current) {
+          clearTimeout(closeTimeoutRef.current);
+          closeTimeoutRef.current = null;
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+        closeTimeoutRef.current = null;
+      }
+      if (longPressRef.current) {
+        clearTimeout(longPressRef.current);
+        longPressRef.current = null;
+      }
+    };
+  }, [showPicker]);
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    // Only for desktop mouse
+    if ((e.nativeEvent as PointerEvent).pointerType === "touch") return;
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setShowPicker(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
+    closeTimeoutRef.current = setTimeout(() => {
+      setShowPicker(false);
+      closeTimeoutRef.current = null;
+    }, 200);
+  };
+
+  const handleSelectReaction = (r: PostReactionType) => {
+    onReact(post.id, r);
+    setShowPicker(false);
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  };
+
+  const handleClickLike = () => {
+    if (isLongPressTriggered.current) {
+      isLongPressTriggered.current = false;
+      return;
+    }
+    if (post.myReaction) {
+      onReact(post.id, post.myReaction);
+    } else {
+      onReact(post.id, "like");
+    }
+  };
+
+  const handleTouchStart = () => {
+    longPressRef.current = setTimeout(() => {
+      setShowPicker(true);
+      isLongPressTriggered.current = true;
+    }, 300);
+  };
+
+  const handleTouchMove = () => {
+    if (longPressRef.current) {
+      clearTimeout(longPressRef.current);
+      longPressRef.current = null;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressRef.current) {
+      clearTimeout(longPressRef.current);
+      longPressRef.current = null;
+    }
+  };
 
   const authorName =
     post.author?.displayName || (post.isMine ? "Nova Labs" : "Người dùng");
@@ -71,18 +161,14 @@ export function PostCard({
   const reactionLabel = myReactionConfig ? myReactionConfig.label : "Thích";
   const reactionColor = myReactionConfig ? myReactionConfig.color : undefined;
 
-  // Overlapping badges stack
-  const badges: PostReactionType[] = [];
-  if (post.myReaction) {
-    badges.push(post.myReaction);
-  } else {
-    badges.push("like");
-  }
-  if (badges[0] !== "trust" && post.reactionCount > 1) {
-    badges.push("trust");
-  } else if (badges[0] !== "launch" && post.reactionCount > 1) {
-    badges.push("launch");
-  }
+  // Dynamic reaction badges from real counts (max 2)
+  const dynamicBadges = getTopReactions(post);
+  const badges: PostReactionType[] =
+    dynamicBadges.length > 0
+      ? dynamicBadges
+      : post.reactionCount > 0
+        ? [post.myReaction || "like"]
+        : [];
 
   const handleCopyLink = () => {
     try {
@@ -402,57 +488,33 @@ export function PostCard({
       </div>
 
       {/* Action Bar (4 buttons) */}
-      <div className="post-action-bar relative">
-        {/* Reaction Pill Hover/Active */}
-        {showPicker && (
-          <ReactionPicker
-            onSelect={(r) => {
-              onReact(post.id, r);
-              setShowPicker(false);
-            }}
-            onClose={() => setShowPicker(false)}
-          />
-        )}
-
-        <button
-          type="button"
-          className={`post-action-btn ${myReactionConfig ? "reacted" : ""}`}
-          style={{ color: reactionColor }}
-          onTouchStart={() => {
-            longPressRef.current = setTimeout(() => {
-              setShowPicker(true);
-              isLongPressTriggered.current = true;
-            }, 300);
-          }}
-          onTouchMove={() => {
-            if (longPressRef.current) {
-              clearTimeout(longPressRef.current);
-              longPressRef.current = null;
-            }
-          }}
-          onTouchEnd={() => {
-            if (longPressRef.current) {
-              clearTimeout(longPressRef.current);
-              longPressRef.current = null;
-            }
-          }}
-          onClick={() => {
-            if (isLongPressTriggered.current) {
-              isLongPressTriggered.current = false;
-              return;
-            }
-            if (post.myReaction) {
-              onReact(post.id, post.myReaction);
-            } else {
-              onReact(post.id, "like");
-            }
-          }}
-          onMouseEnter={() => setShowPicker(true)}
-          title="Bày tỏ cảm xúc"
+      <div className="post-action-bar">
+        <div
+          className="reaction-action-wrapper"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
-          <ReactionIcon size={18} />
-          <span>{reactionLabel}</span>
-        </button>
+          {showPicker && (
+            <ReactionPicker
+              onSelect={handleSelectReaction}
+              onClose={() => setShowPicker(false)}
+            />
+          )}
+
+          <button
+            type="button"
+            className={`post-action-btn ${myReactionConfig ? "reacted" : ""}`}
+            style={{ color: reactionColor }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onClick={handleClickLike}
+            title="Bày tỏ cảm xúc"
+          >
+            <ReactionIcon size={18} />
+            <span>{reactionLabel}</span>
+          </button>
+        </div>
 
         <button
           type="button"

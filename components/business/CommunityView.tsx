@@ -295,7 +295,7 @@ export function CommunityView() {
               type="file"
               accept="image/*"
               multiple
-              className="hidden"
+              className="composer-file-input"
               onChange={handleImageUpload}
             />
             <button

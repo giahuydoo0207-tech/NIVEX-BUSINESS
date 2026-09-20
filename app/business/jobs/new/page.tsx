@@ -3,7 +3,11 @@ import { JobPostForm } from "@/components/business/JobPostForm";
 
 export default function NewJobPage() {
   return (
-    <BusinessShell active="jobs">
+    <BusinessShell
+      active="jobs"
+      breadcrumbLabel="Đăng cơ hội"
+      activeAction="newJob"
+    >
       <div className="page-heading-row job-create-heading">
         <div>
           <p className="eyebrow">CƠ HỘI MỚI</p>

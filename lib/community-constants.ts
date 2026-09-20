@@ -196,6 +196,10 @@ export const INITIAL_DEMO_POSTS: CommunityPost[] = [
     isMine: true,
     reactionCount: 12,
     myReaction: null,
+    reactionCounts: {
+      like: 8,
+      love: 4,
+    },
     comments: [
       {
         id: "c-mine-1",
@@ -232,6 +236,11 @@ export const INITIAL_DEMO_POSTS: CommunityPost[] = [
     isMine: false,
     reactionCount: 83,
     myReaction: null,
+    reactionCounts: {
+      trust: 45,
+      insightful: 25,
+      like: 13,
+    },
     author: CURRENT_BUSINESS_PROFILE,
     isFollowingAuthor: false,
     comments: [
@@ -271,6 +280,10 @@ export const INITIAL_DEMO_POSTS: CommunityPost[] = [
     isMine: false,
     reactionCount: 41,
     myReaction: null,
+    reactionCounts: {
+      insightful: 26,
+      like: 15,
+    },
     author: EXAMPLE_PROFILES[1],
     isFollowingAuthor: true,
     comments: [
@@ -304,6 +317,10 @@ export const INITIAL_DEMO_POSTS: CommunityPost[] = [
     isMine: false,
     reactionCount: 56,
     myReaction: null,
+    reactionCounts: {
+      love: 32,
+      build: 24,
+    },
     author: EXAMPLE_PROFILES[2],
     isFollowingAuthor: false,
     comments: [],

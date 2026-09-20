@@ -8,7 +8,11 @@ export default async function NewInvoicePage({
 }) {
   const { contractor } = await searchParams;
   return (
-    <BusinessShell active="invoices">
+    <BusinessShell
+      active="invoices"
+      breadcrumbLabel="Tạo hóa đơn"
+      activeAction="newInvoice"
+    >
       <div className="page-heading-row">
         <div>
           <p className="eyebrow">HÓA ĐƠN MỚI</p>

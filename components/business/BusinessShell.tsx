@@ -70,6 +70,8 @@ const navigation = [
 export function BusinessShell({
   children,
   active,
+  breadcrumbLabel,
+  activeAction,
 }: {
   children: React.ReactNode;
   active:
@@ -80,6 +82,8 @@ export function BusinessShell({
     | "community"
     | "contractors"
     | "invoices";
+  breadcrumbLabel?: string;
+  activeAction?: "newJob" | "newInvoice";
 }) {
   const [menu, setMenu] = useState(false);
   const [dialog, setDialog] = useState<
@@ -126,11 +130,17 @@ export function BusinessShell({
           ))}
         </nav>
         <div className="sidebar-quick-actions">
-          <Link href="/business/jobs/new" className="sidebar-create">
+          <Link
+            href="/business/jobs/new"
+            className={`sidebar-create ${activeAction === "newJob" ? "active" : ""}`}
+          >
             <Plus size={17} />
             Đăng cơ hội
           </Link>
-          <Link href="/business/invoices/new" className="sidebar-create">
+          <Link
+            href="/business/invoices/new"
+            className={`sidebar-create ${activeAction === "newInvoice" ? "active" : ""}`}
+          >
             <FileText size={17} />
             Tạo hóa đơn
           </Link>
@@ -185,7 +195,8 @@ export function BusinessShell({
             <span>Không gian làm việc</span>
             <span>/</span>
             <strong>
-              {navigation.find((item) => item.key === active)?.label}
+              {breadcrumbLabel ??
+                navigation.find((item) => item.key === active)?.label}
             </strong>
           </div>
           <div className="topbar-actions">
