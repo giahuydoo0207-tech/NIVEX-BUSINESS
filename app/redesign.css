@@ -418,6 +418,10 @@ body:has(.business-app) {
   margin: auto;
   flex: 1;
 }
+.business-app-jobs .business-content,
+.business-app-invoices .business-content {
+  padding-bottom: 96px;
+}
 .page-heading-row {
   display: flex;
   flex-direction: row;

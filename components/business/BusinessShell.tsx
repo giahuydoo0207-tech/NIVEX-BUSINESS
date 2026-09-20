@@ -139,14 +139,15 @@ export function BusinessShell({
         >
           {navigation.map(({ key, href, label, icon: Icon }) => {
             const isNavActive = active === key;
-            const navClassName = isNavActive ? "active" : undefined;
+            const navClassName =
+              isNavActive && activeAction === undefined ? "active" : undefined;
             return (
               <Link
                 key={key}
                 href={href}
                 className={navClassName}
                 aria-current={
-                  isNavActive ? "page" : undefined
+                  isNavActive && activeAction === undefined ? "page" : undefined
                 }
               >
                 <Icon size={18} />
