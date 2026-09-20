@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -46,5 +47,49 @@ class JobControllerTest {
             .andExpect(jsonPath("$.title").value("Backend Integration Engineer"))
             .andExpect(jsonPath("$.status").value("DRAFT"))
             .andExpect(jsonPath("$.currency").value("USDC"));
+    }
+
+    @Test
+    void createsAndIssuesAnInvoiceWithoutDuplicatingTheCommand() throws Exception {
+        String createKey = "invoice-api-test-" + UUID.randomUUID();
+        String issueKey = "invoice-issue-test-" + UUID.randomUUID();
+        String body = """
+            {
+              "contractorId": "contractor-tran-quoc-bao",
+              "description": "Backend API integration milestone",
+              "amountMinor": "125000000",
+              "dueDate": "2026-10-15"
+            }
+            """;
+
+        String invoiceId = mvc.perform(post("/api/v1/invoices")
+                .header("Idempotency-Key", createKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.status").value("DRAFT"))
+            .andExpect(jsonPath("$.amountMinor").value("125000000"))
+            .andReturn()
+            .getResponse()
+            .getContentAsString()
+            .replaceAll(".*\\\"id\\\":\\\"([^\\\"]+)\\\".*", "$1");
+
+        mvc.perform(post("/api/v1/invoices")
+                .header("Idempotency-Key", createKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(invoiceId));
+
+        mvc.perform(get("/api/v1/invoices"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(invoiceId));
+
+        mvc.perform(post("/api/v1/invoices/{invoiceId}/issue", invoiceId)
+                .header("Idempotency-Key", issueKey))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.invoice.status").value("ISSUED"))
+            .andExpect(jsonPath("$.paymentRequest.status").value("CREATED"))
+            .andExpect(jsonPath("$.paymentRequest.network").value("Solana Devnet"));
     }
 }
