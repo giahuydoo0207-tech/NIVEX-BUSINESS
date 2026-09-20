@@ -8,7 +8,6 @@ import { CommentModal } from "./community/CommentModal";
 import { MyPostsModal } from "./community/MyPostsModal";
 import { ProfileExplorerModal } from "./community/ProfileExplorerModal";
 import {
-  ArrowLeft,
   Building2,
   CheckCircle2,
   Clock,
@@ -20,7 +19,6 @@ import {
   Users,
   X,
 } from "lucide-react";
-import Link from "next/link";
 
 const PRESET_TOPICS = [
   "Fintech",
@@ -163,49 +161,6 @@ export function CommunityView() {
         </div>
       )}
 
-      {/* Header matching Flutter: Title 'Cộng đồng', Subtitle, icons 🕐 and 👥 */}
-      <header className="community-header">
-        <div className="community-header-left">
-          <Link
-            href="/business/dashboard"
-            className="community-back-btn"
-            aria-label="Quay lại Tổng quan"
-          >
-            <ArrowLeft size={18} />
-          </Link>
-          <div>
-            <h1 className="community-title">Cộng đồng</h1>
-            <p className="community-subtitle">
-              Chia sẻ tiến độ, sản phẩm và cơ hội hợp tác
-            </p>
-          </div>
-        </div>
-
-        <div className="community-header-actions">
-          {/* Icon 🕐: Bài đăng của tôi (_openMyPosts) */}
-          <button
-            type="button"
-            className="community-icon-action-btn"
-            onClick={() => setShowMyPosts(true)}
-            title="Bài đăng của tôi"
-            aria-label="Bài đăng của tôi"
-          >
-            <Clock size={19} />
-          </button>
-
-          {/* Icon 👥: Khám phá hồ sơ (_openExampleProfiles) */}
-          <button
-            type="button"
-            className="community-icon-action-btn"
-            onClick={() => setShowProfileExplorer(true)}
-            title="Khám phá hồ sơ"
-            aria-label="Khám phá hồ sơ"
-          >
-            <Users size={19} />
-          </button>
-        </div>
-      </header>
-
       {/* Composer Card */}
       <div className="community-composer-card">
         <div className="composer-input-row">
@@ -344,6 +299,26 @@ export function CommunityView() {
         <div className="flex items-center gap-2">
           <Layers size={17} className="text-primary" />
           <span className="section-title-text">Dành cho bạn</span>
+        </div>
+        <div className="community-header-actions">
+          <button
+            type="button"
+            className="community-icon-action-btn"
+            onClick={() => setShowMyPosts(true)}
+            title="Bài đăng của tôi"
+            aria-label="Bài đăng của tôi"
+          >
+            <Clock size={19} />
+          </button>
+          <button
+            type="button"
+            className="community-icon-action-btn"
+            onClick={() => setShowProfileExplorer(true)}
+            title="Khám phá hồ sơ"
+            aria-label="Khám phá hồ sơ"
+          >
+            <Users size={19} />
+          </button>
         </div>
       </div>
 

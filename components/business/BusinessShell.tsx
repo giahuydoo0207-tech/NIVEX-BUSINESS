@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
   Bell,
@@ -88,13 +88,34 @@ export function BusinessShell({
   hideTopbar?: boolean;
 }) {
   const [menu, setMenu] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
   const [dialog, setDialog] = useState<
     "wallet" | "help" | "notifications" | null
   >(null);
-  const hasActiveQuickAction = activeAction !== undefined;
+  useEffect(() => {
+    const sidebar = sidebarRef.current;
+    if (!sidebar) return;
+
+    const savedScrollTop = window.sessionStorage.getItem(
+      "nova-business-sidebar-scroll-top",
+    );
+    if (savedScrollTop) {
+      sidebar.scrollTop = Number(savedScrollTop);
+    }
+
+    const rememberScroll = () => {
+      window.sessionStorage.setItem(
+        "nova-business-sidebar-scroll-top",
+        String(sidebar.scrollTop),
+      );
+    };
+    sidebar.addEventListener("scroll", rememberScroll, { passive: true });
+    return () => sidebar.removeEventListener("scroll", rememberScroll);
+  }, []);
   return (
     <div className={`business-app business-app-${active}`}>
       <aside
+        ref={sidebarRef}
         className={menu ? "business-sidebar sidebar-open" : "business-sidebar"}
       >
         <Link href="/" className="business-brand">
@@ -118,18 +139,14 @@ export function BusinessShell({
         >
           {navigation.map(({ key, href, label, icon: Icon }) => {
             const isNavActive = active === key;
-            const navClassName = isNavActive
-              ? hasActiveQuickAction
-                ? "parent-active"
-                : "active"
-              : undefined;
+            const navClassName = isNavActive ? "active" : undefined;
             return (
               <Link
                 key={key}
                 href={href}
                 className={navClassName}
                 aria-current={
-                  isNavActive && !hasActiveQuickAction ? "page" : undefined
+                  isNavActive ? "page" : undefined
                 }
               >
                 <Icon size={18} />
