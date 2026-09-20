@@ -211,7 +211,6 @@ export function Dashboard() {
         <div className="network-identity">
           <span className="network-orbit-mark">
             <Network size={20} />
-            <i />
           </span>
           <span>
             <small>PAYMENT NETWORK</small>

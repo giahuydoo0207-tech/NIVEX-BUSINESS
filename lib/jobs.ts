@@ -8,11 +8,10 @@ export const jobStatusLabels: Record<JobPostStatus, string> = {
 };
 
 export function jobStatusTone(status: JobPostStatus) {
-  return status === "PUBLISHED"
-    ? "success"
-    : status === "DRAFT" || status === "CLOSED"
-      ? "neutral"
-      : "warning";
+  if (status === "PUBLISHED") return "success";
+  if (status === "DRAFT") return "draft";
+  if (status === "CLOSED") return "neutral";
+  return "warning";
 }
 
 export function isJobPost(value: unknown): value is JobPost {

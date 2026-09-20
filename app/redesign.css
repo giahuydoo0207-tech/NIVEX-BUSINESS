@@ -3128,18 +3128,23 @@ body:has(.business-app) {
   height: 44px;
   display: grid;
   place-items: center;
-  color: #dce8f8;
-  border: 1px solid #52627a;
+  color: #60a5fa;
+  border: 1px solid #334460;
+  border-radius: 8px;
+  background: #0d1a2d;
+  flex-shrink: 0;
 }
 .network-orbit-mark::before {
   content: "";
   position: absolute;
-  inset: 6px;
-  border: 1px dashed #70819a;
+  inset: 4px;
+  border: 1px dashed #4b6282;
   border-radius: 50%;
   animation: dashboard-orbit 8s linear infinite;
 }
-.network-orbit-mark i,
+.network-orbit-mark i {
+  display: none !important;
+}
 .dashboard-network-strip dd i,
 .route-live i {
   width: 6px;
@@ -3148,11 +3153,6 @@ body:has(.business-app) {
   border-radius: 50%;
   background: #40c995;
   box-shadow: 0 0 8px #40c99580;
-}
-.network-orbit-mark i {
-  position: absolute;
-  right: -3px;
-  top: 7px;
 }
 .dashboard-network-strip dl {
   min-width: min(560px, 54%);
@@ -3590,6 +3590,7 @@ body:has(.business-app) {
   color: #71caa7;
   background: #10281f;
 }
+.business-app .status-badge.draft,
 .business-app .status-badge.warning {
   color: #dfb369;
   background: #2e2413;
@@ -3646,8 +3647,10 @@ body:has(.business-app) {
   color: #dce5f0;
   padding-bottom: 48px;
 }
-.business-app .invoice-form-main .form-grid {
+.business-app .invoice-form-main .form-grid,
+.business-app .job-form-main .form-grid {
   row-gap: 24px;
+  align-items: start;
 }
 .invoice-form-main .invoice-amount-field,
 .invoice-form-main .invoice-due-date-field {
@@ -3661,12 +3664,18 @@ body:has(.business-app) {
 }
 .business-app .field input,
 .business-app .field select,
-.business-app .field textarea,
-.business-app .amount-field {
+.business-app .field textarea {
   color: #e5edf7;
   border-color: #344156;
   background: #081321;
   color-scheme: dark;
+}
+.business-app .field input:not([type="checkbox"]):not([type="radio"]):not(.sr-only),
+.business-app .field select {
+  height: 44px;
+  min-height: 44px;
+  box-sizing: border-box;
+  border-radius: 7px;
 }
 .business-app .field input::placeholder,
 .business-app .field textarea::placeholder {
@@ -3676,15 +3685,71 @@ body:has(.business-app) {
   color: #8493a8;
   background: #0b1625;
 }
-.business-app .amount-field input {
-  border: 0;
-  background: transparent;
+.business-app .field-with-icon {
+  position: relative;
+  height: 44px;
+  min-height: 44px;
 }
-.business-app .amount-field strong {
-  color: #78aaf5;
+.business-app .field-with-icon input {
+  height: 44px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding-left: 38px;
 }
 .business-app .field-with-icon svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
   color: #7f90a6;
+  pointer-events: none;
+}
+.business-app .amount-field,
+.business-app .job-budget-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  height: 44px;
+  min-height: 44px;
+  border: 1px solid #344156;
+  border-radius: 7px;
+  background: #081321;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 0;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.business-app .amount-field input,
+.business-app .job-budget-field input {
+  height: 100%;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 13px;
+  font-size: 14px;
+  color: #e5edf7;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.business-app .amount-field strong,
+.business-app .job-budget-field strong {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-left: 1px solid #344156;
+  background: #0d1827;
+  color: #78aaf5;
+  user-select: none;
+}
+.business-app .amount-field:focus-within,
+.business-app .job-budget-field:focus-within {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 1px #60a5fa;
 }
 .business-app .invoice-summary {
   color: #cbd5e2;
@@ -3826,24 +3891,36 @@ body:has(.business-app) {
 .job-post-title-line {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+  flex-wrap: nowrap;
 }
 .job-post-title-line > button,
 .job-post-title-line > a,
 .job-post-title-link {
+  min-width: 0;
+  flex-shrink: 1;
   overflow: hidden;
   padding: 0;
   color: #e7eef8;
   border: 0;
   background: transparent;
-  font-size: 13px;
-  font-weight: 590;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.35;
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
   text-decoration: none;
   cursor: pointer;
   transition: color 140ms ease;
+}
+.job-post-title-line .status-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
 }
 .job-post-title-line > a:hover,
 .job-post-title-link:hover {
@@ -3974,23 +4051,6 @@ body:has(.business-app) {
   height: 1px;
   margin: 28px 0;
   background: #2b384c;
-}
-.job-budget-field {
-  display: flex;
-  align-items: center;
-  color: #e5edf7;
-  border: 1px solid #344156;
-  border-radius: 5px;
-  background: #081321;
-}
-.business-app .job-budget-field input {
-  border: 0;
-  background: transparent;
-}
-.job-budget-field strong {
-  padding-right: 12px;
-  color: #78aaf5;
-  font-size: 11px;
 }
 .job-notify-check {
   min-height: 68px;
@@ -8697,6 +8757,334 @@ body:has(.business-app) {
   background: var(--ink);
   color: #ffffff;
   border-color: var(--border);
+}
+
+/* ==========================================================================
+   LIGHT THEMES POLISH & TYPOGRAPHY SCALE RECONCILIATION
+   Scoped strictly to defaultTheme (Nova Banking) and vietnamFuture
+   ========================================================================== */
+
+/* 1. Dashboard Network Card Orbit Mark */
+.business-app[data-theme="defaultTheme"] .network-orbit-mark {
+  background: #e8eff7;
+  border-color: #cbd5e1;
+  color: #1d4ed8;
+}
+.business-app[data-theme="defaultTheme"] .network-orbit-mark::before {
+  border-color: #94a3b8;
+}
+.business-app[data-theme="vietnamFuture"] .network-orbit-mark {
+  background: #ede6d9;
+  border-color: #dcd3c1;
+  color: #9a5b0d;
+}
+.business-app[data-theme="vietnamFuture"] .network-orbit-mark::before {
+  border-color: #b8aa93;
+}
+
+/* 2. Status Badges in Light Themes */
+.business-app[data-theme="defaultTheme"] .status-badge.success,
+.business-app[data-theme="vietnamFuture"] .status-badge.success {
+  color: #15803d;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+}
+.business-app[data-theme="defaultTheme"] .status-badge.draft,
+.business-app[data-theme="vietnamFuture"] .status-badge.draft {
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+}
+.business-app[data-theme="defaultTheme"] .status-badge.warning,
+.business-app[data-theme="vietnamFuture"] .status-badge.warning {
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+.business-app[data-theme="defaultTheme"] .status-badge.neutral,
+.business-app[data-theme="vietnamFuture"] .status-badge.neutral {
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+/* 3. Create Forms Light Surfaces (White surface + 3px brand-tinted left border) */
+.business-app[data-theme="defaultTheme"] .job-form-main,
+.business-app[data-theme="defaultTheme"] .invoice-form-main {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-left: 3px solid #1d4ed8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: var(--ink);
+}
+.business-app[data-theme="vietnamFuture"] .job-form-main,
+.business-app[data-theme="vietnamFuture"] .invoice-form-main {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-left: 3px solid #9a5b0d;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: var(--ink);
+}
+
+.business-app[data-theme="defaultTheme"] .job-form-main .section-heading > svg,
+.business-app[data-theme="defaultTheme"] .invoice-form-main .section-heading > svg {
+  color: #1d4ed8;
+}
+.business-app[data-theme="vietnamFuture"] .job-form-main .section-heading > svg,
+.business-app[data-theme="vietnamFuture"] .invoice-form-main .section-heading > svg {
+  color: #9a5b0d;
+}
+
+.business-app[data-theme="defaultTheme"] .job-form-divider,
+.business-app[data-theme="vietnamFuture"] .job-form-divider {
+  background: var(--border-subtle);
+}
+
+/* Notification Checkbox in Light Themes */
+.business-app[data-theme="defaultTheme"] .job-notify-check,
+.business-app[data-theme="vietnamFuture"] .job-notify-check {
+  background: var(--surface-subtle);
+  border-color: var(--border);
+  color: var(--ink);
+}
+.business-app[data-theme="defaultTheme"] .job-notify-check strong,
+.business-app[data-theme="vietnamFuture"] .job-notify-check strong {
+  color: var(--ink);
+}
+.business-app[data-theme="defaultTheme"] .job-notify-check small,
+.business-app[data-theme="vietnamFuture"] .job-notify-check small {
+  color: var(--muted);
+}
+.business-app[data-theme="defaultTheme"] .job-notify-check > svg {
+  color: #1d4ed8;
+}
+.business-app[data-theme="vietnamFuture"] .job-notify-check > svg {
+  color: #9a5b0d;
+}
+
+/* Right-side Aside Preview Panels in Light Themes */
+.business-app[data-theme="defaultTheme"] .job-publish-panel,
+.business-app[data-theme="vietnamFuture"] .job-publish-panel {
+  background: #ffffff;
+  border-color: var(--border);
+  color: var(--ink);
+}
+.business-app[data-theme="defaultTheme"] .job-publish-panel h2,
+.business-app[data-theme="vietnamFuture"] .job-publish-panel h2 {
+  color: var(--ink);
+}
+.business-app[data-theme="defaultTheme"] .job-publish-panel p,
+.business-app[data-theme="vietnamFuture"] .job-publish-panel p {
+  color: var(--muted);
+}
+.business-app[data-theme="defaultTheme"] .job-publish-panel dl div,
+.business-app[data-theme="vietnamFuture"] .job-publish-panel dl div {
+  border-color: var(--border-subtle);
+}
+.business-app[data-theme="defaultTheme"] .job-publish-panel dt,
+.business-app[data-theme="vietnamFuture"] .job-publish-panel dt {
+  color: var(--muted);
+}
+.business-app[data-theme="defaultTheme"] .job-publish-panel dd,
+.business-app[data-theme="vietnamFuture"] .job-publish-panel dd {
+  color: var(--ink);
+}
+.business-app[data-theme="defaultTheme"] .job-preview-status,
+.business-app[data-theme="vietnamFuture"] .job-preview-status {
+  color: var(--muted);
+}
+.business-app[data-theme="defaultTheme"] .job-preview-cover,
+.business-app[data-theme="vietnamFuture"] .job-preview-cover {
+  background: var(--surface-subtle);
+  border-color: var(--border);
+}
+.business-app[data-theme="defaultTheme"] .job-preview-budget {
+  color: #1d4ed8;
+}
+.business-app[data-theme="vietnamFuture"] .job-preview-budget {
+  color: #9a5b0d;
+}
+.business-app[data-theme="defaultTheme"] .job-preview-hashtag-item {
+  background: var(--surface-subtle);
+  border-color: var(--border);
+  color: #1d4ed8;
+}
+.business-app[data-theme="vietnamFuture"] .job-preview-hashtag-item {
+  background: var(--surface-subtle);
+  border-color: var(--border);
+  color: #9a5b0d;
+}
+
+/* Image Upload Dropzone & Previews in Light Themes */
+.business-app[data-theme="defaultTheme"] .image-upload-dropzone,
+.business-app[data-theme="vietnamFuture"] .image-upload-dropzone {
+  background: var(--surface-subtle);
+  border-color: var(--border);
+}
+.business-app[data-theme="defaultTheme"] .image-upload-dropzone:hover,
+.business-app[data-theme="defaultTheme"] .image-upload-dropzone.dragging {
+  background: var(--surface-hover);
+  border-color: #1d4ed8;
+}
+.business-app[data-theme="vietnamFuture"] .image-upload-dropzone:hover,
+.business-app[data-theme="vietnamFuture"] .image-upload-dropzone.dragging {
+  background: var(--surface-hover);
+  border-color: #9a5b0d;
+}
+.business-app[data-theme="defaultTheme"] .image-upload-icon {
+  background: rgba(29, 78, 216, 0.1);
+  color: #1d4ed8;
+}
+.business-app[data-theme="vietnamFuture"] .image-upload-icon {
+  background: rgba(154, 91, 13, 0.1);
+  color: #9a5b0d;
+}
+.business-app[data-theme="defaultTheme"] .image-upload-placeholder,
+.business-app[data-theme="vietnamFuture"] .image-upload-placeholder {
+  color: var(--ink);
+}
+.business-app[data-theme="defaultTheme"] .image-upload-helper,
+.business-app[data-theme="vietnamFuture"] .image-upload-helper {
+  color: var(--muted);
+}
+.business-app[data-theme="defaultTheme"] .image-upload-preview-box,
+.business-app[data-theme="vietnamFuture"] .image-upload-preview-box {
+  background: var(--surface-subtle);
+  border-color: var(--border);
+}
+.business-app[data-theme="defaultTheme"] .image-upload-thumbnail,
+.business-app[data-theme="vietnamFuture"] .image-upload-thumbnail {
+  background: var(--surface);
+  border-color: var(--border);
+}
+.business-app[data-theme="defaultTheme"] .image-upload-filename,
+.business-app[data-theme="vietnamFuture"] .image-upload-filename {
+  color: var(--ink);
+}
+.business-app[data-theme="defaultTheme"] .image-upload-hint,
+.business-app[data-theme="vietnamFuture"] .image-upload-hint {
+  color: var(--muted);
+}
+
+/* Chip Inputs in Light Themes */
+.business-app[data-theme="defaultTheme"] .chip-input-container,
+.business-app[data-theme="vietnamFuture"] .chip-input-container {
+  background: var(--surface);
+  border-color: var(--border);
+}
+.business-app[data-theme="defaultTheme"] .chip-input-container:focus-within {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 1px #1d4ed8;
+}
+.business-app[data-theme="vietnamFuture"] .chip-input-container:focus-within {
+  border-color: #9a5b0d;
+  box-shadow: 0 0 0 1px #9a5b0d;
+}
+.business-app[data-theme="defaultTheme"] .chip-badge,
+.business-app[data-theme="vietnamFuture"] .chip-badge {
+  background: var(--surface-subtle);
+  border-color: var(--border);
+  color: var(--ink);
+}
+.business-app[data-theme="defaultTheme"] .chip-remove,
+.business-app[data-theme="vietnamFuture"] .chip-remove {
+  color: var(--muted);
+}
+.business-app[data-theme="defaultTheme"] .chip-native-input,
+.business-app[data-theme="vietnamFuture"] .chip-native-input {
+  color: var(--ink) !important;
+}
+.business-app[data-theme="defaultTheme"] .chip-native-input::placeholder,
+.business-app[data-theme="vietnamFuture"] .chip-native-input::placeholder {
+  color: var(--muted) !important;
+}
+
+/* 4. Currency Addon & Inputs in Light Themes */
+.business-app[data-theme="defaultTheme"] .amount-field,
+.business-app[data-theme="defaultTheme"] .job-budget-field {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+.business-app[data-theme="defaultTheme"] .amount-field input,
+.business-app[data-theme="defaultTheme"] .job-budget-field input {
+  color: #0f172a !important;
+}
+.business-app[data-theme="defaultTheme"] .amount-field strong,
+.business-app[data-theme="defaultTheme"] .job-budget-field strong {
+  background: #e8eff7;
+  border-left-color: #cbd5e1;
+  color: #1d4ed8;
+}
+.business-app[data-theme="defaultTheme"] .amount-field:focus-within,
+.business-app[data-theme="defaultTheme"] .job-budget-field:focus-within {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 1px #1d4ed8;
+}
+
+.business-app[data-theme="vietnamFuture"] .amount-field,
+.business-app[data-theme="vietnamFuture"] .job-budget-field {
+  background: #ffffff;
+  border-color: #dcd3c1;
+  color: #1c1917;
+}
+.business-app[data-theme="vietnamFuture"] .amount-field input,
+.business-app[data-theme="vietnamFuture"] .job-budget-field input {
+  color: #1c1917 !important;
+}
+.business-app[data-theme="vietnamFuture"] .amount-field strong,
+.business-app[data-theme="vietnamFuture"] .job-budget-field strong {
+  background: #ede6d9;
+  border-left-color: #dcd3c1;
+  color: #9a5b0d;
+}
+.business-app[data-theme="vietnamFuture"] .amount-field:focus-within,
+.business-app[data-theme="vietnamFuture"] .job-budget-field:focus-within {
+  border-color: #9a5b0d;
+  box-shadow: 0 0 0 1px #9a5b0d;
+}
+
+/* 5. Typography Scale Harmonization for Business Core Pages */
+.dashboard-tech,
+.jobs-view,
+.job-form-main,
+.invoice-form-main,
+.applications-view,
+.contractors-view,
+.invoices-view {
+  font-size: 14.5px;
+}
+
+.dashboard-tech .network-identity strong {
+  font-size: 14.5px;
+}
+.dashboard-tech .dashboard-network-strip dd {
+  font-size: 11.5px;
+}
+.dashboard-tech .data-table th,
+.invoices-view .data-table th,
+.jobs-view .data-table th {
+  font-size: 12px;
+}
+.dashboard-tech .data-table td,
+.invoices-view .data-table td,
+.jobs-view .data-table td {
+  font-size: 14px;
+}
+
+.job-form-main .field > span,
+.invoice-form-main .field > span {
+  font-size: 14px;
+}
+.job-form-main .field input,
+.job-form-main .field select,
+.invoice-form-main .field input,
+.invoice-form-main .field select {
+  font-size: 14px;
+}
+.job-form-main .field small,
+.invoice-form-main .field small {
+  font-size: 12.5px;
 }
 
 @media (prefers-reduced-motion: reduce) {
