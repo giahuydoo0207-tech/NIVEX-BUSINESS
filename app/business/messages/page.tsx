@@ -8,7 +8,7 @@ export default async function BusinessMessagesPage({
 }) {
   const { candidate } = await searchParams;
   return (
-    <BusinessShell active="messages">
+    <BusinessShell active="messages" hideTopbar>
       <MessagesView initialCandidateId={candidate} />
     </BusinessShell>
   );

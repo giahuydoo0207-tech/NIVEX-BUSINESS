@@ -72,6 +72,7 @@ export function BusinessShell({
   active,
   breadcrumbLabel,
   activeAction,
+  hideTopbar = false,
 }: {
   children: React.ReactNode;
   active:
@@ -84,6 +85,7 @@ export function BusinessShell({
     | "invoices";
   breadcrumbLabel?: string;
   activeAction?: "newJob" | "newInvoice";
+  hideTopbar?: boolean;
 }) {
   const [menu, setMenu] = useState(false);
   const [dialog, setDialog] = useState<
@@ -193,7 +195,7 @@ export function BusinessShell({
         />
       )}
       <div className="business-workspace">
-        <header className="business-topbar">
+        {!hideTopbar && <header className="business-topbar">
           <div className="breadcrumb">
             <button
               className="icon-button menu-button"
@@ -229,7 +231,7 @@ export function BusinessShell({
             </button>
             <span className="avatar topbar-avatar">GH</span>
           </div>
-        </header>
+        </header>}
         <main className="business-content">{children}</main>
         <footer className="workspace-footer">
           <span>Nova Business</span>

@@ -9,8 +9,9 @@ import {
   Clock3,
   ExternalLink,
   FileText,
-  Info,
   MoreHorizontal,
+  PanelRightClose,
+  PanelRightOpen,
   Paperclip,
   Reply,
   Search,
@@ -55,7 +56,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
   const [draft, setDraft] = useState("");
   const [replyingTo, setReplyingTo] = useState<ApplicationMessage | null>(null);
   const [typingId, setTypingId] = useState<string | null>(null);
-  const [showContext, setShowContext] = useState(false);
+  const [showContext, setShowContext] = useState(true);
   const [mobileThreadOpen, setMobileThreadOpen] = useState(Boolean(initialCandidateId));
   const bottomRef = useRef<HTMLDivElement>(null);
   const timersRef = useRef<number[]>([]);
@@ -117,7 +118,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
 
   return (
     <div className="messages-view">
-      <section className={`messages-workspace ${showContext ? "context-open" : ""} ${mobileThreadOpen ? "mobile-thread-open" : ""}`}>
+      <section className={`messages-workspace ${showContext ? "context-open" : "context-hidden"} ${mobileThreadOpen ? "mobile-thread-open" : ""}`}>
         <aside className="conversation-rail" aria-label="Danh sách hội thoại">
           <div className="conversation-rail-head">
             <div><strong>Hội thoại</strong><small>{conversations.length} ứng viên</small></div>
@@ -152,7 +153,16 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                 <span className="application-avatar">{selected.initials}<i /></span>
                 <div><strong>{selected.candidateName}</strong><small>Đang hoạt động · {selected.headline}</small></div>
                 <span className="message-prototype-tag"><i />PROTOTYPE</span>
-                <button type="button" className="icon-button" title="Thông tin ứng viên" aria-label="Thông tin ứng viên" onClick={() => setShowContext((value) => !value)}><Info size={18} /></button>
+                <button
+                  type="button"
+                  className="icon-button context-toggle-button"
+                  title={showContext ? "Ẩn thông tin ứng viên" : "Hiện thông tin ứng viên"}
+                  aria-label={showContext ? "Ẩn thông tin ứng viên" : "Hiện thông tin ứng viên"}
+                  aria-pressed={showContext}
+                  onClick={() => setShowContext((value) => !value)}
+                >
+                  {showContext ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
+                </button>
                 <button type="button" className="icon-button" title="Tùy chọn" aria-label="Tùy chọn hội thoại"><MoreHorizontal size={18} /></button>
               </header>
 

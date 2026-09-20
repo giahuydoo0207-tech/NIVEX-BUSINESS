@@ -363,6 +363,12 @@ body:has(.business-app) {
   align-items: center;
   background: #fff;
 }
+.business-app:has(.business-topbar) .business-content {
+  min-height: calc(100dvh - 72px);
+}
+.business-app:not(:has(.business-topbar)) .business-content {
+  min-height: 100dvh;
+}
 .business-topbar .breadcrumb {
   display: flex;
   align-items: center;
@@ -4280,6 +4286,9 @@ body:has(.business-app) {
   border-radius: 0;
   background: #06101d;
 }
+.messages-workspace.context-hidden {
+  grid-template-columns: minmax(250px, 0.58fr) minmax(560px, 2.25fr);
+}
 .conversation-rail,
 .message-context {
   min-width: 0;
@@ -4318,6 +4327,13 @@ body:has(.business-app) {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.conversation-list::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 .conversation-list > button {
   position: relative;
@@ -4466,6 +4482,16 @@ body:has(.business-app) {
   border-radius: 50%;
   background: #d7a14d;
 }
+.context-toggle-button {
+  color: #d6e6fb;
+  border: 1px solid transparent;
+}
+.context-toggle-button:hover,
+.context-toggle-button[aria-pressed="true"] {
+  color: #7fb4ff;
+  border-color: #294262;
+  background: #0d1d31;
+}
 .message-stream {
   min-height: 0;
   display: flex;
@@ -4476,6 +4502,13 @@ body:has(.business-app) {
   overflow-y: auto;
   overscroll-behavior: contain;
   scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.message-stream::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 .thread-date {
   display: flex;
@@ -4731,6 +4764,9 @@ body:has(.business-app) {
   overscroll-behavior: contain;
   scrollbar-width: none;
 }
+.messages-workspace.context-hidden .message-context {
+  display: none;
+}
 .message-context::-webkit-scrollbar {
   display: none;
 }
@@ -4774,19 +4810,28 @@ body:has(.business-app) {
   right: 12px;
 }
 .application-avatar.context-avatar {
-  width: 58px;
-  height: 58px;
-  margin-top: 4px;
-  font-size: 13px;
+  width: 64px;
+  height: 64px;
+  margin-top: 6px;
+  font-size: 14px;
+  border: 1px solid #355071;
+  box-shadow: 0 0 0 4px #0b1727;
 }
 .message-context h2 {
+  max-width: 100%;
   margin: 13px 0 3px;
-  font-size: 15px;
+  overflow: hidden;
+  color: #f3f7fd;
+  font-size: 16px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .message-context > p {
   margin: 0 0 11px;
   color: #8091a6;
   font-size: 10px;
+  text-align: center;
 }
 .message-context dl {
   width: 100%;
@@ -4850,6 +4895,12 @@ body:has(.business-app) {
 @media (max-width: 1180px) {
   .messages-workspace {
     grid-template-columns: minmax(240px, 0.68fr) minmax(420px, 1.5fr);
+  }
+  .messages-workspace.context-hidden {
+    grid-template-columns: minmax(240px, 0.68fr) minmax(420px, 1.5fr);
+  }
+  .messages-workspace.context-hidden .message-context {
+    display: flex;
   }
   .message-context {
     position: absolute;

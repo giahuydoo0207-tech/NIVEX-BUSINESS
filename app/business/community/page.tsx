@@ -3,7 +3,7 @@ import { CommunityView } from "@/components/business/CommunityView";
 
 export default function BusinessCommunityPage() {
   return (
-    <BusinessShell active="community">
+    <BusinessShell active="community" hideTopbar>
       <CommunityView />
     </BusinessShell>
   );
