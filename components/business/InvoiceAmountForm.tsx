@@ -3,7 +3,14 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, CalendarDays, FileText, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarDays,
+  CreditCard,
+  FileText,
+  ShieldCheck,
+} from "lucide-react";
 import { demoContractors, demoOrganization } from "@/lib/business-demo-data";
 import { formatUsdc, parseUsdcToMinor } from "@/lib/money";
 import type { Invoice } from "@/types/invoice";
@@ -24,6 +31,8 @@ export function InvoiceAmountForm({
   const [error, setError] = useState("");
 
   const parsedAmount = parseUsdcToMinor(amount);
+  const selectedContractor =
+    demoContractors.find((item) => item.id === contractorId) ?? demoContractors[0];
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -69,13 +78,15 @@ export function InvoiceAmountForm({
             <span>Quay lại danh sách hóa đơn</span>
           </Link>
         </div>
+
         <div className="section-heading">
           <FileText size={20} />
           <div>
-            <h2>Thông tin hóa đơn</h2>
-            <p>Thông tin này sẽ xuất hiện trên trang thanh toán.</p>
+            <h2>Thông tin người nhận & dịch vụ</h2>
+            <p>Chọn đối tác nhận thanh toán và tóm tắt nội dung công việc.</p>
           </div>
         </div>
+
         <div className="form-grid">
           <label className="field full">
             <span>Người nhận</span>
@@ -103,6 +114,19 @@ export function InvoiceAmountForm({
               placeholder="Ví dụ: Phát triển ứng dụng Flutter tháng 09/2026"
             />
           </label>
+        </div>
+
+        <div className="job-form-divider" />
+
+        <div className="section-heading">
+          <CreditCard size={20} />
+          <div>
+            <h2>Số tiền & thời hạn thanh toán</h2>
+            <p>Khoản thanh toán bằng USDC sẽ được chuyển trực tiếp trên mạng Solana Devnet.</p>
+          </div>
+        </div>
+
+        <div className="form-grid">
           <label className="field invoice-amount-field">
             <span>Số tiền</span>
             <div className="amount-field">
@@ -139,28 +163,37 @@ export function InvoiceAmountForm({
           </label>
         </div>
       </section>
+
       <aside className="invoice-summary">
-        <p className="eyebrow">XEM TRƯỚC</p>
-        <h2>
+        <div className="job-preview-status">
+          <i /> BẢN XEM TRƯỚC HÓA ĐƠN
+        </div>
+        <h2>{selectedContractor.displayName}</h2>
+        <p>{selectedContractor.role} · Solana Devnet</p>
+        <strong className="job-preview-budget">
           {amount && parsedAmount.ok
             ? formatUsdc(parsedAmount.minor)
             : "0 USDC"}
-        </h2>
+        </strong>
         <dl>
           <div>
-            <dt>Mạng</dt>
+            <dt>Người nhận</dt>
+            <dd>{selectedContractor.displayName}</dd>
+          </div>
+          <div>
+            <dt>Hạn thanh toán</dt>
+            <dd>{dueDate || "Chưa đặt"}</dd>
+          </div>
+          <div>
+            <dt>Mạng xử lý</dt>
             <dd>Solana Devnet</dd>
           </div>
           <div>
             <dt>Trạng thái</dt>
             <dd>Chờ thanh toán</dd>
           </div>
-          <div>
-            <dt>Phí</dt>
-            <dd>Hiển thị trước khi ký</dd>
-          </div>
         </dl>
-        <div className="summary-assurance">
+        <div className="job-publish-assurance">
           <ShieldCheck size={18} />
           <span>
             Kiểm tra người nhận và số tiền trước khi tiếp tục. Hóa đơn thử
@@ -173,7 +206,7 @@ export function InvoiceAmountForm({
           </p>
         )}
         <button className="business-primary-button wide" type="submit">
-          Tạo yêu cầu thanh toán
+          <span>Tạo yêu cầu thanh toán</span>
           <ArrowRight size={18} />
         </button>
       </aside>

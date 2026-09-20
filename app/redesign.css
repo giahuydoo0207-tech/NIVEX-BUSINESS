@@ -1275,8 +1275,9 @@ body:has(.business-app) {
 .invoice-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 400px);
-  gap: 32px;
-  margin-top: 40px;
+  align-items: start;
+  gap: 28px;
+  margin-top: 32px;
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -1286,31 +1287,76 @@ body:has(.business-app) {
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  padding: 28px 32px 56px;
+  color: #dce5f0;
+  border: 1px solid #2c394d;
+  border-radius: 8px;
+  background: #07111fe8;
 }
 .invoice-summary {
+  position: sticky;
+  top: 22px;
+  padding: 24px;
+  color: #cbd5e2;
+  border: 1px solid #2c394d;
+  border-radius: 8px;
+  background: #07111f;
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 23px;
-  border-radius: 6px;
-  box-shadow: none;
-  background: #f8fafc;
-  border: 1px solid #e5eaf1;
 }
 .invoice-summary h2 {
-  font-size: 29px;
-  font-weight: 550;
-  overflow-wrap: anywhere;
+  margin: 0 0 7px;
+  color: #f5f8fc;
+  font-size: 19px;
+  line-height: 1.35;
+}
+.invoice-summary > p {
+  margin: 0;
+  color: #8291a5;
+  font-size: 11px;
+}
+.invoice-summary dl {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding-block: 16px;
+  border-block: 1px solid #273448;
+}
+.invoice-summary dl > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.invoice-summary dt {
+  font-size: 12px;
+  color: #8291a5;
+}
+.invoice-summary dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #dfe7f2;
+  text-align: right;
 }
 .invoice-summary .summary-assurance {
-  background: transparent;
-  padding: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: #0d1827;
+  border: 1px solid #273448;
+  margin-bottom: 20px;
   font-size: 12px;
-  color: #73849a;
+  line-height: 1.45;
+  color: #8c9cb2;
+}
+.invoice-summary .summary-assurance svg {
+  flex-shrink: 0;
+  color: #40c995;
+  margin-top: 1px;
 }
 .section-heading h2 {
   font-size: 17px;
@@ -3645,7 +3691,8 @@ body:has(.business-app) {
 }
 .business-app .invoice-form-main {
   color: #dce5f0;
-  padding-bottom: 48px;
+  padding: 28px 32px 56px;
+  border-radius: 8px;
 }
 .business-app .invoice-form-main .form-grid,
 .business-app .job-form-main .form-grid {
@@ -8814,16 +8861,20 @@ body:has(.business-app) {
   background: #ffffff;
   border: 1px solid var(--border);
   border-left: 3px solid #1d4ed8;
+  border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   color: var(--ink);
+  padding: 28px 32px 56px;
 }
 .business-app[data-theme="vietnamFuture"] .job-form-main,
 .business-app[data-theme="vietnamFuture"] .invoice-form-main {
   background: #ffffff;
   border: 1px solid var(--border);
   border-left: 3px solid #9a5b0d;
+  border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   color: var(--ink);
+  padding: 28px 32px 56px;
 }
 
 .business-app[data-theme="defaultTheme"] .job-form-main .section-heading > svg,
@@ -8864,29 +8915,43 @@ body:has(.business-app) {
 
 /* Right-side Aside Preview Panels in Light Themes */
 .business-app[data-theme="defaultTheme"] .job-publish-panel,
-.business-app[data-theme="vietnamFuture"] .job-publish-panel {
+.business-app[data-theme="defaultTheme"] .invoice-summary,
+.business-app[data-theme="vietnamFuture"] .job-publish-panel,
+.business-app[data-theme="vietnamFuture"] .invoice-summary {
   background: #ffffff;
-  border-color: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   color: var(--ink);
 }
 .business-app[data-theme="defaultTheme"] .job-publish-panel h2,
-.business-app[data-theme="vietnamFuture"] .job-publish-panel h2 {
+.business-app[data-theme="defaultTheme"] .invoice-summary h2,
+.business-app[data-theme="vietnamFuture"] .job-publish-panel h2,
+.business-app[data-theme="vietnamFuture"] .invoice-summary h2 {
   color: var(--ink);
 }
 .business-app[data-theme="defaultTheme"] .job-publish-panel p,
-.business-app[data-theme="vietnamFuture"] .job-publish-panel p {
+.business-app[data-theme="defaultTheme"] .invoice-summary p,
+.business-app[data-theme="vietnamFuture"] .job-publish-panel p,
+.business-app[data-theme="vietnamFuture"] .invoice-summary p {
   color: var(--muted);
 }
 .business-app[data-theme="defaultTheme"] .job-publish-panel dl div,
-.business-app[data-theme="vietnamFuture"] .job-publish-panel dl div {
+.business-app[data-theme="defaultTheme"] .invoice-summary dl div,
+.business-app[data-theme="vietnamFuture"] .job-publish-panel dl div,
+.business-app[data-theme="vietnamFuture"] .invoice-summary dl div {
   border-color: var(--border-subtle);
 }
 .business-app[data-theme="defaultTheme"] .job-publish-panel dt,
-.business-app[data-theme="vietnamFuture"] .job-publish-panel dt {
+.business-app[data-theme="defaultTheme"] .invoice-summary dt,
+.business-app[data-theme="vietnamFuture"] .job-publish-panel dt,
+.business-app[data-theme="vietnamFuture"] .invoice-summary dt {
   color: var(--muted);
 }
 .business-app[data-theme="defaultTheme"] .job-publish-panel dd,
-.business-app[data-theme="vietnamFuture"] .job-publish-panel dd {
+.business-app[data-theme="defaultTheme"] .invoice-summary dd,
+.business-app[data-theme="vietnamFuture"] .job-publish-panel dd,
+.business-app[data-theme="vietnamFuture"] .invoice-summary dd {
   color: var(--ink);
 }
 .business-app[data-theme="defaultTheme"] .job-preview-status,
@@ -8898,10 +8963,12 @@ body:has(.business-app) {
   background: var(--surface-subtle);
   border-color: var(--border);
 }
-.business-app[data-theme="defaultTheme"] .job-preview-budget {
+.business-app[data-theme="defaultTheme"] .job-preview-budget,
+.business-app[data-theme="defaultTheme"] .invoice-summary .job-preview-budget {
   color: #1d4ed8;
 }
-.business-app[data-theme="vietnamFuture"] .job-preview-budget {
+.business-app[data-theme="vietnamFuture"] .job-preview-budget,
+.business-app[data-theme="vietnamFuture"] .invoice-summary .job-preview-budget {
   color: #9a5b0d;
 }
 .business-app[data-theme="defaultTheme"] .job-preview-hashtag-item {
@@ -8913,6 +8980,15 @@ body:has(.business-app) {
   background: var(--surface-subtle);
   border-color: var(--border);
   color: #9a5b0d;
+}
+
+.business-app[data-theme="defaultTheme"] .job-publish-assurance,
+.business-app[data-theme="vietnamFuture"] .job-publish-assurance {
+  color: var(--muted);
+}
+.business-app[data-theme="defaultTheme"] .job-publish-assurance > svg,
+.business-app[data-theme="vietnamFuture"] .job-publish-assurance > svg {
+  color: #15803d;
 }
 
 /* Image Upload Dropzone & Previews in Light Themes */
