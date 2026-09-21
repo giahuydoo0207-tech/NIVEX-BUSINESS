@@ -14,5 +14,6 @@ public record Invoice(
     String currency,
     LocalDate dueDate,
     String status,
-    Instant createdAt
+    Instant createdAt,
+    UUID paymentRequestId
 ) {}

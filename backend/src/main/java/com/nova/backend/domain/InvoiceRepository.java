@@ -57,7 +57,7 @@ public class InvoiceRepository {
             "insert into invoices (id, organization_id, contractor_id, invoice_number, description, amount_minor, currency, due_date, status, idempotency_key) " +
                 "values (?, ?, ?, ?, ?, ?, 'USDC', ?, 'DRAFT', ?) " +
                 "on conflict (organization_id, idempotency_key) do nothing " +
-                "returning id, organization_id, contractor_id, invoice_number, description, amount_minor::text as amount_minor, currency, due_date, status, created_at",
+                "returning id, organization_id, contractor_id, invoice_number, description, amount_minor::text as amount_minor, currency, due_date, status, created_at, null::uuid as payment_request_id",
             this::mapInvoice,
             id,
             organizationId,
@@ -130,7 +130,8 @@ public class InvoiceRepository {
     }
 
     private String invoiceSelect() {
-        return "select id, organization_id, contractor_id, invoice_number, description, amount_minor::text as amount_minor, currency, due_date, status, created_at from invoices";
+        return "select id, organization_id, contractor_id, invoice_number, description, amount_minor::text as amount_minor, currency, due_date, status, created_at, " +
+            "(select p.id from payment_requests p where p.invoice_id=invoices.id) as payment_request_id from invoices";
     }
 
     private Invoice mapInvoice(ResultSet rs, int row) throws SQLException {
@@ -144,7 +145,8 @@ public class InvoiceRepository {
             rs.getString("currency"),
             rs.getDate("due_date").toLocalDate(),
             rs.getString("status"),
-            rs.getTimestamp("created_at").toInstant()
+            rs.getTimestamp("created_at").toInstant(),
+            rs.getObject("payment_request_id", UUID.class)
         );
     }
 

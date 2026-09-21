@@ -13,6 +13,15 @@ export interface DevnetPayment {
   signature: string | null;
 }
 
+export class DevnetApiError extends Error {
+  readonly status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "DevnetApiError";
+    this.status = status;
+  }
+}
+
 export async function devnetApi<T>(path: string, body?: unknown, key?: string): Promise<T> {
   const response = await fetch(`/api/devnet/${path}`, {
     method: body === undefined ? "GET" : "POST",
@@ -22,9 +31,9 @@ export async function devnetApi<T>(path: string, body?: unknown, key?: string): 
   });
   const value = await response.json().catch(() => ({}));
   if (!response.ok || response.status === 202) {
-    throw new Error(value.detail || value.message || (response.status === 202
+    throw new DevnetApiError(value.detail || value.message || (response.status === 202
       ? "Giao dich dang duoc xac nhan. Kiem tra lai, khong thanh toan lai."
-      : `API ${response.status}`));
+      : `API ${response.status}`), response.status);
   }
   return value as T;
 }

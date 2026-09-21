@@ -23,6 +23,9 @@ import { InvoiceTable } from "@/components/business/InvoiceTable";
 import { formatUsdc } from "@/lib/money";
 import { formatDate, sumMinor } from "@/lib/portal-data";
 import { demoContractors } from "@/lib/business-demo-data";
+import { isPaidInvoice, isPendingInvoice } from "@/lib/invoice-api";
+const devnet = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
+function periodEnd() { return devnet ? new Date().toISOString().slice(0, 10) : "2026-09-10"; }
 
 function PaymentRoutePanel({
   invoiceCount,
@@ -55,7 +58,7 @@ function PaymentRoutePanel({
       key: "03",
       label: "Solana",
       value: `${paidCount} confirmed`,
-      note: "Devnet · dữ liệu mô phỏng",
+      note: devnet ? "Devnet · đã hoàn tất" : "Devnet · dữ liệu mô phỏng",
       icon: Network,
     },
     {
@@ -107,10 +110,10 @@ function PaymentRoutePanel({
 }
 
 export function Dashboard() {
-  const { invoices, storageError } = useInvoices();
+  const { invoices, storageError, loading, error, refresh } = useInvoices();
   const [period, setPeriod] = useState("90");
-  const [from, setFrom] = useState("2026-06-13");
-  const [to, setTo] = useState("2026-09-10");
+  const [from, setFrom] = useState(() => new Date(Date.parse(periodEnd()) - 89 * 86400000).toISOString().slice(0, 10));
+  const [to, setTo] = useState(periodEnd);
   const [compare, setCompare] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
   const [maxBins, setMaxBins] = useState(92);
@@ -130,8 +133,8 @@ export function Dashboard() {
       ),
     [invoices, from, to],
   );
-  const paid = filtered.filter((item) => item.status === "PAID_OUT");
-  const pending = filtered.filter((item) => item.status === "AWAITING_PAYMENT");
+  const paid = filtered.filter((item) => isPaidInvoice(item.status));
+  const pending = filtered.filter((item) => isPendingInvoice(item.status));
   const days = useMemo(() => {
     const start = Date.parse(from),
       end = Date.parse(to);
@@ -187,7 +190,7 @@ export function Dashboard() {
   function changePeriod(value: string) {
     setPeriod(value);
     if (value === "custom") return;
-    const end = new Date("2026-09-10T00:00:00Z");
+    const end = new Date(`${periodEnd()}T00:00:00Z`);
     setTo(end.toISOString().slice(0, 10));
     setFrom(
       new Date(end.getTime() - (Number(value) - 1) * 86400000)
@@ -219,18 +222,18 @@ export function Dashboard() {
         </div>
         <dl>
           <div>
-            <dt>RPC</dt>
+            <dt>{devnet ? "Hóa đơn" : "RPC"}</dt>
             <dd>
-              <i /> Sẵn sàng
+              <i /> {devnet ? (loading ? "Đang tải" : error ? "Chưa cập nhật" : "Đã đồng bộ") : "Sẵn sàng"}
             </dd>
           </div>
           <div>
             <dt>Finality</dt>
-            <dd>confirmed</dd>
+            <dd>{devnet ? "finalized" : "confirmed"}</dd>
           </div>
           <div>
             <dt>Chế độ</dt>
-            <dd>Mô phỏng</dd>
+            <dd>{devnet ? "Thử nghiệm Devnet" : "Mô phỏng"}</dd>
           </div>
         </dl>
       </section>
@@ -288,6 +291,9 @@ export function Dashboard() {
           So sánh kỳ trước
         </label>
       </div>
+      {loading && <p role="status">Đang tải hóa đơn...</p>}
+      {error && <div role="alert"><p className="form-error">Không cập nhật được hóa đơn: {error}</p>
+        <button className="business-secondary-button" onClick={refresh}>Thử lại</button></div>}
       {storageError && (
         <p className="form-error" role="alert">
           Không đọc được hóa đơn đã lưu. Dữ liệu minh họa vẫn khả dụng.
@@ -478,7 +484,7 @@ export function Dashboard() {
                   <ArrowDownLeft size={14} />
                   {filtered.length} hóa đơn trong kỳ
                 </span>
-                <span>Dữ liệu minh họa · Solana Devnet</span>
+                <span>{devnet ? "Hóa đơn Devnet" : "Dữ liệu minh họa · Solana Devnet"}</span>
               </>
             )}
           </div>

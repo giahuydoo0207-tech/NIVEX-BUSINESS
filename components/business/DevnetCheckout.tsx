@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ExternalLink, RefreshCw, ShieldCheck, Wallet } from "lucide-react";
 import { NivexLogo } from "@/components/ui/NivexLogo";
 import { formatUsdc } from "@/lib/money";
-import { devnetApi, type DevnetPayment } from "@/lib/devnet-api";
+import { devnetApi, DevnetApiError, type DevnetPayment } from "@/lib/devnet-api";
 import { createWalletClient, simulatePayment, signPayment } from "@/lib/solana-payment";
 import type { WalletState } from "@solana/kit-plugin-wallet";
 
@@ -20,6 +20,7 @@ export function DevnetCheckout({ paymentRequestId }: { paymentRequestId: string 
   const [signature, setSignature] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(false);
   const actionLock = useRef(false);
   const storageKey = `nova.devnet.signature.${paymentRequestId}`;
 
@@ -43,6 +44,39 @@ export function DevnetCheckout({ paymentRequestId }: { paymentRequestId: string 
     return () => { active = false; };
   }, [paymentRequestId, storageKey]);
 
+  const paid = payment?.status === "PAID_ON_CHAIN";
+  useEffect(() => {
+    if (!signature || paid || !payment) return;
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    let attempts = 0;
+    async function check() {
+      if (actionLock.current) { timer = setTimeout(check, 1000); return; }
+      setChecking(true);
+      let retry = true;
+      try {
+        const updated = await devnetApi<DevnetPayment>(`payment-requests/${paymentRequestId}/verify`, { signature });
+        if (!active) return;
+        setPayment(updated); setError("");
+        retry = updated.status !== "PAID_ON_CHAIN";
+      } catch (e) {
+        if (!active) return;
+        retry = !(e instanceof DevnetApiError) || e.status === 202 || e.status === 429 || e.status >= 500;
+        if (!(e instanceof DevnetApiError && e.status === 202)) {
+          setError(e instanceof Error ? e.message : "Chưa kiểm tra được giao dịch.");
+        }
+      }
+      if (!active) return;
+      if (retry && ++attempts < 24) timer = setTimeout(check, 5000);
+      else {
+        setChecking(false);
+        if (retry) setError("Chưa xác nhận hoàn tất. Hãy kiểm tra lại giao dịch đã gửi, không thanh toán lại.");
+      }
+    }
+    timer = setTimeout(check, 1000);
+    return () => { active = false; clearTimeout(timer); setChecking(false); };
+  }, [signature, paid, paymentRequestId, !!payment]);
+
   async function act(action: () => Promise<void>) {
     if (actionLock.current) return;
     actionLock.current = true; setBusy(true); setError("");
@@ -56,7 +90,6 @@ export function DevnetCheckout({ paymentRequestId }: { paymentRequestId: string 
   }
 
   const connected = wallet?.connected;
-  const paid = payment?.status === "PAID_ON_CHAIN";
   return <main className="checkout-page">
     <header className="checkout-header">
       <Link href="/business/invoices" aria-label="Quay lại hóa đơn"><ArrowLeft size={20} /></Link>
@@ -100,7 +133,8 @@ export function DevnetCheckout({ paymentRequestId }: { paymentRequestId: string 
             <button className="business-secondary-button wide" disabled={busy} onClick={() => setPreview(null)}>Kiểm tra lại giao dịch</button></>}
           {connected && <button className="business-secondary-button wide" disabled={busy} onClick={() => act(async () => { await client?.wallet.disconnect(); setPreview(null); })}>Đổi ví</button>}
         </>}
-        {signature && !paid && <button className="business-primary-button wide" disabled={busy} onClick={() => act(verify)}><RefreshCw size={18} /> Kiểm tra xác nhận giao dịch</button>}
+        {signature && !paid && <button className="business-primary-button wide" disabled={busy || checking} onClick={() => act(verify)}><RefreshCw size={18} /> Kiểm tra xác nhận giao dịch</button>}
+        {checking && <p role="status">Đang chờ xác nhận giao dịch đã gửi trên Devnet...</p>}
         {paid && <p role="status"><ShieldCheck size={20} /> Backend đã xác minh thanh toán hoàn tất trên Devnet.</p>}
         {busy && <p role="status">Đang xử lý...</p>}
       </aside>

@@ -26,6 +26,8 @@ import { demoContractors } from "@/lib/business-demo-data";
 import { formatUsdc } from "@/lib/money";
 import { formatDate, statusLabels, statusTone } from "@/lib/portal-data";
 import type { Invoice } from "@/types/invoice";
+import { isPaidInvoice, isPendingInvoice } from "@/lib/invoice-api";
+const devnet = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
 export function InvoiceTable({
   invoices,
   compact = false,
@@ -35,12 +37,15 @@ export function InvoiceTable({
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("ALL");
-  const [selected, setSelected] = useState<Invoice | null>(null);
+  const [selection, setSelected] = useState<Invoice | null>(null);
+  const selected = invoices.find(item => item.id === selection?.id) ?? selection;
   const [sorting, setSorting] = useState<SortingState>([
     { id: "createdAt", desc: true },
   ]);
   const filtered = useMemo(
-    () => invoices.filter((item) => status === "ALL" || item.status === status),
+    () => invoices.filter((item) => status === "ALL"
+      || (status === "PAID_OUT" ? isPaidInvoice(item.status)
+        : status === "AWAITING_PAYMENT" ? isPendingInvoice(item.status) : item.status === status)),
     [invoices, status],
   );
   const columns = useMemo<ColumnDef<Invoice>[]>(
@@ -184,7 +189,7 @@ export function InvoiceTable({
           <p>
             {compact
               ? "Theo dõi những khoản thanh toán của đội ngũ."
-              : "Hóa đơn mẫu và yêu cầu bạn tạo trên trình duyệt này."}
+              : devnet ? "Hóa đơn và trạng thái thanh toán Devnet." : "Hóa đơn mẫu và yêu cầu bạn tạo trên trình duyệt này."}
           </p>
         </div>
         {compact ? (
@@ -300,7 +305,7 @@ export function InvoiceTable({
       <div className="table-pagination">
         <span>
           {table.getFilteredRowModel().rows.length} hóa đơn
-          {compact ? " · Dữ liệu minh họa" : ""}
+          {compact ? (devnet ? " · Solana Devnet" : " · Dữ liệu minh họa") : ""}
         </span>
         <div>
           <span>
@@ -330,7 +335,7 @@ export function InvoiceTable({
         description={
           selected?.id.startsWith("sample-")
             ? "Hóa đơn minh họa. Không có giao dịch thật."
-            : "Yêu cầu thanh toán lưu trên trình duyệt này."
+            : devnet ? "Yêu cầu thanh toán Devnet." : "Yêu cầu thanh toán lưu trên trình duyệt này."
         }
         open={selected !== null}
         onOpenChange={(open) => {
@@ -353,7 +358,7 @@ export function InvoiceTable({
                   {
                     demoContractors.find(
                       (person) => person.id === selected.contractorId,
-                    )?.displayName
+                    )?.displayName || "Người nhận demo"
                   }
                 </dd>
               </div>
@@ -366,7 +371,7 @@ export function InvoiceTable({
                 <dd>Solana Devnet</dd>
               </div>
             </dl>
-            {!selected.id.startsWith("sample-") && (
+            {!!selected.paymentRequestId && !selected.id.startsWith("sample-") && (
               <Link
                 href={"/pay/" + selected.paymentRequestId}
                 className="business-primary-button"

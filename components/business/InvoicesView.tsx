@@ -1,10 +1,10 @@
 "use client";
 import Link from "next/link";
-import { FilePlus2 } from "lucide-react";
+import { FilePlus2, RefreshCw } from "lucide-react";
 import { useInvoices } from "@/components/business/useInvoices";
 import { InvoiceTable } from "@/components/business/InvoiceTable";
 export function InvoicesView() {
-  const { invoices, storageError } = useInvoices();
+  const { invoices, storageError, loading, error, refresh } = useInvoices();
   return (
     <>
       <div className="page-heading-row">
@@ -22,7 +22,10 @@ export function InvoicesView() {
           Không đọc được hóa đơn đã lưu trên trình duyệt này.
         </p>
       )}
-      <InvoiceTable invoices={invoices} />
+      {loading && <p role="status">Đang tải hóa đơn...</p>}
+      {error && <div role="alert"><p className="form-error">Không cập nhật được hóa đơn: {error}</p>
+        <button className="business-secondary-button" onClick={refresh}><RefreshCw size={16} />Thử lại</button></div>}
+      {!loading && <InvoiceTable invoices={invoices} />}
     </>
   );
 }

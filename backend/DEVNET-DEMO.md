@@ -53,8 +53,17 @@ not the mock contractor's wallet. Native mobile wallet integration is not includ
   needs investigation; there is deliberately no automatic replacement transfer.
 - Tests use PostgreSQL with transactional rollback and mocked RPC transactions.
   They do not prove a real wallet-signed transfer has settled.
-- Invoice list/mobile still have mock data paths. The checkout and backend are the
-  authoritative views for this local demo; full shared-data integration remains.
+- With `NEXT_PUBLIC_PAYMENT_MODE=devnet`, invoice lists and dashboard read the
+  backend, refresh every 15 seconds while visible and on window focus, and never
+  fall back to sample invoices on an API failure. The API includes paymentRequestId
+  so issued invoices can reopen checkout. Local demo mode and mobile remain separate.
+- Checkout verifies the stored signature automatically, up to 24 attempts with a
+  five-second delay between requests. Pending responses do not enable another
+  transfer; after the retry window, use the manual verification button.
+- Phase 6 acceptance: create and prepare an invoice, connect a different payer,
+  simulate, personally sign in Phantom, wait for PAID_ON_CHAIN, reload checkout,
+  and check the invoice list/dashboard. Confirmed alone must not count as paid.
+  A real Devnet transfer and its Explorer signature are still required evidence.
 - Run `npm test`, `node --test lib/solana-payment.test.ts`, `npm run lint`,
   `npm run build`, and Maven tests before committing.
 - Do not expose this API or enable production payments until authentication,

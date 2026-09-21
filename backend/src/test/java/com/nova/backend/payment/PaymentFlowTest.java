@@ -81,6 +81,13 @@ class PaymentFlowTest {
             .contentType(MediaType.APPLICATION_JSON).content(body))
             .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("PAID_ON_CHAIN"));
         verify(rpc,times(2)).call(eq("getTransaction"),anyList());
+        String listed = mvc.perform(get("/api/v1/invoices").header("X-Nova-Demo-Key", DEMO_KEY))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        var rows = json.readTree(listed);
+        var matching = java.util.stream.StreamSupport.stream(rows.spliterator(), false)
+            .filter(row -> id.equals(row.path("paymentRequestId").asText())).findFirst().orElseThrow();
+        org.junit.jupiter.api.Assertions.assertEquals("PAID_ON_CHAIN", matching.path("status").asText());
+        org.junit.jupiter.api.Assertions.assertEquals("1000000", matching.path("amountMinor").asText());
     }
 
     @Test void pendingTransactionDoesNotMarkInvoicePaid() throws Exception {
