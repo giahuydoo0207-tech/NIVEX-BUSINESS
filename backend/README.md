@@ -39,7 +39,7 @@ CORS_ALLOWED_ORIGINS=https://<business-domain>,<mobile-web-domain>
 SOLANA_NETWORK=devnet
 SOLANA_RPC_URL=https://api.devnet.solana.com
 SOLANA_DEMO_RECIPIENT=<public-devnet-recipient-wallet>
-SOLANA_USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+SOLANA_USDC_MINT=BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k
 NOVA_DEMO_API_KEY=<same-server-side-demo-key-as-the-web-proxy>
 ```
 

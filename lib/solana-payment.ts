@@ -11,7 +11,7 @@ import { findAssociatedTokenPda, getCreateAssociatedTokenIdempotentInstruction,
 import { getAddMemoInstruction } from "@solana-program/memo";
 import type { DevnetPayment } from "./devnet-api";
 
-export const DEVNET_MINT = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+export const DEVNET_MINT = "BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k";
 export const rpc = createSolanaRpc("https://api.devnet.solana.com");
 export function createWalletClient() {
   return createClient().use(walletSigner({ chain: "solana:devnet", autoConnect: false,
