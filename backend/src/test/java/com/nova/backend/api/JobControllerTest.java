@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
+@org.springframework.transaction.annotation.Transactional
 class JobControllerTest {
     @Autowired
     private MockMvc mvc;

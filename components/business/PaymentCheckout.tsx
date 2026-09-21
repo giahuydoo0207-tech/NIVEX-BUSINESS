@@ -13,12 +13,20 @@ import { formatUsdc } from "@/lib/money";
 import type { Invoice } from "@/types/invoice";
 import { isInvoice } from "@/lib/portal-data";
 import { NivexLogo } from "@/components/ui/NivexLogo";
+import { DevnetCheckout } from "./DevnetCheckout";
 
 export function PaymentCheckout({
   paymentRequestId,
 }: {
   paymentRequestId: string;
 }) {
+  if (/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(paymentRequestId)) {
+    return <DevnetCheckout key={paymentRequestId} paymentRequestId={paymentRequestId} />;
+  }
+  return <DemoPaymentCheckout paymentRequestId={paymentRequestId} />;
+}
+
+function DemoPaymentCheckout({ paymentRequestId }: { paymentRequestId: string }) {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [walletConnected, setWalletConnected] = useState(false);

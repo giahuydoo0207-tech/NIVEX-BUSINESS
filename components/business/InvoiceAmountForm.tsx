@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -14,6 +14,7 @@ import {
 import { demoContractors, demoOrganization } from "@/lib/business-demo-data";
 import { formatUsdc, parseUsdcToMinor } from "@/lib/money";
 import type { Invoice } from "@/types/invoice";
+import { devnetApi } from "@/lib/devnet-api";
 
 export function InvoiceAmountForm({
   initialContractorId,
@@ -29,17 +30,36 @@ export function InvoiceAmountForm({
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const pending = useRef(false);
+  const retry = useRef<{ body: string; key: string } | null>(null);
+  const devnet = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
 
   const parsedAmount = parseUsdcToMinor(amount);
   const selectedContractor =
     demoContractors.find((item) => item.id === contractorId) ?? demoContractors[0];
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!parsedAmount.ok) return setError(parsedAmount.message);
     if (!description.trim())
       return setError("Nhập nội dung công việc hoặc dịch vụ.");
     if (!dueDate) return setError("Chọn hạn thanh toán cho hóa đơn.");
+
+    if (devnet) {
+      if (pending.current) return;
+      pending.current = true; setBusy(true); setError("");
+      const body = { contractorId, description: description.trim(), amountMinor: parsedAmount.minor, dueDate };
+      const serialized = JSON.stringify(body);
+      if (retry.current?.body !== serialized) retry.current = { body: serialized, key: crypto.randomUUID() };
+      try {
+        const created = await devnetApi<{ id: string }>("invoices", body, retry.current.key);
+        const issued = await devnetApi<{ paymentRequest: { id: string } }>(`invoices/${created.id}/issue`, {}, `issue-${created.id}`);
+        router.push(`/pay/${issued.paymentRequest.id}`);
+      } catch (e) { setError(e instanceof Error ? e.message : "Không tạo được hóa đơn."); }
+      finally { pending.current = false; setBusy(false); }
+      return;
+    }
 
     const randomPart = crypto.randomUUID().slice(0, 8).toUpperCase();
     const invoice: Invoice = {
@@ -89,7 +109,7 @@ export function InvoiceAmountForm({
 
         <div className="form-grid">
           <label className="field full">
-            <span>Người nhận</span>
+            <span>{devnet ? "Hồ sơ demo (thanh toán đến ví demo đã cấu hình)" : "Người nhận"}</span>
             <select
               aria-label="Người nhận"
               value={contractorId}
@@ -196,8 +216,7 @@ export function InvoiceAmountForm({
         <div className="job-publish-assurance">
           <ShieldCheck size={18} />
           <span>
-            Kiểm tra người nhận và số tiền trước khi tiếp tục. Hóa đơn thử
-            nghiệm được lưu trên trình duyệt này.
+            {devnet ? "Hóa đơn được lưu ở backend. Bước tiếp theo hiển thị địa chỉ ví nhận demo và cho bạn kiểm tra trước khi ký trên Devnet." : "Kiểm tra người nhận và số tiền trước khi tiếp tục. Hóa đơn thử nghiệm được lưu trên trình duyệt này."}
           </span>
         </div>
         {error && (
@@ -205,7 +224,7 @@ export function InvoiceAmountForm({
             {error}
           </p>
         )}
-        <button className="business-primary-button wide" type="submit">
+        <button className="business-primary-button wide" type="submit" disabled={busy}>
           <span>Tạo yêu cầu thanh toán</span>
           <ArrowRight size={18} />
         </button>

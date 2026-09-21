@@ -43,6 +43,7 @@ public class InvoiceRepository {
             : request.organizationId();
         Optional<Invoice> existing = findByIdempotencyKey(organizationId, idempotencyKey);
         if (existing.isPresent()) {
+            checkReplay(existing.get(), request);
             return new CreateResult(existing.get(), false);
         }
 
@@ -70,15 +71,22 @@ public class InvoiceRepository {
         if (!inserted.isEmpty()) {
             return new CreateResult(inserted.getFirst(), true);
         }
-        return new CreateResult(
-            findByIdempotencyKey(organizationId, idempotencyKey).orElseThrow(),
-            false
-        );
+        Invoice replay = findByIdempotencyKey(organizationId, idempotencyKey).orElseThrow();
+        checkReplay(replay, request);
+        return new CreateResult(replay, false);
+    }
+
+    private void checkReplay(Invoice existing, CreateInvoiceRequest request) {
+        if (!existing.contractorId().equals(request.contractorId()) || !existing.description().equals(request.description())
+            || !existing.amountMinor().equals(request.amountMinor()) || !existing.dueDate().toString().equals(request.dueDate())) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,
+                "Idempotency key already used for a different invoice");
+        }
     }
 
     @Transactional
     public Optional<IssuedInvoice> issue(UUID invoiceId) {
-        Optional<Invoice> invoice = findById(invoiceId);
+        Optional<Invoice> invoice = jdbc.query(invoiceSelect() + " where id = ? for update", this::mapInvoice, invoiceId).stream().findFirst();
         if (invoice.isEmpty()) {
             return Optional.empty();
         }

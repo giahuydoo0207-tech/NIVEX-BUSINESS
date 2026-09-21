@@ -50,6 +50,12 @@ public class InvoiceController {
         @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey,
         @Valid @RequestBody CreateInvoiceRequest request
     ) {
+        if (idempotencyKey.isBlank() || idempotencyKey.length() > 160) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid idempotency key");
+        }
+        if (new java.math.BigInteger(request.amountMinor()).compareTo(new java.math.BigInteger("18446744073709551615")) > 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount exceeds token limit");
+        }
         validateDueDate(request.dueDate());
         CreateResult result = repository.createOrFind(request, idempotencyKey);
         return ResponseEntity.status(result.created() ? HttpStatus.CREATED : HttpStatus.OK)
@@ -84,9 +90,9 @@ public class InvoiceController {
 
     public record CreateInvoiceRequest(
         UUID organizationId,
-        @NotBlank String contractorId,
-        @NotBlank String description,
-        @NotBlank @Pattern(regexp = "^[1-9][0-9]*$") String amountMinor,
+        @NotBlank @jakarta.validation.constraints.Size(max = 120) String contractorId,
+        @NotBlank @jakarta.validation.constraints.Size(max = 4000) String description,
+        @NotBlank @Pattern(regexp = "^[1-9][0-9]{0,19}$") String amountMinor,
         @NotBlank String dueDate
     ) {}
 }
