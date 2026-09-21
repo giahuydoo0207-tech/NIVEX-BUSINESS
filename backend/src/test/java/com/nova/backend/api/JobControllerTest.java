@@ -14,10 +14,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+    properties = "nova.demo.api-key=test-demo-key"
+)
 @AutoConfigureMockMvc
 @org.springframework.transaction.annotation.Transactional
 class JobControllerTest {
+    private static final String DEMO_KEY = "test-demo-key";
+
     @Autowired
     private MockMvc mvc;
 
@@ -76,6 +81,7 @@ class JobControllerTest {
 
         String invoiceId = mvc.perform(post("/api/v1/invoices")
                 .header("Idempotency-Key", createKey)
+                .header("X-Nova-Demo-Key", DEMO_KEY)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isCreated())
@@ -88,17 +94,23 @@ class JobControllerTest {
 
         mvc.perform(post("/api/v1/invoices")
                 .header("Idempotency-Key", createKey)
+                .header("X-Nova-Demo-Key", DEMO_KEY)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(invoiceId));
 
         mvc.perform(get("/api/v1/invoices"))
+            .andExpect(status().isUnauthorized());
+
+        mvc.perform(get("/api/v1/invoices")
+                .header("X-Nova-Demo-Key", DEMO_KEY))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(invoiceId));
 
         mvc.perform(post("/api/v1/invoices/{invoiceId}/issue", invoiceId)
-                .header("Idempotency-Key", issueKey))
+                .header("Idempotency-Key", issueKey)
+                .header("X-Nova-Demo-Key", DEMO_KEY))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.invoice.status").value("ISSUED"))
             .andExpect(jsonPath("$.paymentRequest.status").value("CREATED"))

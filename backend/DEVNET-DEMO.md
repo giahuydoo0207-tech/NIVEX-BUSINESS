@@ -1,8 +1,8 @@
 # Local Devnet checkout
 
-This is an opt-in local demo, not a production payment service. The API has no
-authentication or tenant authorization yet. Keep it bound to localhost. The Next
-proxy intentionally rejects production requests even when the demo flag is set.
+This is an opt-in Devnet demo, not a production payment service. The API has no
+tenant authorization yet, so invoice and payment endpoints require a shared demo
+API key between the Next proxy and backend. Keep the key server-side only.
 
 ## Start backend (PowerShell)
 
@@ -14,6 +14,7 @@ From D:\NIVEX-BUSINESS\backend:
 $env:JAVA_HOME='D:\Tools\Java\jdk-21.0.12.1+1'
 $env:Path="$env:JAVA_HOME\bin;$env:Path"
 $env:SOLANA_DEMO_RECIPIENT='<public recipient address>'
+$env:NOVA_DEMO_API_KEY='replace-with-a-long-random-demo-key'
 New-Item -ItemType Directory -Force 'D:\NIVEX-MOBILE\.runtime\java-sockets' | Out-Null
 & 'D:\Tools\Maven\apache-maven-3.9.10\bin\mvn.cmd' -q package
 & "$env:JAVA_HOME\bin\java.exe" '-Djdk.net.unixdomain.tmpdir=D:\NIVEX-MOBILE\.runtime\java-sockets' -jar target/nova-backend-0.1.0.jar
@@ -29,6 +30,7 @@ Set-Location D:\NIVEX-BUSINESS
 $env:DEVNET_DEMO_ENABLED='true'
 $env:NEXT_PUBLIC_PAYMENT_MODE='devnet'
 $env:NOVA_API_URL='http://127.0.0.1:8080'
+$env:NOVA_DEMO_API_KEY='replace-with-a-long-random-demo-key'
 npm run dev -- --hostname 127.0.0.1 --port 3001
 ```
 
@@ -40,6 +42,9 @@ not the mock contractor's wallet. Native mobile wallet integration is not includ
 
 ## Verification and limitations
 
+- For Railway/Vercel demos, set the same `NOVA_DEMO_API_KEY` value on both
+  services. The browser never receives this key; Vercel sends it to Railway as
+  `X-Nova-Demo-Key`.
 - Backend validates genesis, mint, decimals, signer, memo, recipient owner, exact
   token delta and signature uniqueness. Confirmed is PAYMENT_DETECTED; only
   finalized is PAID_ON_CHAIN. Neither status means fiat payout.

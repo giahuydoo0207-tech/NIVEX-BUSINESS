@@ -37,8 +37,12 @@ DATABASE_USER=<database-user>
 DATABASE_PASSWORD=<database-password>
 CORS_ALLOWED_ORIGINS=https://<business-domain>,<mobile-web-domain>
 SOLANA_NETWORK=devnet
-SOLANA_USDC_MINT=
+SOLANA_RPC_URL=https://api.devnet.solana.com
+SOLANA_DEMO_RECIPIENT=<public-devnet-recipient-wallet>
+SOLANA_USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+NOVA_DEMO_API_KEY=<same-server-side-demo-key-as-the-web-proxy>
 ```
 
-Use a managed PostgreSQL instance in production. `SOLANA_USDC_MINT` remains
-empty until the payment lifecycle is ready for Devnet integration.
+Use a managed PostgreSQL instance in production. `NOVA_DEMO_API_KEY` is a
+temporary demo guard for invoice/payment endpoints; keep it server-side and
+rotate it if it is ever exposed.
