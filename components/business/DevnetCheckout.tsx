@@ -21,6 +21,7 @@ export function DevnetCheckout({ paymentRequestId }: { paymentRequestId: string 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
+  const [staleSignature, setStaleSignature] = useState(false);
   const actionLock = useRef(false);
   const storageKey = `nova.devnet.signature.${paymentRequestId}`;
 
@@ -36,7 +37,7 @@ export function DevnetCheckout({ paymentRequestId }: { paymentRequestId: string 
 
   useEffect(() => {
     let active = true;
-    setPayment(null); setPreview(null); setSignature(""); setError("");
+    setPayment(null); setPreview(null); setSignature(""); setError(""); setStaleSignature(false);
     try { setSignature(localStorage.getItem(storageKey) || ""); } catch { /* Read-only storage is allowed until signing. */ }
     devnetApi<DevnetPayment>(`payment-requests/${paymentRequestId}`).then(p => {
       if (active) { setPayment(p); if (p.signature) setSignature(p.signature); }
@@ -50,6 +51,7 @@ export function DevnetCheckout({ paymentRequestId }: { paymentRequestId: string 
     let active = true;
     let timer: ReturnType<typeof setTimeout>;
     let attempts = 0;
+    setStaleSignature(false);
     async function check() {
       if (actionLock.current) { timer = setTimeout(check, 1000); return; }
       setChecking(true);
@@ -57,7 +59,7 @@ export function DevnetCheckout({ paymentRequestId }: { paymentRequestId: string 
       try {
         const updated = await devnetApi<DevnetPayment>(`payment-requests/${paymentRequestId}/verify`, { signature });
         if (!active) return;
-        setPayment(updated); setError("");
+        setPayment(updated); setError(""); setStaleSignature(false);
         retry = updated.status !== "PAID_ON_CHAIN";
       } catch (e) {
         if (!active) return;
@@ -70,7 +72,10 @@ export function DevnetCheckout({ paymentRequestId }: { paymentRequestId: string 
       if (retry && ++attempts < 24) timer = setTimeout(check, 5000);
       else {
         setChecking(false);
-        if (retry) setError("Chưa xác nhận hoàn tất. Hãy kiểm tra lại giao dịch đã gửi, không thanh toán lại.");
+        if (retry) {
+          setStaleSignature(true);
+          setError("Chữ ký này chưa xuất hiện trên Devnet. Có thể RPC đã từ chối sau khi ví ký, hãy bỏ chữ ký và ký lại.");
+        }
       }
     }
     timer = setTimeout(check, 1000);
@@ -86,7 +91,12 @@ export function DevnetCheckout({ paymentRequestId }: { paymentRequestId: string 
 
   async function verify() {
     const p = await devnetApi<DevnetPayment>(`payment-requests/${paymentRequestId}/verify`, { signature });
-    setPayment(p);
+    setPayment(p); setStaleSignature(false);
+  }
+
+  function clearStaleSignature() {
+    try { localStorage.removeItem(storageKey); } catch { /* Clearing local retry state is best effort. */ }
+    setSignature(""); setPreview(null); setError(""); setStaleSignature(false);
   }
 
   const connected = wallet?.connected;
@@ -134,6 +144,7 @@ export function DevnetCheckout({ paymentRequestId }: { paymentRequestId: string 
           {connected && <button className="business-secondary-button wide" disabled={busy} onClick={() => act(async () => { await client?.wallet.disconnect(); setPreview(null); })}>Đổi ví</button>}
         </>}
         {signature && !paid && <button className="business-primary-button wide" disabled={busy || checking} onClick={() => act(verify)}><RefreshCw size={18} /> Kiểm tra xác nhận giao dịch</button>}
+        {signature && !paid && staleSignature && <button className="business-secondary-button wide" disabled={busy} onClick={clearStaleSignature}>Bỏ chữ ký này và ký lại</button>}
         {checking && <p role="status">Đang chờ xác nhận giao dịch đã gửi trên Devnet...</p>}
         {paid && <p role="status"><ShieldCheck size={20} /> Backend đã xác minh thanh toán hoàn tất trên Devnet.</p>}
         {busy && <p role="status">Đang xử lý...</p>}

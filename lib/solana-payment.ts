@@ -60,8 +60,17 @@ export async function signPayment(preview: Awaited<ReturnType<typeof simulatePay
   if (Date.now() - preview.checkedAt > 45000) throw new Error("Ban xem truoc het han. Hay mo phong lai.");
   const signed = await signTransactionMessageWithSigners(preview.message);
   const signature = getSignatureFromTransaction(signed);
-  // Persist before broadcast: a lost HTTP response must never offer another payment.
+  const wireTransaction = getBase64EncodedWireTransaction(signed);
+  try {
+    await rpc.sendTransaction(wireTransaction, { encoding: "base64", skipPreflight: false, preflightCommitment: "confirmed", maxRetries: 3n }).send();
+  } catch {
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const status = await rpc.getSignatureStatuses([signature], { searchTransactionHistory: true }).send();
+      if (status.value[0]) { persistSignature(signature); return signature; }
+      if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    throw new Error("Giao dich chua duoc gui len Devnet. Hay ki lai de lay blockhash moi.");
+  }
   persistSignature(signature);
-  await rpc.sendTransaction(getBase64EncodedWireTransaction(signed), { encoding: "base64", skipPreflight: false, preflightCommitment: "confirmed", maxRetries: 3n }).send();
   return signature;
 }
