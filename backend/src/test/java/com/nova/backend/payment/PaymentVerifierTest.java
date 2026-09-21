@@ -35,6 +35,13 @@ class PaymentVerifierTest {
 
     @Test void acceptsMatchingTransfer() throws Exception { verify(transaction()); }
 
+    @Test void acceptsKitMemoProgram() throws Exception {
+        var tx=transaction();
+        ((ObjectNode)tx.at("/transaction/message/instructions/1"))
+            .put("programId","Memo4c2pN8afCj432Lb7RMVKi9PbQnnW7ewFFaV3oAH");
+        verify(tx);
+    }
+
     @ParameterizedTest
     @ValueSource(strings={"mint","owner","programId"})
     void rejectsWrongTokenOrRecipient(String field) throws Exception {

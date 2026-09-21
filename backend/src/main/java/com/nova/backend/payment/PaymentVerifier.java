@@ -9,6 +9,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 /** Verify chain evidence, never a client-supplied amount or success flag. */
 public final class PaymentVerifier {
+    private static final Set<String> MEMO_PROGRAMS = Set.of(
+        "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
+        "Memo4c2pN8afCj432Lb7RMVKi9PbQnnW7ewFFaV3oAH");
+
     private PaymentVerifier() {}
 
     public static void verify(JsonNode tx, String signature, String recipient, String mint,
@@ -26,7 +30,7 @@ public final class PaymentVerifier {
         }
         boolean memo = false;
         for (var ix : message.path("instructions")) {
-            if ("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr".equals(ix.path("programId").asText())
+            if (MEMO_PROGRAMS.contains(ix.path("programId").asText())
                     && reference.equals(ix.path("parsed").asText())) memo = true;
         }
         require(memo, "Invoice reference missing");
