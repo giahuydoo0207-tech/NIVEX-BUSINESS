@@ -103,7 +103,7 @@ export function DevnetCheckout({ paymentRequestId }: { paymentRequestId: string 
   return <main className="checkout-page">
     <header className="checkout-header">
       <Link href="/business/invoices" aria-label="Quay lại hóa đơn"><ArrowLeft size={20} /></Link>
-      <NivexLogo size={30} variant="plain" /><span className="network-badge">Solana Devnet</span>
+      <NivexLogo size={30} variant="onLight" /><span className="network-badge">Solana Devnet</span>
     </header>
     <div className="checkout-layout">
       <section className="checkout-invoice">

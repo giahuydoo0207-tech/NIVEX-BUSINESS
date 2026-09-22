@@ -74,7 +74,7 @@ function DemoPaymentCheckout({ paymentRequestId }: { paymentRequestId: string })
         <Link href="/business/dashboard" aria-label="Quay lại dashboard">
           <ArrowLeft size={20} />
         </Link>
-        <NivexLogo size={30} variant="plain" />
+        <NivexLogo size={30} variant="onLight" />
         <span className="network-badge">
           <i />
           Devnet
