@@ -81,6 +81,10 @@ public class PaymentService {
         var used = jdbc.queryForList("select id from payment_requests where transaction_signature=? and id<>?", signature, id);
         if (!used.isEmpty()) throw error(HttpStatus.CONFLICT, "Transaction already belongs to another invoice");
         String next = "finalized".equals(commitment) ? "PAID_ON_CHAIN" : "PAYMENT_DETECTED";
+        jdbc.update("insert into payment_ledger_entries (payment_request_id, commitment, signature, recipient, mint, amount_minor, reference) " +
+            "values (?, ?, ?, ?, ?, ?, ?) on conflict (payment_request_id, commitment) do nothing",
+            id, commitment, signature, payment.recipient(), payment.mint(),
+            new java.math.BigDecimal(payment.amountMinor()), payment.reference());
         jdbc.update("update payment_requests set status=?, transaction_signature=?, confirmed_at=coalesce(confirmed_at,now()), finalized_at=case when ?='PAID_ON_CHAIN' then now() else finalized_at end, updated_at=now() where id=?",
             next, signature, next, id);
         jdbc.update("update invoices set status=?, updated_at=now() where id=?", next, payment.invoiceId());

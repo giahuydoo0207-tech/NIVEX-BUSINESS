@@ -28,6 +28,7 @@ class PaymentFlowTest {
 
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
+    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
     @MockitoBean DevnetRpc rpc;
 
     String create(String key, String amount) throws Exception {
@@ -81,6 +82,10 @@ class PaymentFlowTest {
             .contentType(MediaType.APPLICATION_JSON).content(body))
             .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("PAID_ON_CHAIN"));
         verify(rpc,times(2)).call(eq("getTransaction"),anyList());
+        org.junit.jupiter.api.Assertions.assertEquals(2, jdbc.queryForObject(
+            "select count(*) from payment_ledger_entries where payment_request_id=?", Integer.class, UUID.fromString(id)));
+        org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.queryForObject(
+            "select count(*) from payment_ledger_entries where payment_request_id=? and commitment='finalized'", Integer.class, UUID.fromString(id)));
         String listed = mvc.perform(get("/api/v1/invoices").header("X-Nova-Demo-Key", DEMO_KEY))
             .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         var rows = json.readTree(listed);
