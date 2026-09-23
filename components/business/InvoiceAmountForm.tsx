@@ -15,6 +15,7 @@ import { demoContractors, demoOrganization } from "@/lib/business-demo-data";
 import { formatUsdc, parseUsdcToMinor } from "@/lib/money";
 import type { Invoice } from "@/types/invoice";
 import { devnetApi } from "@/lib/devnet-api";
+import { isFutureInvoiceDueDate, minimumInvoiceDueDate } from "@/lib/invoice-due-date";
 
 export function InvoiceAmountForm({
   initialContractorId,
@@ -45,6 +46,8 @@ export function InvoiceAmountForm({
     if (!description.trim())
       return setError("Nhập nội dung công việc hoặc dịch vụ.");
     if (!dueDate) return setError("Chọn hạn thanh toán cho hóa đơn.");
+    if (devnet && !isFutureInvoiceDueDate(dueDate))
+      return setError("Hạn thanh toán phải sau hôm nay. Vui lòng chọn từ ngày mai trở đi.");
 
     if (devnet) {
       if (pending.current) return;
@@ -173,8 +176,11 @@ export function InvoiceAmountForm({
               <CalendarDays size={18} />
               <input
                 type="date"
+                min={devnet ? minimumInvoiceDueDate() : undefined}
                 value={dueDate}
+                onInvalid={(event) => event.currentTarget.setCustomValidity("Hạn thanh toán phải sau hôm nay. Vui lòng chọn từ ngày mai trở đi.")}
                 onChange={(event) => {
+                  event.target.setCustomValidity("");
                   setDueDate(event.target.value);
                   setError("");
                 }}
