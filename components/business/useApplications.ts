@@ -30,36 +30,28 @@ function sanitizeAndMigrateApplications(
       return null;
     }
 
+    const itemObj = item as CandidateApplication;
+    let badge = itemObj.statusBadge;
+    if (badge === "Shortlist" || badge === "Shortlisted") {
+      badge = "Đã chọn";
+    } else if (badge === "Đang xem xét") {
+      badge = "Đang xem";
+    } else if (badge === "Đã rút hồ sơ") {
+      badge = "Đã rút";
+    }
+
     sanitized.push({
-      ...(item as CandidateApplication),
+      ...itemObj,
       status: normalizedStatus,
+      statusBadge: badge,
     });
   }
 
   return sanitized;
 }
 
-function getInitialApplications(): CandidateApplication[] {
-  if (typeof window === "undefined") return demoApplications;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const sanitized = sanitizeAndMigrateApplications(parsed);
-      if (sanitized) {
-        return sanitized;
-      }
-    }
-  } catch {
-    /* fallback to demo */
-  }
-  return demoApplications;
-}
-
 export function useApplications() {
-  const [applications, setApplications] = useState<CandidateApplication[]>(
-    getInitialApplications,
-  );
+  const [applications, setApplications] = useState<CandidateApplication[]>(demoApplications);
 
   useEffect(() => {
     function loadFromStorage() {

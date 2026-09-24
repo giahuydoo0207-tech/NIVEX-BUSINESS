@@ -84,6 +84,12 @@ export function ApplicationsView({
     return applications[0]?.id ?? "";
   });
 
+  useEffect(() => {
+    if (applications.length > 0 && !applications.some((app) => app.id === selectedId)) {
+      setSelectedId(applications[0].id);
+    }
+  }, [applications, selectedId]);
+
   const visibleApplications = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("vi");
     return jobApplications.filter((application) => {
@@ -364,7 +370,9 @@ export function ApplicationsView({
                           {status.label}
                         </i>
                         {application.statusBadge &&
-                          application.statusBadge !== status.label && (
+                          application.statusBadge !== status.label &&
+                          application.statusBadge !== "Shortlist" &&
+                          application.statusBadge !== "Đã chọn" && (
                             <span className="application-readiness-badge">
                               {application.statusBadge}
                             </span>
