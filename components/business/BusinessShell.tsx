@@ -25,6 +25,7 @@ import { PortalDialog } from "@/components/ui/PortalDialog";
 import {
   DEFAULT_BUSINESS_THEME_ID,
   getInitialThemeId,
+  isBusinessThemeId,
   setStoredThemeId,
   type BusinessThemeId,
 } from "@/types/theme";
@@ -80,6 +81,7 @@ export function BusinessShell({
   breadcrumbLabel,
   activeAction,
   hideTopbar = false,
+  initialTheme,
 }: {
   children: React.ReactNode;
   active:
@@ -93,9 +95,12 @@ export function BusinessShell({
   breadcrumbLabel?: string;
   activeAction?: "newJob" | "newInvoice";
   hideTopbar?: boolean;
+  initialTheme?: BusinessThemeId;
 }) {
   const [menu, setMenu] = useState(false);
-  const [themeId, setThemeId] = useState<BusinessThemeId>(DEFAULT_BUSINESS_THEME_ID);
+  const [themeId, setThemeId] = useState<BusinessThemeId>(
+    initialTheme || DEFAULT_BUSINESS_THEME_ID
+  );
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
   const [dialog, setDialog] = useState<
@@ -108,6 +113,12 @@ export function BusinessShell({
   };
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paramTheme = params.get("theme");
+    if (paramTheme && isBusinessThemeId(paramTheme)) {
+      setThemeId(paramTheme);
+      return;
+    }
     const stored = getInitialThemeId();
     if (stored && stored !== DEFAULT_BUSINESS_THEME_ID) {
       setThemeId(stored);

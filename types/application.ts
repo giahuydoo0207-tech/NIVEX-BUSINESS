@@ -28,6 +28,32 @@ export interface PortfolioPreviewItem {
   description?: string;
 }
 
+export interface CandidateExperience {
+  id?: string;
+  role: string;
+  company: string;
+  period: string;
+  description: string;
+}
+
+export interface CandidateEducation {
+  degree: string;
+  institution: string;
+  years: string;
+  note?: string;
+}
+
+export interface CandidatePortfolioProject {
+  id: string;
+  title: string;
+  role?: string;
+  description?: string;
+  badge?: string;
+  badgeTone?: "amber" | "blue" | "green";
+  url?: string;
+  techTags?: string[];
+}
+
 export interface CandidateApplication {
   id: string;
   jobId: string;
@@ -50,6 +76,25 @@ export interface CandidateApplication {
   createdAt: string;
   updatedAt: string;
   messages: ApplicationMessage[];
+
+  // Mobile Parity Profile fields
+  username?: string;
+  avatarUrl?: string;
+  statusBadge?: string;
+  workType?: string;
+  capacity?: string;
+  timezone?: string;
+  languages?: string;
+  profileCompletion?: number;
+  completionTip?: string;
+  trustRank?: string;
+  trustRankSubtitle?: string;
+  bio?: string;
+  detailedSkills?: string[];
+  detailedPortfolio?: CandidatePortfolioProject[];
+  experiences?: CandidateExperience[];
+  education?: CandidateEducation;
+  privacyNotice?: string;
 }
 
 export type Application = CandidateApplication;

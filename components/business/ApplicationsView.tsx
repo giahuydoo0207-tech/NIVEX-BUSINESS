@@ -3,27 +3,31 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
+  AlignLeft,
+  Briefcase,
   Check,
-  Clock3,
+  ChevronRight,
+  Clock,
+  Code2,
   ExternalLink,
   FilterX,
-  Mail,
+  GraduationCap,
+  Landmark,
+  Layers,
+  LayoutGrid,
+  Languages,
   MapPin,
   MessageCircle,
-  MessagesSquare,
   Search,
-  Sparkles,
+  Shield,
+  ShieldCheck,
   UserRoundCheck,
   X,
 } from "lucide-react";
 import { useApplications } from "@/components/business/useApplications";
 import { useJobs } from "@/components/business/useJobs";
 import { NEXT_ACTIONS, statusCopy } from "@/lib/application-status";
-import type {
-  ApplicationStatus,
-  CandidateApplication,
-  PortfolioPreviewItem,
-} from "@/types/application";
+import type { ApplicationStatus } from "@/types/application";
 
 type ApplicationFilter = "ALL" | ApplicationStatus;
 
@@ -37,53 +41,6 @@ const filters: Array<{ value: ApplicationFilter; label: string }> = [
   { value: "rejected", label: "Từ chối" },
   { value: "withdrawn", label: "Đã rút" },
 ];
-
-function PortfolioItemCard({ item }: { item: PortfolioPreviewItem }) {
-  const [imgError, setImgError] = useState(false);
-  const initials =
-    item.title
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((w) => w[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase() || "PF";
-
-  const showThumb = Boolean(item.thumbnailUrl) && !imgError;
-
-  return (
-    <a
-      href={item.url || "#"}
-      target={item.url ? "_blank" : undefined}
-      rel={item.url ? "noopener noreferrer" : undefined}
-      className="portfolio-preview-card"
-    >
-      <div className="portfolio-card-thumb-wrapper">
-        {showThumb ? (
-          <img
-            src={item.thumbnailUrl}
-            alt={item.title}
-            className="portfolio-preview-thumbnail"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div className="portfolio-preview-fallback">
-            <span>{initials}</span>
-          </div>
-        )}
-      </div>
-      <div className="portfolio-preview-meta">
-        <strong className="portfolio-preview-title">
-          <span>{item.title}</span>
-          {item.url && <ExternalLink size={13} />}
-        </strong>
-        {item.description && (
-          <p className="portfolio-preview-desc">{item.description}</p>
-        )}
-      </div>
-    </a>
-  );
-}
 
 interface ApplicationsViewProps {
   initialCandidateId?: string;
@@ -144,67 +101,8 @@ export function ApplicationsView({
     );
   }, [jobApplications, selectedId, visibleApplications]);
 
-  const newCount = jobApplications.filter(
-    (app) => app.status === "submitted",
-  ).length;
-  const reviewCount = jobApplications.filter(
-    (app) => app.status === "viewed" || app.status === "shortlisted",
-  ).length;
-  const interviewCount = jobApplications.filter(
-    (app) => app.status === "interview",
-  ).length;
-  const acceptedCount = jobApplications.filter(
-    (app) => app.status === "accepted",
-  ).length;
-
   return (
     <div className="applications-view">
-      <div className="page-heading-row">
-        <div>
-          <h1>Ứng viên</h1>
-          <p>Đánh giá năng lực, kinh nghiệm và mức độ phù hợp của từng hồ sơ.</p>
-        </div>
-      </div>
-
-      <section className="application-command-strip" aria-label="Tổng quan ứng viên">
-        <article>
-          <span className="jobs-command-icon blue">
-            <Sparkles size={18} />
-          </span>
-          <span>
-            <small>HỒ SƠ MỚI</small>
-            <strong>{newCount} cần mở</strong>
-          </span>
-        </article>
-        <article>
-          <span className="jobs-command-icon amber">
-            <Clock3 size={18} />
-          </span>
-          <span>
-            <small>ĐANG XEM & SHORTLIST</small>
-            <strong>{reviewCount} hồ sơ</strong>
-          </span>
-        </article>
-        <article>
-          <span className="jobs-command-icon blue">
-            <MessagesSquare size={18} />
-          </span>
-          <span>
-            <small>PHỎNG VẤN</small>
-            <strong>{interviewCount} ứng viên</strong>
-          </span>
-        </article>
-        <article>
-          <span className="jobs-command-icon green">
-            <UserRoundCheck size={18} />
-          </span>
-          <span>
-            <small>ĐÃ NHẬN (HIRED)</small>
-            <strong>{acceptedCount} người</strong>
-          </span>
-        </article>
-      </section>
-
       {filterJobId && (
         <div className="application-filter-banner">
           <div>
@@ -223,253 +121,582 @@ export function ApplicationsView({
       )}
 
       <section className="application-workbench">
+        {/* ========================================================
+            CỘT TRÁI: HÀNG CHỜ XÉT DUYỆT / DANH SÁCH ỨNG VIÊN
+            ======================================================== */}
         <aside className="application-queue" aria-label="Danh sách ứng viên">
-          <div className="application-queue-head">
-            <div>
-              <strong>Hàng chờ xét duyệt</strong>
-              <small>{visibleApplications.length} hồ sơ</small>
+          <div className="application-queue-sticky-top">
+            <div className="application-queue-head">
+              <div className="application-queue-title-row">
+                <strong>Hàng chờ xét duyệt</strong>
+                <span className="application-count-pill">
+                  {visibleApplications.length} hồ sơ
+                </span>
+              </div>
+              <label className="application-search">
+                <Search size={14} />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  aria-label="Tìm ứng viên"
+                  placeholder="Tìm ứng viên..."
+                />
+                {query && (
+                  <button
+                    type="button"
+                    className="application-search-clear"
+                    onClick={() => setQuery("")}
+                    aria-label="Xóa tìm kiếm"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </label>
             </div>
-            <label className="application-search">
-              <Search size={15} />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                aria-label="Tìm ứng viên"
-                placeholder="Tìm ứng viên..."
-              />
-            </label>
-          </div>
-          <div
-            className="application-tabs"
-            role="tablist"
-            aria-label="Lọc hồ sơ"
-          >
-            {filters.map((item) => (
-              <button
-                type="button"
-                role="tab"
-                aria-selected={filter === item.value}
-                className={filter === item.value ? "active" : undefined}
-                onClick={() => setFilter(item.value)}
-                key={item.value}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-          <div className="application-list">
-            {visibleApplications.map((application) => {
-              const status = statusCopy[application.status];
-              return (
+
+            {/* 8 BỘ LỌC TRẠNG THÁI STICKY */}
+            <div
+              className="application-tabs"
+              role="tablist"
+              aria-label="Lọc hồ sơ theo trạng thái"
+            >
+              {filters.map((item) => (
                 <button
                   type="button"
-                  className={
-                    application.id === selected?.id ? "active" : undefined
-                  }
-                  onClick={() => setSelectedId(application.id)}
-                  key={application.id}
+                  role="tab"
+                  aria-selected={filter === item.value}
+                  className={`application-tab-btn ${
+                    filter === item.value ? "active" : ""
+                  }`}
+                  onClick={() => setFilter(item.value)}
+                  key={item.value}
                 >
-                  <span className="application-avatar">
-                    {application.initials}
-                  </span>
-                  <span className="application-list-copy">
-                    <span>
-                      <strong>{application.candidateName}</strong>
-                      <small>{application.submittedAt.split(" · ")[1]}</small>
-                    </span>
-                    <b>{application.headline}</b>
-                    <small>{application.jobTitle}</small>
-                    <i className={`application-status ${status.tone}`}>
-                      {status.label}
-                    </i>
-                  </span>
+                  <span>{item.label}</span>
                 </button>
-              );
-            })}
-            {visibleApplications.length === 0 && (
-              <div className="application-empty">
-                <Search size={24} />
-                <strong>Không có hồ sơ phù hợp</strong>
-                <small>Thử đổi từ khóa hoặc trạng thái.</small>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
+
+          {/* VÙNG LƯỚT VÔ HÌNH: DANH SÁCH ỨNG VIÊN */}
+          <div className="application-list-scroll">
+            <div className="application-list">
+              {visibleApplications.map((application) => {
+                const status = statusCopy[application.status];
+                const isSelected = application.id === selected?.id;
+                return (
+                  <button
+                    type="button"
+                    className={`application-card-item ${
+                      isSelected ? "active" : ""
+                    }`}
+                    onClick={() => setSelectedId(application.id)}
+                    key={application.id}
+                  >
+                    <div className="application-card-avatar-wrap">
+                      {application.avatarUrl ? (
+                        <img
+                          src={application.avatarUrl}
+                          alt={application.candidateName}
+                          className="application-card-avatar-img"
+                        />
+                      ) : (
+                        <span className="application-avatar">
+                          {application.initials}
+                        </span>
+                      )}
+                      {(application.statusBadge === "Sẵn sàng" ||
+                        application.status === "submitted") && (
+                        <span className="avatar-online-dot" />
+                      )}
+                    </div>
+                    <div className="application-list-copy">
+                      <div className="application-list-top-row">
+                        <strong className="candidate-name">
+                          {application.candidateName}
+                        </strong>
+                        <span className="candidate-time">
+                          {application.submittedAt.includes("·")
+                            ? application.submittedAt.split(" · ")[1]
+                            : application.submittedAt}
+                        </span>
+                      </div>
+                      <span className="candidate-headline">
+                        {application.headline}
+                      </span>
+                      <small className="candidate-job-tag">
+                        {application.jobTitle}
+                      </small>
+                      <div className="application-card-badges">
+                        <i className={`application-status ${status.tone}`}>
+                          {status.label}
+                        </i>
+                        {application.statusBadge &&
+                          application.statusBadge !== status.label && (
+                            <span className="application-readiness-badge">
+                              {application.statusBadge}
+                            </span>
+                          )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+              {visibleApplications.length === 0 && (
+                <div className="application-empty">
+                  <Search size={24} />
+                  <strong>Không có hồ sơ phù hợp</strong>
+                  <small>Thử đổi từ khóa hoặc bộ lọc trạng thái.</small>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="application-queue-fade" aria-hidden="true" />
         </aside>
 
+        {/* ========================================================
+            CỘT PHẢI: PROFILE ỨNG VIÊN CHI TIẾT (CHUẨN MOBILE PARITY)
+            ======================================================== */}
         {selected ? (
-          <div className="candidate-workspace">
-            <header className="candidate-header">
-              <div className="candidate-identity">
-                <span className="application-avatar large">
-                  {selected.initials}
-                </span>
-                <span>
-                  <small>
-                    ỨNG TUYỂN ·{" "}
-                    <Link
-                      href={`/business/jobs/${selected.jobId}`}
-                      className="candidate-job-link"
-                      title="Xem chi tiết cơ hội việc làm"
-                    >
-                      {selected.jobTitle}
-                    </Link>
-                  </small>
-                  <strong>{selected.candidateName}</strong>
-                  <p>{selected.headline}</p>
+          <div
+            className="candidate-profile-scroll"
+            id="candidate-profile-container"
+          >
+            {/* STICKY HEADER ACTIONS BAR */}
+            <header className="candidate-sticky-header">
+              <div className="candidate-header-meta">
+                <span className="candidate-header-prefix">ỨNG TUYỂN</span>
+                <span className="candidate-header-dot">·</span>
+                <Link
+                  href={`/business/jobs/${selected.jobId}`}
+                  className="candidate-header-job-link"
+                  title="Xem chi tiết cơ hội việc làm"
+                >
+                  {selected.jobTitle}
+                </Link>
+                <span
+                  className={`application-status ${statusCopy[selected.status].tone}`}
+                >
+                  {statusCopy[selected.status].label}
                 </span>
               </div>
-              <div className="candidate-status-block">
+
+              <div className="candidate-header-actions">
                 <Link
                   href={`/business/messages?candidate=${selected.id}`}
-                  className="candidate-message-button"
-                  aria-label={`Nhắn tin với ${selected.candidateName}`}
-                  title="Nhắn tin"
+                  className="candidate-action-btn message-btn"
+                  title={`Nhắn tin với ${selected.candidateName}`}
                 >
-                  <MessageCircle size={19} />
+                  <MessageCircle size={15} />
                   <span>Nhắn tin</span>
                 </Link>
-                <div>
-                  <span
-                    className={`application-status ${statusCopy[selected.status].tone}`}
-                  >
-                    {statusCopy[selected.status].label}
-                  </span>
-                  <small>{statusCopy[selected.status].description}</small>
-                </div>
+
+                {selected.status !== "withdrawn" &&
+                  selected.status !== "rejected" &&
+                  selected.status !== "accepted" && (
+                    <>
+                      <button
+                        type="button"
+                        className="candidate-action-btn reject-btn"
+                        onClick={() => updateStatus(selected.id, "rejected")}
+                      >
+                        <X size={15} />
+                        <span>Từ chối</span>
+                      </button>
+
+                      {NEXT_ACTIONS[selected.status]?.map((action) => (
+                        <button
+                          type="button"
+                          key={action.next}
+                          className={`candidate-action-btn ${
+                            action.tone === "primary"
+                              ? "primary-action-btn"
+                              : "secondary-action-btn"
+                          }`}
+                          onClick={() => updateStatus(selected.id, action.next)}
+                        >
+                          {action.next === "accepted" && <Check size={15} />}
+                          <span>{action.label}</span>
+                        </button>
+                      ))}
+                    </>
+                  )}
               </div>
             </header>
 
-            <div className="candidate-body candidate-body-profile-only">
-              <section
-                className="candidate-profile"
-                aria-label="Thông tin ứng viên"
-              >
-                <div className="candidate-contact-grid">
-                  <span>
-                    <Mail size={14} />
-                    {selected.email}
-                  </span>
-                  <span>
-                    <MapPin size={14} />
-                    {selected.location}
-                  </span>
-                  {selected.portfolioLabel && (
-                    <span>
-                      <ExternalLink size={14} />
-                      <a
-                        href={
-                          selected.portfolioLabel.startsWith("http")
-                            ? selected.portfolioLabel
-                            : `https://${selected.portfolioLabel}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {selected.portfolioLabel}
-                      </a>
-                    </span>
-                  )}
+            {/* VÙNG LƯỚT VÔ HÌNH: NỘI DUNG PROFILE CHI TIẾT */}
+            <div className="candidate-profile-content">
+              {/* THÔNG BÁO TRẠNG THÁI CUỐI CÙNG NẾU CÓ */}
+              {selected.status === "withdrawn" && (
+                <div className="profile-banner-notice withdrawn">
+                  <span>Ứng viên đã chủ động rút hồ sơ ứng tuyển.</span>
                 </div>
-                <div className="candidate-match-row">
-                  <span>
-                    <Sparkles size={16} />
-                    Mức phù hợp hồ sơ
-                  </span>
-                  <strong>{selected.matchScore}%</strong>
-                  <i>
-                    <span style={{ width: `${selected.matchScore}%` }} />
-                  </i>
+              )}
+              {selected.status === "rejected" && (
+                <div className="profile-banner-notice rejected">
+                  <span>Hồ sơ đã được đánh dấu từ chối.</span>
                 </div>
-                <div className="candidate-copy-block">
-                  <small>LỜI NHẮN ỨNG TUYỂN</small>
-                  <p>{selected.coverNote || selected.coverLetter}</p>
+              )}
+              {selected.status === "accepted" && (
+                <div className="profile-banner-notice accepted">
+                  <Check size={16} />
+                  <span>Ứng viên đã được nhận chính thức (Hired).</span>
                 </div>
-                <div className="candidate-copy-block split">
-                  <span>
-                    <small>KỸ NĂNG</small>
-                    <span className="job-skill-list">
-                      {selected.skills.map((skill) => (
-                        <span key={skill}>{skill}</span>
-                      ))}
-                    </span>
+              )}
+
+              {/* 1. HERO PROFILE CARD */}
+              <div className="mobile-profile-hero-card">
+                <div className="hero-top-row">
+                  <div className="hero-avatar-area">
+                    <div className="hero-avatar-ring">
+                      {selected.avatarUrl ? (
+                        <img
+                          src={selected.avatarUrl}
+                          alt={selected.candidateName}
+                          className="hero-avatar-image"
+                        />
+                      ) : (
+                        <span className="hero-avatar-initials">
+                          {selected.initials}
+                        </span>
+                      )}
+                      <span className="hero-online-badge" />
+                    </div>
+                    <div className="hero-names">
+                      <h2 className="hero-candidate-name">
+                        {selected.candidateName}
+                      </h2>
+                      <span className="hero-username">
+                        {selected.username ||
+                          `@${selected.initials.toLowerCase()}.nova`}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="hero-readiness-badge">
+                    <span className="readiness-dot" />
+                    <span>{selected.statusBadge || "Sẵn sàng"}</span>
+                  </div>
+                </div>
+
+                <div className="hero-headline">{selected.headline}</div>
+
+                <div className="hero-meta-chips">
+                  <span className="hero-meta-item">
+                    <MapPin size={13} />
+                    <span>{selected.location}</span>
                   </span>
-                  <span>
-                    <small>THỜI GIAN BẮT ĐẦU</small>
-                    <p>{selected.availability}</p>
+                  <span className="hero-meta-item">
+                    <Clock size={13} />
+                    <span>{selected.timezone || "UTC+7"}</span>
+                  </span>
+                  <span className="hero-meta-item">
+                    <Languages size={13} />
+                    <span>{selected.languages || "Tiếng Việt · English"}</span>
                   </span>
                 </div>
 
-                {selected.portfolioPreview &&
-                  selected.portfolioPreview.length > 0 && (
-                    <div className="candidate-copy-block portfolio-section">
-                      <small>DỰ ÁN / PORTFOLIO TIÊU BIỂU</small>
-                      <div className="portfolio-preview-grid">
-                        {selected.portfolioPreview.map((item) => (
-                          <PortfolioItemCard key={item.id} item={item} />
-                        ))}
+                <div className="hero-card-divider" />
+
+                <div className="hero-work-specs">
+                  <div className="spec-item">
+                    <span className="spec-label">Hình thức</span>
+                    <strong className="spec-val">
+                      {selected.workType || "Remote · Theo dự án"}
+                    </strong>
+                  </div>
+                  <div className="spec-item">
+                    <span className="spec-label">Năng lực</span>
+                    <strong className="spec-val">
+                      {selected.capacity ||
+                        selected.availability ||
+                        "20 giờ/tuần"}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. MỨC ĐỘ HOÀN THIỆN HỒ SƠ */}
+              <div className="mobile-profile-completion-card">
+                <div className="completion-header">
+                  <span className="completion-title">
+                    Mức độ hoàn thiện hồ sơ
+                  </span>
+                  <strong className="completion-percent">
+                    {selected.profileCompletion || selected.matchScore || 86}%
+                  </strong>
+                </div>
+                <div
+                  className="completion-track"
+                  role="progressbar"
+                  aria-valuenow={
+                    selected.profileCompletion || selected.matchScore || 86
+                  }
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div
+                    className="completion-fill"
+                    style={{
+                      width: `${
+                        selected.profileCompletion || selected.matchScore || 86
+                      }%`,
+                    }}
+                  />
+                </div>
+                <p className="completion-tip">
+                  {selected.completionTip ||
+                    "Bổ sung chứng chỉ để doanh nghiệp có thêm cơ sở đánh giá."}
+                </p>
+              </div>
+
+              {/* 3. CẤP BẬC UY TÍN */}
+              <div className="mobile-profile-reputation-card">
+                <div className="reputation-left">
+                  <div className="reputation-icon-wrap">
+                    <Shield size={18} />
+                  </div>
+                  <div className="reputation-text">
+                    <strong className="reputation-title">
+                      {selected.trustRank || "Chưa xếp hạng"}
+                    </strong>
+                    <span className="reputation-subtitle">
+                      {selected.trustRankSubtitle || "Cấp bậc uy tín Nova"}
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight size={18} className="reputation-chevron" />
+              </div>
+
+              {/* 4. GIỚI THIỆU */}
+              <div className="mobile-profile-section">
+                <div className="section-title-row">
+                  <AlignLeft size={16} />
+                  <h3>Giới thiệu</h3>
+                </div>
+                <div className="section-card-surface">
+                  <p className="bio-text">
+                    {selected.bio ||
+                      selected.coverNote ||
+                      selected.coverLetter ||
+                      "Tôi xây dựng ứng dụng Flutter cho fintech và các sản phẩm thanh toán. Tôi tập trung vào giao diện responsive, code dễ bảo trì và tiến độ minh bạch theo từng giai đoạn."}
+                  </p>
+                </div>
+              </div>
+
+              {/* 5. KỸ NĂNG */}
+              <div className="mobile-profile-section">
+                <div className="section-title-row">
+                  <Code2 size={16} />
+                  <h3>Kỹ năng</h3>
+                </div>
+                <div className="skills-chip-wrap">
+                  {(selected.detailedSkills || selected.skills).map(
+                    (skill, idx) => {
+                      const isEmphasized = idx === 0 || skill === "Flutter";
+                      return (
+                        <span
+                          key={skill}
+                          className={`mobile-skill-chip ${
+                            isEmphasized ? "emphasized" : ""
+                          }`}
+                        >
+                          {skill}
+                        </span>
+                      );
+                    },
+                  )}
+                </div>
+              </div>
+
+              {/* 6. PORTFOLIO NỔI BẬT */}
+              <div className="mobile-profile-section">
+                <div className="section-title-row">
+                  <LayoutGrid size={16} />
+                  <h3>Portfolio nổi bật</h3>
+                </div>
+                <div className="portfolio-cards-stack">
+                  {(
+                    selected.detailedPortfolio || [
+                      {
+                        id: "p1",
+                        title:
+                          selected.portfolioPreview[0]?.title ||
+                          "Nova Mobile Prototype",
+                        role: "Flutter Developer",
+                        description:
+                          selected.portfolioPreview[0]?.description ||
+                          "Ứng dụng hỗ trợ freelancer tìm việc, trao đổi và theo dõi thanh toán quốc tế.",
+                        badge: "Prototype",
+                        badgeTone: "amber" as const,
+                        url:
+                          selected.portfolioPreview[0]?.url ||
+                          "https://github.com",
+                        techTags: ["Flutter", "Dart", "Solana Devnet"],
+                      },
+                      {
+                        id: "p2",
+                        title:
+                          selected.portfolioPreview[1]?.title ||
+                          "Nova Business",
+                        role: "Product & Frontend Developer",
+                        description:
+                          selected.portfolioPreview[1]?.description ||
+                          "Không gian doanh nghiệp để đăng cơ hội, xét duyệt ứng viên và quản lý yêu cầu thanh toán.",
+                        badge: "Đang phát triển",
+                        badgeTone: "amber" as const,
+                        url:
+                          selected.portfolioPreview[1]?.url ||
+                          "https://business.novapay.dev",
+                        techTags: ["Next.js", "TypeScript", "UI/UX"],
+                      },
+                    ]
+                  ).map((project) => (
+                    <div key={project.id} className="mobile-project-card">
+                      <div className="project-card-header">
+                        <div className="project-title-area">
+                          <div className="project-icon-box">
+                            <Layers size={18} />
+                          </div>
+                          <div className="project-headings">
+                            <h4 className="project-name">{project.title}</h4>
+                            {project.role && (
+                              <span className="project-role">
+                                {project.role}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {project.badge && (
+                          <span
+                            className={`project-status-badge ${
+                              project.badgeTone || "amber"
+                            }`}
+                          >
+                            {project.badge}
+                          </span>
+                        )}
+                      </div>
+
+                      {project.description && (
+                        <p className="project-desc">{project.description}</p>
+                      )}
+
+                      {project.url && (
+                        <a
+                          href={project.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="project-link"
+                        >
+                          <ExternalLink size={13} />
+                          <span>Xem sản phẩm</span>
+                        </a>
+                      )}
+
+                      {project.techTags && project.techTags.length > 0 && (
+                        <div className="project-tech-tags">
+                          {project.techTags.map((tag) => (
+                            <span key={tag} className="tech-tag-chip">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 7. KINH NGHIỆM */}
+              <div className="mobile-profile-section">
+                <div className="section-title-row">
+                  <Briefcase size={16} />
+                  <h3>Kinh nghiệm</h3>
+                </div>
+                <div className="section-card-surface experience-surface">
+                  {(
+                    selected.experiences || [
+                      {
+                        id: "exp-default",
+                        role: "Flutter Developer",
+                        company: "Independent Freelancer",
+                        period: "2024 - nay",
+                        description:
+                          "Xây dựng auth flow, wallet, payment request và kiểm thử responsive trên thiết bị Android thật.",
+                      },
+                    ]
+                  ).map((exp, index, arr) => (
+                    <div key={exp.id || exp.role} className="experience-item">
+                      <div className="experience-timeline">
+                        <span className="timeline-dot" />
+                        {index < arr.length - 1 && (
+                          <span className="timeline-line" />
+                        )}
+                      </div>
+                      <div className="experience-content">
+                        <h4 className="experience-role">{exp.role}</h4>
+                        <span className="experience-company-period">
+                          {exp.company} · {exp.period}
+                        </span>
+                        <p className="experience-desc">{exp.description}</p>
                       </div>
                     </div>
-                  )}
-
-                <div className="candidate-review-actions">
-                  {selected.status === "withdrawn" && (
-                    <div className="application-status-notice withdrawn">
-                      <span>Ứng viên đã chủ động rút hồ sơ ứng tuyển.</span>
-                    </div>
-                  )}
-
-                  {selected.status === "rejected" && (
-                    <div className="application-status-notice rejected">
-                      <span>Hồ sơ đã được đánh dấu từ chối.</span>
-                    </div>
-                  )}
-
-                  {selected.status === "accepted" && (
-                    <div className="application-status-notice accepted">
-                      <Check size={16} />
-                      <span>Ứng viên đã được nhận chính thức (Hired).</span>
-                    </div>
-                  )}
-
-                  {selected.status !== "withdrawn" &&
-                    selected.status !== "rejected" &&
-                    selected.status !== "accepted" && (
-                      <>
-                        <button
-                          type="button"
-                          className="business-secondary-button button-danger"
-                          onClick={() => updateStatus(selected.id, "rejected")}
-                        >
-                          <X size={16} /> Từ chối
-                        </button>
-
-                        {NEXT_ACTIONS[selected.status]?.map((action) => (
-                          <button
-                            type="button"
-                            key={action.next}
-                            className={
-                              action.tone === "primary"
-                                ? "business-primary-button"
-                                : "business-secondary-button"
-                            }
-                            onClick={() =>
-                              updateStatus(selected.id, action.next)
-                            }
-                          >
-                            {action.next === "accepted" && <Check size={16} />}
-                            {action.label}
-                          </button>
-                        ))}
-                      </>
-                    )}
+                  ))}
                 </div>
-              </section>
+              </div>
+
+              {/* 8. HỌC VẤN & CHỨNG CHỈ */}
+              <div className="mobile-profile-section">
+                <div className="section-title-row">
+                  <GraduationCap size={16} />
+                  <h3>Học vấn & chứng chỉ</h3>
+                </div>
+                <div className="section-card-surface education-surface">
+                  <div className="education-icon-box">
+                    <Landmark size={20} />
+                  </div>
+                  <div className="education-content">
+                    <h4 className="education-degree">
+                      {selected.education?.degree || "Kỹ thuật phần mềm"}
+                    </h4>
+                    <span className="education-institution">
+                      {selected.education?.institution ||
+                        "Đại học FPT Đà Nẵng"}{" "}
+                      ·{" "}
+                      {selected.education?.years || "Sinh viên · 2023 - 2027"}
+                    </span>
+                    <span className="education-note">
+                      {selected.education?.note ||
+                        "Thông tin do người dùng tự khai"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 9. QUYỀN RIÊNG TƯ */}
+              <div className="mobile-privacy-card">
+                <div className="privacy-icon-box">
+                  <ShieldCheck size={18} />
+                </div>
+                <div className="privacy-content">
+                  <strong className="privacy-title">
+                    Hiển thị: Người dùng Nova
+                  </strong>
+                  <p className="privacy-desc">
+                    {selected.privacyNotice ||
+                      "Email, số điện thoại, tài khoản ngân hàng và địa chỉ ví không xuất hiện trong hồ sơ này."}
+                  </p>
+                </div>
+              </div>
             </div>
+
+            {/* FADE NHẸ DƯỚI ĐÁY BÁO HIỆU CÒN NỘI DUNG CUỘN */}
+            <div className="candidate-profile-fade" aria-hidden="true" />
           </div>
         ) : (
           <div className="application-empty workspace">
-            <UserRoundCheck size={30} />
+            <UserRoundCheck size={36} />
             <strong>Chọn một hồ sơ để bắt đầu</strong>
+            <small>Nhấp vào bất kỳ ứng viên nào bên trái để xem hồ sơ chi tiết</small>
           </div>
         )}
       </section>

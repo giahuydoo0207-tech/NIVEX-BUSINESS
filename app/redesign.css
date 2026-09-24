@@ -437,7 +437,7 @@ body:has(.business-app) {
   margin: auto;
   flex: 1;
 }
-.business-app:not(.business-app-messages) .business-content::after {
+.business-app:not(.business-app-messages):not(.business-app-applications) .business-content::after {
   content: "";
   display: block;
   height: 56px;
@@ -4494,460 +4494,46 @@ body:has(.business-app) {
   font-weight: 560;
 }
 .application-workbench {
-  min-height: 690px;
-  display: grid;
-  grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.9fr);
-  border: 1px solid #2d3a4f;
-  background: #06101de8;
-}
-.application-queue {
-  min-width: 0;
-  overflow: hidden;
-  border-right: 1px solid #2d3a4f;
-}
-.application-queue-head {
-  min-height: 82px;
-  display: grid;
-  gap: 12px;
-  padding: 15px;
-  border-bottom: 1px solid #263347;
-}
-.application-queue-head > div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.application-queue-head strong {
-  font-size: 12px;
-}
-.application-queue-head small {
-  color: #718198;
-  font-family: Consolas, monospace;
-  font-size: 9px;
-}
-.application-search {
-  min-height: 34px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 10px;
-  color: #718198;
-  border: 1px solid #2d3a4f;
-  background: #081321;
-}
-.application-search input {
-  min-width: 0;
+  flex: 1;
   width: 100%;
-  color: #dce5f0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  font-size: 11px;
-}
-.application-tabs {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-bottom: 1px solid #2d3a4f;
-  background: #081321;
-}
-.application-tabs button {
-  min-width: 0;
-  min-height: 38px;
-  padding: 0 4px;
-  color: #78899f;
-  border: 0;
-  border-right: 1px solid #263347;
-  border-bottom: 1px solid #263347;
-  background: transparent;
-  font-size: 9px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 150ms ease;
-}
-.application-tabs button:nth-child(4n) {
-  border-right: 0;
-}
-.application-tabs button:hover {
-  color: #c9d6e7;
-  background: #0d1a2c;
-}
-.application-tabs button.active {
-  color: #eef4fc;
-  box-shadow: inset 0 -2px #2d7ff9;
-  background: #0f223d;
-  font-weight: 600;
-}
-.application-list {
-  display: grid;
-}
-.application-list > button {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
-  align-items: start;
-  gap: 11px;
-  padding: 16px 14px;
-  color: inherit;
-  border: 0;
-  border-bottom: 1px solid #202d40;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-.application-list > button:hover,
-.application-list > button.active {
-  background: #0b1726;
-}
-.application-list > button.active {
-  box-shadow: inset 2px 0 #2d7ff9;
-}
-.application-avatar {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  color: #b9d3f6;
-  border: 1px solid #3a4b63;
-  border-radius: 50%;
-  background: #10213a;
-  font-size: 10px;
-  font-weight: 700;
-}
-.application-avatar.large {
-  width: 48px;
-  height: 48px;
-  font-size: 12px;
-}
-.application-list-copy {
-  min-width: 0;
-  display: grid;
-  gap: 4px;
-}
-.application-list-copy > span:first-child {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-.application-list-copy strong,
-.application-list-copy b,
-.application-list-copy small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.application-list-copy strong {
-  color: #e6edf7;
-  font-size: 11px;
-}
-.application-list-copy b {
-  color: #a9b8ca;
-  font-size: 10px;
-  font-weight: 530;
-}
-.application-list-copy small {
-  color: #6f8096;
-  font-size: 9px;
-}
-.application-status {
-  width: max-content;
-  display: inline-flex;
-  align-items: center;
-  min-height: 20px;
-  margin-top: 4px;
-  padding: 0 7px;
-  border: 1px solid #344156;
-  border-radius: 3px;
-  font-family: Consolas, monospace;
-  font-size: 8px;
-  font-style: normal;
-  font-weight: 600;
-}
-.application-status.new {
-  color: #8db7f7;
-  border-color: #385981;
-  background: #102342;
-}
-.application-status.review {
-  color: #dfb66e;
-  border-color: #624c29;
-  background: #241c10;
-}
-.application-status.shortlist {
-  color: #c084fc;
-  border-color: #581c87;
-  background: #1e1035;
-}
-.application-status.interview {
-  color: #38bdf8;
-  border-color: #0284c7;
-  background: #0c2338;
-}
-.application-status.approved {
-  color: #75d1a9;
-  border-color: #315e4e;
-  background: #10251f;
-}
-.application-status.rejected {
-  color: #d99a95;
-  border-color: #603633;
-  background: #271718;
-}
-.application-status.withdrawn {
-  color: #94a3b8;
-  border-color: #475569;
-  background: #1e293b;
-}
-.candidate-workspace {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-.candidate-header {
-  min-height: 94px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 18px 22px;
-  border-bottom: 1px solid #2d3a4f;
-}
-.candidate-identity {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 13px;
-}
-.candidate-identity > span:last-child {
-  min-width: 0;
-  display: grid;
-  gap: 3px;
-}
-.candidate-identity small {
-  overflow: hidden;
-  color: #7092bf;
-  font-family: Consolas, monospace;
-  font-size: 8px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.candidate-identity strong {
-  color: #f1f5fb;
-  font-size: 17px;
-}
-.candidate-identity p {
-  margin: 0;
-  color: #8798ad;
-  font-size: 11px;
-}
-.candidate-status-block {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.candidate-status-block > div {
-  display: grid;
-  justify-items: end;
-  gap: 5px;
-}
-.candidate-status-block > div > small {
-  color: #718198;
-  font-size: 9px;
-}
-.candidate-message-button {
-  min-height: 38px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 13px;
-  color: #eaf2ff;
-  border: 1px solid #3a70b7;
-  border-radius: 6px;
-  background: #12305b;
-  font-size: 11px;
-  font-weight: 650;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
-}
-.candidate-message-button:hover {
-  border-color: #6aa6f5;
-  background: #173b6e;
-}
-.candidate-message-button:active {
-  transform: translateY(1px);
-}
-.candidate-body {
+  height: 100%;
   min-height: 0;
   display: grid;
-  flex: 1;
-  grid-template-columns: minmax(0, 1.05fr) minmax(330px, 0.95fr);
+  grid-template-columns: 360px minmax(0, 1fr);
+  background: #060b14;
+  overflow: hidden;
+  border: 0;
 }
-.candidate-body-profile-only {
-  grid-template-columns: minmax(0, 1fr);
-}
-.candidate-body-profile-only .candidate-profile {
+
+.applications-view {
   width: 100%;
-  max-width: 920px;
-  border-right: 0;
-}
-.candidate-profile {
-  min-width: 0;
-  padding: 22px;
-  border-right: 1px solid #2d3a4f;
-}
-.candidate-contact-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  border: 1px solid #29364a;
-}
-.candidate-contact-grid span {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 42px;
-  padding: 0 11px;
-  overflow: hidden;
-  color: #9cacbf;
-  border-right: 1px solid #29364a;
-  border-bottom: 1px solid #29364a;
-  font-size: 9px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.candidate-contact-grid span:nth-child(2) {
-  border-right: 0;
-}
-.candidate-contact-grid span:last-child {
-  grid-column: 1 / -1;
-  border-right: 0;
-  border-bottom: 0;
-}
-.candidate-contact-grid svg {
-  flex: 0 0 auto;
-  color: #78aaf5;
-}
-.candidate-match-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 9px 14px;
-  padding: 20px 0;
-  border-bottom: 1px solid #273448;
-}
-.candidate-match-row > span {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #aab9cb;
-  font-size: 10px;
-}
-.candidate-match-row > span svg {
-  color: #78aaf5;
-}
-.candidate-match-row strong {
-  color: #dce8f7;
-  font-family: Consolas, monospace;
-  font-size: 12px;
-}
-.candidate-match-row > i {
-  grid-column: 1 / -1;
-  height: 3px;
-  overflow: hidden;
-  background: #17263a;
-}
-.candidate-match-row > i span {
-  display: block;
   height: 100%;
-  background: #2d7ff9;
-}
-.candidate-copy-block {
-  padding: 18px 0;
-  border-bottom: 1px solid #273448;
-}
-.candidate-copy-block > small,
-.candidate-copy-block > span > small {
-  display: block;
-  margin-bottom: 8px;
-  color: #718198;
-  font-family: Consolas, monospace;
-  font-size: 8px;
-}
-.candidate-copy-block p {
-  margin: 0;
-  color: #a9b7c8;
-  font-size: 11px;
-  line-height: 1.65;
-}
-.candidate-copy-block.split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-}
-.candidate-review-actions,
-.jobs-heading-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 9px;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
 }
-.candidate-review-actions {
-  margin-top: 22px;
-}
-.candidate-review-actions button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.button-danger {
-  color: #f87171 !important;
-  border-color: #7f1d1d !important;
-  background: #2a1215 !important;
-}
-.button-danger:hover {
-  color: #fca5a5 !important;
-  border-color: #991b1b !important;
-  background: #3b181c !important;
-}
-.application-status-notice {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 550;
-}
-.application-status-notice.withdrawn {
-  color: #94a3b8;
-  border: 1px solid #475569;
-  background: #1e293b;
-}
-.application-status-notice.rejected {
-  color: #f87171;
-  border: 1px solid #7f1d1d;
-  background: #2a1215;
-}
-.application-status-notice.accepted {
-  color: #4ade80;
-  border: 1px solid #166534;
-  background: #0f291e;
-}
+
 .application-filter-banner {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 16px;
-  margin-bottom: 16px;
-  border: 1px solid #1e3a8a;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-bottom: 1px solid #1e3a8a;
   background: #0d1b33;
   color: #93c5fd;
   font-size: 12px;
+  z-index: 15;
 }
+
 .application-filter-banner strong {
   color: #ffffff;
   font-weight: 600;
 }
+
 .clear-filter-button {
   display: inline-flex;
   align-items: center;
@@ -4962,99 +4548,1161 @@ body:has(.business-app) {
   text-decoration: none;
   transition: all 150ms ease;
 }
+
 .clear-filter-button:hover {
   background: #2563eb;
   color: #ffffff;
 }
 
-/* Portfolio preview items */
-.candidate-copy-block.portfolio-section {
-  padding-bottom: 22px;
+/* ==========================================================================
+   LEFT COLUMN: APPLICATION QUEUE & FILTER LIST
+   ========================================================================== */
+.application-queue {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #1a273b;
+  background: #08101e;
+  position: relative;
+  overflow: hidden;
 }
-.portfolio-preview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
-  margin-top: 10px;
+
+.application-queue-sticky-top {
+  flex-shrink: 0;
+  background: #0a1324;
+  border-bottom: 1px solid #1a273b;
+  z-index: 5;
 }
-.portfolio-preview-card {
+
+.application-queue-head {
+  padding: 14px 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.application-queue-title-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px;
-  border: 1px solid #263347;
+}
+
+.application-queue-title-row strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.application-count-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: #132238;
+  color: #94a3b8;
+  border: 1px solid #1e3352;
+}
+
+.application-search {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  color: #64748b;
+  border: 1px solid #1d2c44;
   border-radius: 6px;
-  background: #091422;
-  text-decoration: none;
-  color: inherit;
-  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+  background: #060b14;
+  transition: border-color 150ms ease;
 }
-.portfolio-preview-card:hover {
-  border-color: #3b82f6;
-  background: #0f223a;
-  transform: translateY(-1px);
+
+.application-search:focus-within {
+  border-color: #38bdf8;
+  color: #38bdf8;
 }
-.portfolio-card-thumb-wrapper {
-  width: 50px;
-  height: 50px;
+
+.application-search input {
+  min-width: 0;
+  flex: 1;
+  color: #f8fafc;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 12px;
+}
+
+.application-search input::placeholder {
+  color: #475569;
+}
+
+.application-search-clear {
+  background: transparent;
+  border: 0;
+  color: #64748b;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.application-search-clear:hover {
+  color: #f8fafc;
+  background: #1e293b;
+}
+
+/* 8 Status Filter Tabs (Sticky under search) */
+.application-tabs {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  border-top: 1px solid #142033;
+  padding: 4px 8px;
+  gap: 4px;
+  background: #070e1c;
+}
+
+.application-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.application-tab-btn {
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #718198;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: all 150ms ease;
   flex-shrink: 0;
-  border-radius: 6px;
-  overflow: hidden;
-  background: #132235;
-  display: grid;
-  place-items: center;
 }
-.portfolio-preview-thumbnail {
-  width: 100%;
-  height: 100%;
+
+.application-tab-btn:hover {
+  color: #cbd5e1;
+  background: #101c30;
+}
+
+.application-tab-btn.active {
+  color: #38bdf8;
+  background: #0f2744;
+  font-weight: 600;
+}
+
+/* Invisible Scroll Candidate List */
+.application-list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  position: relative;
+}
+
+.application-list-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.application-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.application-card-item {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 14px 16px;
+  color: inherit;
+  border: 0;
+  border-bottom: 1px solid #142033;
+  border-left: 3px solid transparent;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 150ms ease, border-left-color 150ms ease;
+}
+
+.application-card-item:hover {
+  background: #0c182c;
+}
+
+.application-card-item.active {
+  background: #0e203b;
+  border-left-color: #38bdf8;
+}
+
+.application-card-avatar-wrap {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.application-card-avatar-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   object-fit: cover;
-  display: block;
+  border: 1px solid #23354f;
+  background: #111d2e;
 }
-.portfolio-preview-fallback {
-  width: 100%;
-  height: 100%;
+
+.application-avatar {
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #1e3a5f 0%, #10213a 100%);
-  color: #93c5fd;
+  color: #38bdf8;
+  border: 1px solid #1e3a5f;
+  border-radius: 50%;
+  background: #0f2038;
+  font-size: 13px;
   font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.5px;
-  border: 1px solid #2d4566;
-  border-radius: 6px;
 }
-.portfolio-preview-meta {
+
+.avatar-online-dot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid #08101e;
+}
+
+.application-list-copy {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
-.portfolio-preview-title {
+
+.application-list-top-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: #e2e8f0;
-  font-size: 12px;
-  font-weight: 600;
+  justify-content: space-between;
+  gap: 8px;
 }
-.portfolio-preview-title span {
+
+.candidate-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.portfolio-preview-title svg {
-  flex-shrink: 0;
-  color: #60a5fa;
-}
-.portfolio-preview-desc {
-  margin: 0;
-  color: #8fa0b5;
+
+.candidate-time {
   font-size: 10px;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  color: #64748b;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.candidate-headline {
+  font-size: 11px;
+  color: #94a3b8;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidate-job-tag {
+  font-size: 10px;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.application-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.application-status {
+  width: max-content;
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 7px;
+  border: 1px solid #344156;
+  border-radius: 3px;
+  font-family: Consolas, monospace;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.application-status.new {
+  color: #8db7f7;
+  border-color: #385981;
+  background: #102342;
+}
+
+.application-status.review {
+  color: #dfb66e;
+  border-color: #624c29;
+  background: #241c10;
+}
+
+.application-status.shortlist {
+  color: #c084fc;
+  border-color: #581c87;
+  background: #1e1035;
+}
+
+.application-status.interview {
+  color: #38bdf8;
+  border-color: #0284c7;
+  background: #0c2338;
+}
+
+.application-status.approved {
+  color: #75d1a9;
+  border-color: #315e4e;
+  background: #10251f;
+}
+
+.application-status.rejected {
+  color: #d99a95;
+  border-color: #603633;
+  background: #271718;
+}
+
+.application-status.withdrawn {
+  color: #94a3b8;
+  border-color: #475569;
+  background: #1e293b;
+}
+
+.application-readiness-badge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 7px;
+  border-radius: 4px;
+  background: #064e3b33;
+  color: #34d399;
+  border: 1px solid #05966955;
+}
+
+.application-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 24px;
+  color: #64748b;
+  text-align: center;
+}
+
+.application-empty strong {
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.application-empty small {
+  font-size: 12px;
+}
+
+.application-empty.workspace {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #475569;
+  padding: 40px;
+}
+
+.application-empty.workspace strong {
+  font-size: 16px;
+  color: #94a3b8;
+}
+
+.application-queue-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  background: linear-gradient(to top, #08101e 20%, transparent);
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* ==========================================================================
+   RIGHT COLUMN: CANDIDATE PROFILE WORKSPACE (MOBILE PARITY)
+   ========================================================================== */
+.candidate-profile-scroll {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  position: relative;
+  background: #050a14;
+}
+
+.candidate-profile-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Sticky Action Bar at Top of Candidate Column */
+.candidate-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 28px;
+  background: rgba(9, 18, 34, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #1a283e;
+}
+
+.candidate-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.candidate-header-prefix {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.candidate-header-dot {
+  color: #334155;
+}
+
+.candidate-header-job-link {
+  color: #93c5fd;
+  text-decoration: none;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidate-header-job-link:hover {
+  color: #38bdf8;
+  text-decoration: underline;
+}
+
+.candidate-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.candidate-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: all 150ms ease;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.candidate-action-btn.message-btn {
+  background: #0e223b;
+  color: #38bdf8;
+  border-color: #1e3a5f;
+}
+
+.candidate-action-btn.message-btn:hover {
+  background: #142f52;
+  border-color: #38bdf8;
+}
+
+.candidate-action-btn.reject-btn {
+  background: #200f12;
+  color: #f87171;
+  border-color: #4c1d24;
+}
+
+.candidate-action-btn.reject-btn:hover {
+  background: #311419;
+  border-color: #f87171;
+}
+
+.candidate-action-btn.primary-action-btn {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #38bdf8;
+}
+
+.candidate-action-btn.primary-action-btn:hover {
+  background: #0369a1;
+}
+
+.candidate-action-btn.secondary-action-btn {
+  background: #172439;
+  color: #e2e8f0;
+  border-color: #2b3e5b;
+}
+
+.candidate-action-btn.secondary-action-btn:hover {
+  background: #21324d;
+  color: #ffffff;
+}
+
+/* Candidate Profile Content Layout */
+.candidate-profile-content {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 24px 32px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.candidate-profile-fade {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  margin-top: -32px;
+  background: linear-gradient(to top, #050a14 20%, transparent);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Status Banner Notices */
+.profile-banner-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.profile-banner-notice.withdrawn {
+  background: #1e293b;
+  border: 1px solid #475569;
+  color: #94a3b8;
+}
+
+.profile-banner-notice.rejected {
+  background: #2a1215;
+  border: 1px solid #7f1d1d;
+  color: #f87171;
+}
+
+.profile-banner-notice.accepted {
+  background: #0f291e;
+  border: 1px solid #166534;
+  color: #4ade80;
+}
+
+/* 1. HERO PROFILE CARD */
+.mobile-profile-hero-card {
+  background: #0a1324;
+  border: 1px solid #1d2c44;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hero-top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.hero-avatar-area {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hero-avatar-ring {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.hero-avatar-image {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #253956;
+  background: #0f1d31;
+}
+
+.hero-avatar-initials {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #38bdf8;
+  background: #0f223a;
+  border: 2px solid #253956;
+}
+
+.hero-online-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid #0a1324;
+}
+
+.hero-names {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hero-candidate-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.hero-username {
+  font-size: 12px;
+  color: #64748b;
+  font-family: Consolas, monospace;
+}
+
+.hero-readiness-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #064e3b33;
+  color: #34d399;
+  border: 1px solid #05966955;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.readiness-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+}
+
+.hero-headline {
+  font-size: 13px;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.hero-meta-chips {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.hero-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.hero-meta-item svg {
+  color: #38bdf8;
+}
+
+.hero-card-divider {
+  height: 1px;
+  background: #172439;
+  margin: 2px 0;
+}
+
+.hero-work-specs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.spec-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.spec-label {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.spec-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+/* 2. MỨC ĐỘ HOÀN THIỆN HỒ SƠ */
+.mobile-profile-completion-card {
+  background: #0a1324;
+  border: 1px solid #1d2c44;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.completion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.completion-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.completion-percent {
+  font-size: 14px;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.completion-track {
+  height: 6px;
+  width: 100%;
+  background: #162439;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.completion-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00d2ff, #3b82f6);
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+.completion-tip {
+  margin: 0;
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+/* 3. CẤP BẬC UY TÍN */
+.mobile-profile-reputation-card {
+  background: #0a1324;
+  border: 1px solid #1d2c44;
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reputation-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reputation-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #0d223f;
+  border: 1px solid #1e3a5f;
+  color: #38bdf8;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.reputation-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reputation-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.reputation-subtitle {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.reputation-chevron {
+  color: #475569;
+}
+
+/* Section Wrapper (Generic for sections 4 - 8) */
+.mobile-profile-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #38bdf8;
+  padding: 0 4px;
+}
+
+.section-title-row h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.section-card-surface {
+  background: #0a1324;
+  border: 1px solid #1d2c44;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+/* 4. GIỚI THIỆU */
+.bio-text {
+  margin: 0;
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+/* 5. KỸ NĂNG */
+.skills-chip-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mobile-skill-chip {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #0a1324;
+  border: 1px solid #1d2c44;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.mobile-skill-chip.emphasized {
+  background: #0c233f;
+  border-color: #0284c7;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+/* 6. PORTFOLIO NỔI BẬT */
+.portfolio-cards-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-project-card {
+  background: #0a1324;
+  border: 1px solid #1d2c44;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.project-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.project-title-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.project-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #0f1d31;
+  border: 1px solid #23354f;
+  color: #38bdf8;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.project-headings {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.project-role {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.project-status-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.project-status-badge.amber {
+  background: #451a0366;
+  color: #f59e0b;
+  border: 1px solid #78350f;
+}
+
+.project-desc {
+  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.project-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #38bdf8;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  width: fit-content;
+}
+
+.project-link:hover {
+  text-decoration: underline;
+}
+
+.project-tech-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tech-tag-chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #111e33;
+  color: #718198;
+}
+
+/* 7. KINH NGHIỆM */
+.experience-surface {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.experience-item {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 12px;
+  position: relative;
+}
+
+.experience-timeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 5px;
+}
+
+.timeline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf888;
+  flex-shrink: 0;
+}
+
+.timeline-line {
+  width: 2px;
+  flex: 1;
+  background: #1e3a5f;
+  margin-top: 6px;
+  min-height: 24px;
+}
+
+.experience-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.experience-role {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.experience-company-period {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.experience-desc {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+/* 8. HỌC VẤN & CHỨNG CHỈ */
+.education-surface {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.education-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #0f1d31;
+  border: 1px solid #23354f;
+  color: #38bdf8;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.education-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.education-degree {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.education-institution {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.education-note {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* 9. QUYỀN RIÊNG TƯ */
+.mobile-privacy-card {
+  background: #08101e;
+  border: 1px solid #1a283e;
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.privacy-icon-box {
+  color: #64748b;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.privacy-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.privacy-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.privacy-desc {
+  margin: 0;
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.4;
 }
 
 /* Job Detail Page */
@@ -5393,33 +6041,17 @@ body:has(.business-app) {
     border-bottom: 1px solid #2d3a4f;
   }
   .application-workbench {
-    grid-template-columns: minmax(250px, 0.65fr) minmax(0, 1.65fr);
-  }
-  .candidate-body {
-    grid-template-columns: 1fr;
-  }
-  .candidate-profile {
-    border-right: 0;
-    border-bottom: 1px solid #2d3a4f;
+    grid-template-columns: 300px minmax(0, 1fr);
   }
 }
 @media (max-width: 820px) {
   .application-workbench {
     grid-template-columns: 1fr;
+    grid-template-rows: 320px 1fr;
   }
   .application-queue {
     border-right: 0;
-    border-bottom: 1px solid #2d3a4f;
-  }
-  .application-list {
-    grid-template-columns: repeat(3, minmax(240px, 1fr));
-    overflow-x: auto;
-  }
-  .application-list > button {
-    border-right: 1px solid #202d40;
-  }
-  .application-list > button.active {
-    box-shadow: inset 0 -2px #2d7ff9;
+    border-bottom: 1px solid #1a273b;
   }
 }
 @media (max-width: 560px) {
@@ -6021,36 +6653,47 @@ body:has(.business-app) {
   display: none;
 }
 
-.business-app-messages {
+.business-app-messages,
+.business-app-applications {
   height: 100dvh;
   min-height: 0;
   overflow: hidden;
 }
 .business-app-messages .business-sidebar,
-.business-app-messages .business-workspace {
+.business-app-messages .business-workspace,
+.business-app-applications .business-sidebar,
+.business-app-applications .business-workspace {
   height: 100dvh;
   min-height: 0;
 }
-.business-app-messages .business-sidebar {
+.business-app-messages .business-sidebar,
+.business-app-applications .business-sidebar {
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
 }
-.business-app-messages .business-sidebar::-webkit-scrollbar {
+.business-app-messages .business-sidebar::-webkit-scrollbar,
+.business-app-applications .business-sidebar::-webkit-scrollbar {
   display: none;
 }
-.business-app-messages .business-workspace {
+.business-app-messages .business-workspace,
+.business-app-applications .business-workspace {
   overflow: hidden;
 }
-.business-app-messages .business-content {
+.business-app-messages .business-content,
+.business-app-applications .business-content {
   width: 100%;
   max-width: none;
   min-height: 0;
   margin: 0;
   padding: 0;
   overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
-.business-app-messages .workspace-footer {
+.business-app-messages .workspace-footer,
+.business-app-applications .workspace-footer {
   display: none;
 }
 .context-close {
@@ -8706,83 +9349,327 @@ body:has(.business-app) {
 }
 .business-app[data-theme="defaultTheme"] .application-workbench,
 .business-app[data-theme="vietnamFuture"] .application-workbench {
-  background: var(--surface);
-  border-color: var(--border);
+  background: var(--canvas);
 }
+
 .business-app[data-theme="defaultTheme"] .application-queue,
 .business-app[data-theme="vietnamFuture"] .application-queue {
   background: var(--surface);
   border-right-color: var(--border);
 }
-.business-app[data-theme="defaultTheme"] .application-queue-head,
-.business-app[data-theme="vietnamFuture"] .application-queue-head {
+
+.business-app[data-theme="defaultTheme"] .application-queue-sticky-top,
+.business-app[data-theme="vietnamFuture"] .application-queue-sticky-top {
+  background: var(--surface);
   border-bottom-color: var(--border);
 }
-.business-app[data-theme="defaultTheme"] .application-queue-head strong,
-.business-app[data-theme="vietnamFuture"] .application-queue-head strong {
+
+.business-app[data-theme="defaultTheme"] .application-queue-title-row strong,
+.business-app[data-theme="vietnamFuture"] .application-queue-title-row strong {
   color: var(--ink);
 }
-.business-app[data-theme="defaultTheme"] .application-queue-head small,
-.business-app[data-theme="vietnamFuture"] .application-queue-head small {
+
+.business-app[data-theme="defaultTheme"] .application-count-pill,
+.business-app[data-theme="vietnamFuture"] .application-count-pill {
+  background: var(--surface-subtle);
+  border-color: var(--border);
   color: var(--muted);
 }
+
+.business-app[data-theme="defaultTheme"] .application-search,
+.business-app[data-theme="vietnamFuture"] .application-search {
+  background: var(--surface-subtle);
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+.business-app[data-theme="defaultTheme"] .application-search input,
+.business-app[data-theme="vietnamFuture"] .application-search input {
+  color: var(--ink);
+}
+
+.business-app[data-theme="defaultTheme"] .application-search input::placeholder,
+.business-app[data-theme="vietnamFuture"] .application-search input::placeholder {
+  color: var(--muted);
+}
+
 .business-app[data-theme="defaultTheme"] .application-tabs,
 .business-app[data-theme="vietnamFuture"] .application-tabs {
   background: var(--surface-subtle);
-  border-bottom-color: var(--border);
+  border-top-color: var(--border);
 }
-.business-app[data-theme="defaultTheme"] .application-tabs button,
-.business-app[data-theme="vietnamFuture"] .application-tabs button {
+
+.business-app[data-theme="defaultTheme"] .application-tab-btn,
+.business-app[data-theme="vietnamFuture"] .application-tab-btn {
   color: var(--muted);
-  border-right-color: var(--border);
-  border-bottom-color: var(--border);
 }
-.business-app[data-theme="defaultTheme"] .application-tabs button:hover,
-.business-app[data-theme="vietnamFuture"] .application-tabs button:hover {
+
+.business-app[data-theme="defaultTheme"] .application-tab-btn:hover,
+.business-app[data-theme="vietnamFuture"] .application-tab-btn:hover {
   color: var(--ink);
   background: var(--surface-hover);
 }
-.business-app[data-theme="defaultTheme"] .application-tabs button.active,
-.business-app[data-theme="vietnamFuture"] .application-tabs button.active {
+
+.business-app[data-theme="defaultTheme"] .application-tab-btn.active,
+.business-app[data-theme="vietnamFuture"] .application-tab-btn.active {
   color: var(--app-accent);
   background: var(--surface);
-  box-shadow: inset 0 -2px var(--app-accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   font-weight: 700;
 }
-.business-app[data-theme="defaultTheme"] .application-list > button,
-.business-app[data-theme="vietnamFuture"] .application-list > button {
+
+.business-app[data-theme="defaultTheme"] .application-card-item,
+.business-app[data-theme="vietnamFuture"] .application-card-item {
   border-bottom-color: var(--border);
 }
-.business-app[data-theme="defaultTheme"] .application-list > button:hover,
-.business-app[data-theme="vietnamFuture"] .application-list > button:hover {
+
+.business-app[data-theme="defaultTheme"] .application-card-item:hover,
+.business-app[data-theme="vietnamFuture"] .application-card-item:hover {
   background: var(--surface-hover);
 }
-.business-app[data-theme="defaultTheme"] .application-list > button.active,
-.business-app[data-theme="vietnamFuture"] .application-list > button.active {
+
+.business-app[data-theme="defaultTheme"] .application-card-item.active,
+.business-app[data-theme="vietnamFuture"] .application-card-item.active {
   background: var(--surface-active);
-  box-shadow: inset 3px 0 var(--app-accent);
+  border-left-color: var(--app-accent);
 }
+
 .business-app[data-theme="defaultTheme"] .application-avatar,
 .business-app[data-theme="vietnamFuture"] .application-avatar {
   background: var(--surface-subtle);
   border-color: var(--border);
   color: var(--app-accent);
 }
-.business-app[data-theme="defaultTheme"] .application-list-copy strong,
-.business-app[data-theme="vietnamFuture"] .application-list-copy strong {
+
+.business-app[data-theme="defaultTheme"] .candidate-name,
+.business-app[data-theme="vietnamFuture"] .candidate-name {
   color: var(--ink);
 }
-.business-app[data-theme="defaultTheme"] .application-list-copy b,
-.business-app[data-theme="vietnamFuture"] .application-list-copy b {
+
+.business-app[data-theme="defaultTheme"] .candidate-time,
+.business-app[data-theme="vietnamFuture"] .candidate-time,
+.business-app[data-theme="defaultTheme"] .candidate-headline,
+.business-app[data-theme="vietnamFuture"] .candidate-headline,
+.business-app[data-theme="defaultTheme"] .candidate-job-tag,
+.business-app[data-theme="vietnamFuture"] .candidate-job-tag {
   color: var(--muted);
 }
-.business-app[data-theme="defaultTheme"] .application-list-copy small,
-.business-app[data-theme="vietnamFuture"] .application-list-copy small {
+
+.business-app[data-theme="defaultTheme"] .application-queue-fade,
+.business-app[data-theme="vietnamFuture"] .application-queue-fade {
+  background: linear-gradient(to top, var(--surface) 20%, transparent);
+}
+
+/* Light theme candidate profile */
+.business-app[data-theme="defaultTheme"] .candidate-profile-scroll,
+.business-app[data-theme="vietnamFuture"] .candidate-profile-scroll {
+  background: var(--canvas);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-sticky-header {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom-color: var(--border);
+}
+
+.business-app[data-theme="vietnamFuture"] .candidate-sticky-header {
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom-color: var(--border);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-header-prefix,
+.business-app[data-theme="vietnamFuture"] .candidate-header-prefix {
   color: var(--muted);
 }
-.business-app[data-theme="defaultTheme"] .candidate-profile,
-.business-app[data-theme="vietnamFuture"] .candidate-profile {
-  border-right-color: var(--border);
+
+.business-app[data-theme="defaultTheme"] .candidate-header-dot,
+.business-app[data-theme="vietnamFuture"] .candidate-header-dot {
+  color: var(--border);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-header-job-link,
+.business-app[data-theme="vietnamFuture"] .candidate-header-job-link {
+  color: var(--app-accent);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-action-btn.message-btn,
+.business-app[data-theme="vietnamFuture"] .candidate-action-btn.message-btn {
+  background: var(--surface-subtle);
+  color: var(--app-accent);
+  border-color: var(--border);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-action-btn.secondary-action-btn,
+.business-app[data-theme="vietnamFuture"] .candidate-action-btn.secondary-action-btn {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+/* Light Theme Cards & Surfaces */
+.business-app[data-theme="defaultTheme"] .mobile-profile-hero-card,
+.business-app[data-theme="vietnamFuture"] .mobile-profile-hero-card,
+.business-app[data-theme="defaultTheme"] .mobile-profile-completion-card,
+.business-app[data-theme="vietnamFuture"] .mobile-profile-completion-card,
+.business-app[data-theme="defaultTheme"] .mobile-profile-reputation-card,
+.business-app[data-theme="vietnamFuture"] .mobile-profile-reputation-card,
+.business-app[data-theme="defaultTheme"] .section-card-surface,
+.business-app[data-theme="vietnamFuture"] .section-card-surface,
+.business-app[data-theme="defaultTheme"] .mobile-project-card,
+.business-app[data-theme="vietnamFuture"] .mobile-project-card,
+.business-app[data-theme="defaultTheme"] .mobile-privacy-card,
+.business-app[data-theme="vietnamFuture"] .mobile-privacy-card {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.business-app[data-theme="defaultTheme"] .hero-candidate-name,
+.business-app[data-theme="vietnamFuture"] .hero-candidate-name,
+.business-app[data-theme="defaultTheme"] .completion-title,
+.business-app[data-theme="vietnamFuture"] .completion-title,
+.business-app[data-theme="defaultTheme"] .reputation-title,
+.business-app[data-theme="vietnamFuture"] .reputation-title,
+.business-app[data-theme="defaultTheme"] .section-title-row h3,
+.business-app[data-theme="vietnamFuture"] .section-title-row h3,
+.business-app[data-theme="defaultTheme"] .project-name,
+.business-app[data-theme="vietnamFuture"] .project-name,
+.business-app[data-theme="defaultTheme"] .experience-role,
+.business-app[data-theme="vietnamFuture"] .experience-role,
+.business-app[data-theme="defaultTheme"] .education-degree,
+.business-app[data-theme="vietnamFuture"] .education-degree,
+.business-app[data-theme="defaultTheme"] .privacy-title,
+.business-app[data-theme="vietnamFuture"] .privacy-title {
+  color: var(--ink);
+}
+
+.business-app[data-theme="defaultTheme"] .hero-headline,
+.business-app[data-theme="defaultTheme"] .spec-val,
+.business-app[data-theme="defaultTheme"] .bio-text,
+.business-app[data-theme="defaultTheme"] .project-desc,
+.business-app[data-theme="defaultTheme"] .experience-desc,
+.business-app[data-theme="defaultTheme"] .education-institution {
+  color: #334155;
+}
+
+.business-app[data-theme="vietnamFuture"] .hero-headline,
+.business-app[data-theme="vietnamFuture"] .spec-val,
+.business-app[data-theme="vietnamFuture"] .bio-text,
+.business-app[data-theme="vietnamFuture"] .project-desc,
+.business-app[data-theme="vietnamFuture"] .experience-desc,
+.business-app[data-theme="vietnamFuture"] .education-institution {
+  color: #4a3c2c;
+}
+
+.business-app[data-theme="defaultTheme"] .hero-username,
+.business-app[data-theme="vietnamFuture"] .hero-username,
+.business-app[data-theme="defaultTheme"] .hero-meta-item,
+.business-app[data-theme="vietnamFuture"] .hero-meta-item,
+.business-app[data-theme="defaultTheme"] .spec-label,
+.business-app[data-theme="vietnamFuture"] .spec-label,
+.business-app[data-theme="defaultTheme"] .completion-tip,
+.business-app[data-theme="vietnamFuture"] .completion-tip,
+.business-app[data-theme="defaultTheme"] .reputation-subtitle,
+.business-app[data-theme="vietnamFuture"] .reputation-subtitle,
+.business-app[data-theme="defaultTheme"] .project-role,
+.business-app[data-theme="vietnamFuture"] .project-role,
+.business-app[data-theme="defaultTheme"] .experience-company-period,
+.business-app[data-theme="vietnamFuture"] .experience-company-period,
+.business-app[data-theme="defaultTheme"] .education-note,
+.business-app[data-theme="vietnamFuture"] .education-note,
+.business-app[data-theme="defaultTheme"] .privacy-desc,
+.business-app[data-theme="vietnamFuture"] .privacy-desc {
+  color: var(--muted);
+}
+
+.business-app[data-theme="defaultTheme"] .hero-card-divider,
+.business-app[data-theme="vietnamFuture"] .hero-card-divider {
+  background: var(--border);
+}
+
+.business-app[data-theme="defaultTheme"] .completion-track,
+.business-app[data-theme="vietnamFuture"] .completion-track {
+  background: var(--surface-subtle);
+}
+
+.business-app[data-theme="defaultTheme"] .reputation-icon-wrap,
+.business-app[data-theme="vietnamFuture"] .reputation-icon-wrap,
+.business-app[data-theme="defaultTheme"] .project-icon-box,
+.business-app[data-theme="vietnamFuture"] .project-icon-box,
+.business-app[data-theme="defaultTheme"] .education-icon-box,
+.business-app[data-theme="vietnamFuture"] .education-icon-box {
+  background: var(--surface-subtle);
+  border-color: var(--border);
+  color: var(--app-accent);
+}
+
+.business-app[data-theme="defaultTheme"] .mobile-skill-chip,
+.business-app[data-theme="vietnamFuture"] .mobile-skill-chip {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+.business-app[data-theme="defaultTheme"] .mobile-skill-chip.emphasized,
+.business-app[data-theme="vietnamFuture"] .mobile-skill-chip.emphasized {
+  background: var(--surface-subtle);
+  border-color: var(--app-accent);
+  color: var(--app-accent);
+}
+
+.business-app[data-theme="defaultTheme"] .tech-tag-chip,
+.business-app[data-theme="vietnamFuture"] .tech-tag-chip {
+  background: var(--surface-subtle);
+  color: var(--muted);
+}
+
+.business-app[data-theme="defaultTheme"] .timeline-dot,
+.business-app[data-theme="vietnamFuture"] .timeline-dot {
+  background: var(--app-accent);
+  box-shadow: 0 0 6px var(--app-accent);
+}
+
+.business-app[data-theme="defaultTheme"] .timeline-line,
+.business-app[data-theme="vietnamFuture"] .timeline-line {
+  background: var(--border);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-profile-fade,
+.business-app[data-theme="vietnamFuture"] .candidate-profile-fade {
+  background: linear-gradient(to top, var(--canvas) 20%, transparent);
+}
+
+/* Blockchain Flow Theme Overrides */
+.business-app[data-theme="blockchainFlow"] .application-workbench {
+  background: #080e24;
+}
+
+.business-app[data-theme="blockchainFlow"] .application-queue {
+  background: #0b1430;
+  border-right-color: #1e2c52;
+}
+
+.business-app[data-theme="blockchainFlow"] .application-queue-sticky-top {
+  background: #0e193c;
+  border-bottom-color: #1e2c52;
+}
+
+.business-app[data-theme="blockchainFlow"] .candidate-profile-scroll {
+  background: #080e24;
+}
+
+.business-app[data-theme="blockchainFlow"] .candidate-sticky-header {
+  background: rgba(14, 25, 60, 0.92);
+  border-bottom-color: #1e2c52;
+}
+
+.business-app[data-theme="blockchainFlow"] .mobile-profile-hero-card,
+.business-app[data-theme="blockchainFlow"] .mobile-profile-completion-card,
+.business-app[data-theme="blockchainFlow"] .mobile-profile-reputation-card,
+.business-app[data-theme="blockchainFlow"] .section-card-surface,
+.business-app[data-theme="blockchainFlow"] .mobile-project-card,
+.business-app[data-theme="blockchainFlow"] .mobile-privacy-card {
+  background: #0f1c3f;
+  border-color: #1e2e5a;
 }
 
 /* Community Feed Reaction Picker & Hover in Light Themes */
