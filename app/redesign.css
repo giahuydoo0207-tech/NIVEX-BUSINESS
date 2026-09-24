@@ -4572,7 +4572,9 @@ body:has(.business-app) {
   flex-shrink: 0;
   background: #0a1324;
   border-bottom: 1px solid #1a273b;
-  z-index: 5;
+  z-index: 20;
+  position: relative;
+  overflow: visible;
 }
 
 .application-queue-head {
@@ -4656,17 +4658,13 @@ body:has(.business-app) {
 /* 8 Status Filter Tabs (Sticky under search) */
 .application-tabs {
   display: flex;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow: visible;
   border-top: 1px solid #142033;
   padding: 4px 8px;
   gap: 4px;
   background: #070e1c;
-}
-
-.application-tabs::-webkit-scrollbar {
-  display: none;
+  position: relative;
+  z-index: 20;
 }
 
 .application-tab-btn {
@@ -4689,6 +4687,65 @@ body:has(.business-app) {
 }
 
 .application-tab-btn.active {
+  color: #38bdf8;
+  background: #0f2744;
+  font-weight: 600;
+}
+
+/* Filter Tab Dropdown */
+.application-tab-dropdown-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.application-tab-dropdown-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.application-filter-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 120px;
+  background: #0b1528;
+  border: 1px solid #1e3a5f;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  padding: 4px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: candidateDropdownFadeIn 120ms ease;
+}
+
+.application-filter-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+  text-align: left;
+  cursor: pointer;
+  transition: all 120ms ease;
+  white-space: nowrap;
+}
+
+.application-filter-dropdown-item:hover {
+  background: #142847;
+  color: #38bdf8;
+}
+
+.application-filter-dropdown-item.active {
   color: #38bdf8;
   background: #0f2744;
   font-weight: 600;
@@ -4835,17 +4892,20 @@ body:has(.business-app) {
 }
 
 .application-status {
-  width: max-content;
+  min-width: 64px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   min-height: 20px;
-  padding: 0 7px;
+  padding: 0 6px;
   border: 1px solid #344156;
   border-radius: 3px;
   font-family: Consolas, monospace;
   font-size: 9px;
   font-style: normal;
   font-weight: 600;
+  box-sizing: border-box;
 }
 
 .application-status.new {
@@ -4995,6 +5055,56 @@ body:has(.business-app) {
   letter-spacing: 0.5px;
   color: #64748b;
   text-transform: uppercase;
+}
+
+/* Candidate Status Dot (Replacing Header Pill) */
+.candidate-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+  cursor: help;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.candidate-status-dot:hover {
+  transform: scale(1.35);
+}
+
+.candidate-status-dot.new {
+  background: #38bdf8;
+  box-shadow: 0 0 7px rgba(56, 189, 248, 0.7);
+}
+
+.candidate-status-dot.review {
+  background: #3b82f6;
+  box-shadow: 0 0 7px rgba(59, 130, 246, 0.7);
+}
+
+.candidate-status-dot.shortlist {
+  background: #a855f7;
+  box-shadow: 0 0 7px rgba(168, 85, 247, 0.7);
+}
+
+.candidate-status-dot.interview {
+  background: #2563eb;
+  box-shadow: 0 0 7px rgba(37, 99, 235, 0.7);
+}
+
+.candidate-status-dot.approved {
+  background: #22c55e;
+  box-shadow: 0 0 7px rgba(34, 197, 94, 0.7);
+}
+
+.candidate-status-dot.rejected {
+  background: #ef4444;
+  box-shadow: 0 0 7px rgba(239, 68, 68, 0.7);
+}
+
+.candidate-status-dot.withdrawn {
+  background: #64748b;
+  box-shadow: 0 0 6px rgba(100, 116, 139, 0.6);
 }
 
 .candidate-header-dot {
@@ -9600,6 +9710,31 @@ body:has(.business-app) {
   background: var(--surface);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   font-weight: 700;
+}
+
+.business-app[data-theme="defaultTheme"] .application-filter-dropdown-menu,
+.business-app[data-theme="vietnamFuture"] .application-filter-dropdown-menu {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+}
+
+.business-app[data-theme="defaultTheme"] .application-filter-dropdown-item,
+.business-app[data-theme="vietnamFuture"] .application-filter-dropdown-item {
+  color: var(--muted);
+}
+
+.business-app[data-theme="defaultTheme"] .application-filter-dropdown-item:hover,
+.business-app[data-theme="vietnamFuture"] .application-filter-dropdown-item:hover {
+  background: var(--surface-hover);
+  color: var(--app-accent);
+}
+
+.business-app[data-theme="defaultTheme"] .application-filter-dropdown-item.active,
+.business-app[data-theme="vietnamFuture"] .application-filter-dropdown-item.active {
+  background: var(--surface-active);
+  color: var(--app-accent);
+  font-weight: 600;
 }
 
 .business-app[data-theme="defaultTheme"] .application-card-item,

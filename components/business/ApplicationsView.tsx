@@ -32,11 +32,14 @@ import type { ApplicationStatus } from "@/types/application";
 
 type ApplicationFilter = "ALL" | ApplicationStatus;
 
-const filters: Array<{ value: ApplicationFilter; label: string }> = [
+const primaryFilters: Array<{ value: ApplicationFilter; label: string }> = [
   { value: "ALL", label: "Tất cả" },
   { value: "submitted", label: "Mới gửi" },
   { value: "viewed", label: "Đang xem" },
-  { value: "shortlisted", label: "Shortlist" },
+  { value: "shortlisted", label: "Đã chọn" },
+];
+
+const secondaryFilters: Array<{ value: ApplicationFilter; label: string }> = [
   { value: "interview", label: "Phỏng vấn" },
   { value: "accepted", label: "Đã nhận" },
   { value: "rejected", label: "Từ chối" },
@@ -132,6 +135,41 @@ export function ApplicationsView({
     };
   }, [actionMenuOpen]);
 
+  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
+  const filterMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!filterMenuOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        filterMenuRef.current &&
+        !filterMenuRef.current.contains(event.target as Node)
+      ) {
+        setFilterMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setFilterMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [filterMenuOpen]);
+
+  const selectedSecondaryFilter = useMemo(() => {
+    return secondaryFilters.find((f) => f.value === filter) ?? null;
+  }, [filter]);
+
+  const dropdownLabel = selectedSecondaryFilter
+    ? `${selectedSecondaryFilter.label} ▾`
+    : "Khác ▾";
+  const isSecondaryFilterActive = !!selectedSecondaryFilter;
+
   const availableActions = useMemo(() => {
     return selected ? NEXT_ACTIONS[selected.status] || [] : [];
   }, [selected]);
@@ -211,13 +249,13 @@ export function ApplicationsView({
               </label>
             </div>
 
-            {/* 8 BỘ LỌC TRẠNG THÁI STICKY */}
+            {/* 4 TAB NỔI + 1 DROPDOWN "KHÁC" */}
             <div
               className="application-tabs"
               role="tablist"
               aria-label="Lọc hồ sơ theo trạng thái"
             >
-              {filters.map((item) => (
+              {primaryFilters.map((item) => (
                 <button
                   type="button"
                   role="tab"
@@ -225,12 +263,50 @@ export function ApplicationsView({
                   className={`application-tab-btn ${
                     filter === item.value ? "active" : ""
                   }`}
-                  onClick={() => setFilter(item.value)}
+                  onClick={() => {
+                    setFilter(item.value);
+                    setFilterMenuOpen(false);
+                  }}
                   key={item.value}
                 >
                   <span>{item.label}</span>
                 </button>
               ))}
+
+              <div className="application-tab-dropdown-wrap" ref={filterMenuRef}>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={isSecondaryFilterActive}
+                  aria-expanded={filterMenuOpen}
+                  className={`application-tab-btn application-tab-dropdown-btn ${
+                    isSecondaryFilterActive ? "active" : ""
+                  }`}
+                  onClick={() => setFilterMenuOpen((prev) => !prev)}
+                >
+                  <span>{dropdownLabel}</span>
+                </button>
+
+                {filterMenuOpen && (
+                  <div className="application-filter-dropdown-menu" role="menu">
+                    {secondaryFilters.map((item) => (
+                      <button
+                        type="button"
+                        key={item.value}
+                        className={`application-filter-dropdown-item ${
+                          filter === item.value ? "active" : ""
+                        }`}
+                        onClick={() => {
+                          setFilter(item.value);
+                          setFilterMenuOpen(false);
+                        }}
+                      >
+                        <span>{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -321,6 +397,11 @@ export function ApplicationsView({
             {/* STICKY HEADER ACTIONS BAR */}
             <header className="candidate-sticky-header">
               <div className="candidate-header-meta">
+                <span
+                  className={`candidate-status-dot ${statusCopy[selected.status].tone}`}
+                  title={statusCopy[selected.status].label}
+                  aria-label={statusCopy[selected.status].label}
+                />
                 <span className="candidate-header-prefix">ỨNG TUYỂN</span>
                 <span className="candidate-header-dot">·</span>
                 <Link
@@ -330,11 +411,6 @@ export function ApplicationsView({
                 >
                   {selected.jobTitle}
                 </Link>
-                <span
-                  className={`application-status ${statusCopy[selected.status].tone}`}
-                >
-                  {statusCopy[selected.status].label}
-                </span>
               </div>
 
               <div className="candidate-header-actions">

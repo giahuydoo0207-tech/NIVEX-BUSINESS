@@ -225,7 +225,7 @@ export const demoApplications: CandidateApplication[] = [
     candidateName: "Nguyễn Khánh Linh",
     initials: "KL",
     username: "@khanhlinh.design",
-    statusBadge: "Shortlist",
+    statusBadge: "Đã chọn",
     headline: "Product Designer",
     email: "linh.nguyen@example.com",
     location: "Hà Nội, Việt Nam",

@@ -90,12 +90,12 @@ export const statusCopy: Record<
     tone: "new",
   },
   viewed: {
-    label: "Đang xem xét",
+    label: "Đang xem",
     description: "Đội ngũ đang đánh giá năng lực",
     tone: "review",
   },
   shortlisted: {
-    label: "Shortlist",
+    label: "Đã chọn",
     description: "Ứng viên tiềm năng cho dự án",
     tone: "shortlist",
   },
@@ -115,7 +115,7 @@ export const statusCopy: Record<
     tone: "rejected",
   },
   withdrawn: {
-    label: "Đã rút hồ sơ",
+    label: "Đã rút",
     description: "Ứng viên đã chủ động rút hồ sơ",
     tone: "withdrawn",
   },
