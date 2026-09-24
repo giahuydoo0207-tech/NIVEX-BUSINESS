@@ -5035,6 +5035,7 @@ body:has(.business-app) {
   transition: all 150ms ease;
   text-decoration: none;
   border: 1px solid transparent;
+  white-space: nowrap;
 }
 
 .candidate-action-btn.message-btn {
@@ -5046,6 +5047,27 @@ body:has(.business-app) {
 .candidate-action-btn.message-btn:hover {
   background: #142f52;
   border-color: #38bdf8;
+}
+
+/* Icon-only Message Button (pushed to far right) */
+.candidate-action-btn.message-icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: #0e223b;
+  color: #38bdf8;
+  border-color: #1e3a5f;
+  margin-left: 6px;
+}
+
+.candidate-action-btn.message-icon-btn:hover {
+  background: #142f52;
+  border-color: #38bdf8;
+  color: #7dd3fc;
 }
 
 .candidate-action-btn.reject-btn {
@@ -5078,6 +5100,98 @@ body:has(.business-app) {
 .candidate-action-btn.secondary-action-btn:hover {
   background: #21324d;
   color: #ffffff;
+}
+
+/* Split Action Button & Dropdown Menu */
+.candidate-split-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.candidate-split-btn .main-action-btn {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.candidate-split-btn .main-action-btn:only-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  border-right-color: #38bdf8;
+}
+
+.candidate-split-btn .dropdown-toggle-btn {
+  border-left: none;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.candidate-split-btn .dropdown-toggle-btn:hover,
+.candidate-split-btn .dropdown-toggle-btn.active {
+  background: #0369a1;
+}
+
+.dropdown-chevron {
+  transition: transform 150ms ease;
+}
+
+.dropdown-chevron.open {
+  transform: rotate(180deg);
+}
+
+.candidate-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 170px;
+  background: #0b1528;
+  border: 1px solid #1e3a5f;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  padding: 4px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: candidateDropdownFadeIn 120ms ease;
+}
+
+@keyframes candidateDropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.candidate-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #cbd5e1;
+  text-align: left;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.candidate-dropdown-item:hover {
+  background: #142847;
+  color: #38bdf8;
 }
 
 /* Candidate Profile Content Layout */
@@ -5390,6 +5504,76 @@ body:has(.business-app) {
 
 .reputation-chevron {
   color: #475569;
+}
+
+/* Embedded Profile Completion Section inside Hero Card */
+.hero-completion-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+/* Slim Reputation Row (Demoted from heavy card to clickable borderless row) */
+.mobile-profile-reputation-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(30, 48, 77, 0.5);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 150ms ease;
+  color: inherit;
+}
+
+.mobile-profile-reputation-row:hover {
+  background: rgba(20, 35, 60, 0.75);
+  border-color: rgba(56, 189, 248, 0.35);
+  transform: translateX(2px);
+}
+
+.reputation-row-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.reputation-row-icon {
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+.reputation-row-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+}
+
+.reputation-row-dot {
+  color: #475569;
+  font-size: 12px;
+}
+
+.reputation-row-subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.reputation-row-chevron {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: transform 150ms ease, color 150ms ease;
+}
+
+.mobile-profile-reputation-row:hover .reputation-row-chevron {
+  color: #38bdf8;
+  transform: translateX(2px);
 }
 
 /* Section Wrapper (Generic for sections 4 - 8) */
@@ -9492,10 +9676,36 @@ body:has(.business-app) {
 }
 
 .business-app[data-theme="defaultTheme"] .candidate-action-btn.message-btn,
-.business-app[data-theme="vietnamFuture"] .candidate-action-btn.message-btn {
+.business-app[data-theme="vietnamFuture"] .candidate-action-btn.message-btn,
+.business-app[data-theme="defaultTheme"] .candidate-action-btn.message-icon-btn,
+.business-app[data-theme="vietnamFuture"] .candidate-action-btn.message-icon-btn {
   background: var(--surface-subtle);
   color: var(--app-accent);
   border-color: var(--border);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-action-btn.message-icon-btn:hover,
+.business-app[data-theme="vietnamFuture"] .candidate-action-btn.message-icon-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--app-accent);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-dropdown-menu,
+.business-app[data-theme="vietnamFuture"] .candidate-dropdown-menu {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-dropdown-item,
+.business-app[data-theme="vietnamFuture"] .candidate-dropdown-item {
+  color: var(--ink);
+}
+
+.business-app[data-theme="defaultTheme"] .candidate-dropdown-item:hover,
+.business-app[data-theme="vietnamFuture"] .candidate-dropdown-item:hover {
+  background: var(--surface-hover);
+  color: var(--app-accent);
 }
 
 .business-app[data-theme="defaultTheme"] .candidate-action-btn.secondary-action-btn,
@@ -9521,6 +9731,28 @@ body:has(.business-app) {
   background: var(--surface);
   border-color: var(--border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.business-app[data-theme="defaultTheme"] .mobile-profile-reputation-row,
+.business-app[data-theme="vietnamFuture"] .mobile-profile-reputation-row {
+  background: var(--surface-subtle);
+  border-color: var(--border);
+}
+
+.business-app[data-theme="defaultTheme"] .mobile-profile-reputation-row:hover,
+.business-app[data-theme="vietnamFuture"] .mobile-profile-reputation-row:hover {
+  background: var(--surface-hover);
+  border-color: var(--border);
+}
+
+.business-app[data-theme="defaultTheme"] .reputation-row-title,
+.business-app[data-theme="vietnamFuture"] .reputation-row-title {
+  color: var(--ink);
+}
+
+.business-app[data-theme="defaultTheme"] .reputation-row-subtitle,
+.business-app[data-theme="vietnamFuture"] .reputation-row-subtitle {
+  color: var(--muted);
 }
 
 .business-app[data-theme="defaultTheme"] .hero-candidate-name,
@@ -9670,6 +9902,16 @@ body:has(.business-app) {
 .business-app[data-theme="blockchainFlow"] .mobile-privacy-card {
   background: #0f1c3f;
   border-color: #1e2e5a;
+}
+
+.business-app[data-theme="blockchainFlow"] .mobile-profile-reputation-row {
+  background: rgba(15, 28, 63, 0.45);
+  border-color: rgba(30, 46, 90, 0.5);
+}
+
+.business-app[data-theme="blockchainFlow"] .mobile-profile-reputation-row:hover {
+  background: rgba(22, 40, 88, 0.7);
+  border-color: rgba(99, 102, 241, 0.4);
 }
 
 /* Community Feed Reaction Picker & Hover in Light Themes */

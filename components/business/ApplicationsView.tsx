@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlignLeft,
   Briefcase,
   Check,
+  ChevronDown,
   ChevronRight,
   Clock,
   Code2,
@@ -100,6 +101,62 @@ export function ApplicationsView({
       null
     );
   }, [jobApplications, selectedId, visibleApplications]);
+
+  const [actionMenuOpen, setActionMenuOpen] = useState(false);
+  const actionMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setActionMenuOpen(false);
+  }, [selectedId]);
+
+  useEffect(() => {
+    if (!actionMenuOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        actionMenuRef.current &&
+        !actionMenuRef.current.contains(event.target as Node)
+      ) {
+        setActionMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActionMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [actionMenuOpen]);
+
+  const availableActions = useMemo(() => {
+    return selected ? NEXT_ACTIONS[selected.status] || [] : [];
+  }, [selected]);
+
+  const mainAction = useMemo(() => {
+    return (
+      availableActions.find((a) => a.next === "accepted") ||
+      availableActions[0] ||
+      null
+    );
+  }, [availableActions]);
+
+  const dropdownActions = useMemo(() => {
+    if (!mainAction) return [];
+    return availableActions.filter((a) => a.next !== mainAction.next);
+  }, [availableActions, mainAction]);
+
+  const isTerminal = useMemo(() => {
+    if (!selected) return true;
+    return (
+      selected.status === "withdrawn" ||
+      selected.status === "rejected" ||
+      selected.status === "accepted"
+    );
+  }, [selected]);
 
   return (
     <div className="applications-view">
@@ -281,45 +338,75 @@ export function ApplicationsView({
               </div>
 
               <div className="candidate-header-actions">
-                <Link
-                  href={`/business/messages?candidate=${selected.id}`}
-                  className="candidate-action-btn message-btn"
-                  title={`Nhắn tin với ${selected.candidateName}`}
-                >
-                  <MessageCircle size={15} />
-                  <span>Nhắn tin</span>
-                </Link>
+                {!isTerminal && (
+                  <>
+                    <button
+                      type="button"
+                      className="candidate-action-btn reject-btn"
+                      onClick={() => updateStatus(selected.id, "rejected")}
+                    >
+                      <X size={14} />
+                      <span>Từ chối</span>
+                    </button>
 
-                {selected.status !== "withdrawn" &&
-                  selected.status !== "rejected" &&
-                  selected.status !== "accepted" && (
-                    <>
-                      <button
-                        type="button"
-                        className="candidate-action-btn reject-btn"
-                        onClick={() => updateStatus(selected.id, "rejected")}
-                      >
-                        <X size={15} />
-                        <span>Từ chối</span>
-                      </button>
-
-                      {NEXT_ACTIONS[selected.status]?.map((action) => (
+                    {mainAction && (
+                      <div className="candidate-split-btn" ref={actionMenuRef}>
                         <button
                           type="button"
-                          key={action.next}
-                          className={`candidate-action-btn ${
-                            action.tone === "primary"
-                              ? "primary-action-btn"
-                              : "secondary-action-btn"
-                          }`}
-                          onClick={() => updateStatus(selected.id, action.next)}
+                          className="candidate-action-btn primary-action-btn main-action-btn"
+                          onClick={() => updateStatus(selected.id, mainAction.next)}
                         >
-                          {action.next === "accepted" && <Check size={15} />}
-                          <span>{action.label}</span>
+                          {mainAction.next === "accepted" && <Check size={14} />}
+                          <span>{mainAction.label}</span>
                         </button>
-                      ))}
-                    </>
-                  )}
+                        {dropdownActions.length > 0 && (
+                          <>
+                            <button
+                              type="button"
+                              className={`candidate-action-btn primary-action-btn dropdown-toggle-btn ${
+                                actionMenuOpen ? "active" : ""
+                              }`}
+                              onClick={() => setActionMenuOpen((prev) => !prev)}
+                              aria-label="Tùy chọn hành động khác"
+                              aria-expanded={actionMenuOpen}
+                            >
+                              <ChevronDown
+                                size={14}
+                                className={`dropdown-chevron ${actionMenuOpen ? "open" : ""}`}
+                              />
+                            </button>
+                            {actionMenuOpen && (
+                              <div className="candidate-dropdown-menu" role="menu">
+                                {dropdownActions.map((action) => (
+                                  <button
+                                    type="button"
+                                    key={action.next}
+                                    className="candidate-dropdown-item"
+                                    onClick={() => {
+                                      updateStatus(selected.id, action.next);
+                                      setActionMenuOpen(false);
+                                    }}
+                                  >
+                                    {action.label}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <Link
+                  href={`/business/messages?candidate=${selected.id}`}
+                  className="candidate-action-btn message-icon-btn"
+                  title={`Nhắn tin với ${selected.candidateName}`}
+                  aria-label="Nhắn tin"
+                >
+                  <MessageCircle size={15} />
+                </Link>
               </div>
             </header>
 
@@ -412,59 +499,62 @@ export function ApplicationsView({
                     </strong>
                   </div>
                 </div>
-              </div>
 
-              {/* 2. MỨC ĐỘ HOÀN THIỆN HỒ SƠ */}
-              <div className="mobile-profile-completion-card">
-                <div className="completion-header">
-                  <span className="completion-title">
-                    Mức độ hoàn thiện hồ sơ
-                  </span>
-                  <strong className="completion-percent">
-                    {selected.profileCompletion || selected.matchScore || 86}%
-                  </strong>
-                </div>
-                <div
-                  className="completion-track"
-                  role="progressbar"
-                  aria-valuenow={
-                    selected.profileCompletion || selected.matchScore || 86
-                  }
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                >
-                  <div
-                    className="completion-fill"
-                    style={{
-                      width: `${
-                        selected.profileCompletion || selected.matchScore || 86
-                      }%`,
-                    }}
-                  />
-                </div>
-                <p className="completion-tip">
-                  {selected.completionTip ||
-                    "Bổ sung chứng chỉ để doanh nghiệp có thêm cơ sở đánh giá."}
-                </p>
-              </div>
+                <div className="hero-card-divider" />
 
-              {/* 3. CẤP BẬC UY TÍN */}
-              <div className="mobile-profile-reputation-card">
-                <div className="reputation-left">
-                  <div className="reputation-icon-wrap">
-                    <Shield size={18} />
-                  </div>
-                  <div className="reputation-text">
-                    <strong className="reputation-title">
-                      {selected.trustRank || "Chưa xếp hạng"}
-                    </strong>
-                    <span className="reputation-subtitle">
-                      {selected.trustRankSubtitle || "Cấp bậc uy tín Nova"}
+                {/* MỨC ĐỘ HOÀN THIỆN HỒ SƠ (GỘP TRONG IDENTITY CARD) */}
+                <div className="hero-completion-section">
+                  <div className="completion-header">
+                    <span className="completion-title">
+                      Mức độ hoàn thiện hồ sơ
                     </span>
+                    <strong className="completion-percent">
+                      {selected.profileCompletion || selected.matchScore || 86}%
+                    </strong>
                   </div>
+                  <div
+                    className="completion-track"
+                    role="progressbar"
+                    aria-valuenow={
+                      selected.profileCompletion || selected.matchScore || 86
+                    }
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <div
+                      className="completion-fill"
+                      style={{
+                        width: `${
+                          selected.profileCompletion || selected.matchScore || 86
+                        }%`,
+                      }}
+                    />
+                  </div>
+                  <p className="completion-tip">
+                    {selected.completionTip ||
+                      "Bổ sung chứng chỉ để doanh nghiệp có thêm cơ sở đánh giá."}
+                  </p>
                 </div>
-                <ChevronRight size={18} className="reputation-chevron" />
               </div>
+
+              {/* 2. CẤP BẬC UY TÍN (DÒNG MẢNH KHÔNG VIỀN) */}
+              <Link
+                href="/business/reputation"
+                className="mobile-profile-reputation-row"
+                title="Xem chi tiết Cấp bậc uy tín Nova"
+              >
+                <div className="reputation-row-left">
+                  <Shield size={16} className="reputation-row-icon" />
+                  <span className="reputation-row-title">
+                    {selected.trustRank || "Chưa xếp hạng"}
+                  </span>
+                  <span className="reputation-row-dot">·</span>
+                  <span className="reputation-row-subtitle">
+                    {selected.trustRankSubtitle || "Cấp bậc uy tín Nova"}
+                  </span>
+                </div>
+                <ChevronRight size={15} className="reputation-row-chevron" />
+              </Link>
 
               {/* 4. GIỚI THIỆU */}
               <div className="mobile-profile-section">
