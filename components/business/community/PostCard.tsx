@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CommunityPost, PostReactionType } from "@/types/community";
+import { CommunityPost, PostPrivacy, PostReactionType } from "@/types/community";
 import { POST_REACTIONS } from "@/lib/community-constants";
 import {
   calculateTotalComments,
@@ -11,13 +11,17 @@ import {
 import Link from "next/link";
 import {
   ArrowUpRight,
+  Ban,
   Bookmark,
   BriefcaseBusiness,
   Building2,
   CheckCircle2,
   Copy,
+  Edit3,
   EyeOff,
+  Flag,
   Globe2,
+  Lock,
   MessageCircle,
   MessagesSquare,
   MoreHorizontal,
@@ -25,12 +29,23 @@ import {
   PinOff,
   Repeat2,
   Send,
+  ShieldAlert,
   ThumbsUp,
+  Trash2,
   User,
   UserCheck,
+  UserMinus,
+  UserPlus,
 } from "lucide-react";
 import { ReactionPicker } from "./ReactionPicker";
 import { FullscreenImageViewer } from "./FullscreenImageViewer";
+import {
+  ConfirmBlockModal,
+  ConfirmDeleteModal,
+  EditPostModal,
+  PrivacyModal,
+  ReportPostModal,
+} from "./PostActionModals";
 
 interface PostCardProps {
   post: CommunityPost;
@@ -42,6 +57,15 @@ interface PostCardProps {
   onToggleFollow?: (handle: string) => void;
   isFollowing?: boolean;
   onShowNotice: (msg: string) => void;
+  onDeletePost?: (postId: string) => void;
+  onBlockUser?: (handle: string) => void;
+  onEditPost?: (postId: string, content: string, topics?: string[]) => void;
+  onUpdatePrivacy?: (postId: string, privacy: PostPrivacy) => void;
+  initialShowOptions?: boolean;
+  initialShowDelete?: boolean;
+  initialShowBlock?: boolean;
+  initialShowReport?: boolean;
+  initialShowPrivacy?: boolean;
 }
 
 export function PostCard({
@@ -54,13 +78,41 @@ export function PostCard({
   onToggleFollow,
   isFollowing = false,
   onShowNotice,
+  onDeletePost,
+  onBlockUser,
+  onEditPost,
+  onUpdatePrivacy,
+  initialShowOptions = false,
+  initialShowDelete = false,
+  initialShowBlock = false,
+  initialShowReport = false,
+  initialShowPrivacy = false,
 }: PostCardProps) {
-  const [showOptions, setShowOptions] = useState(false);
+  const [showOptions, setShowOptions] = useState(initialShowOptions);
   const [showPicker, setShowPicker] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(initialShowDelete);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(initialShowBlock);
+  const [showReportModal, setShowReportModal] = useState(initialShowReport);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(initialShowPrivacy);
+  const [showEditModal, setShowEditModal] = useState(false);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPressTriggered = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (initialShowOptions) setShowOptions(true);
+    if (initialShowDelete) setShowDeleteConfirm(true);
+    if (initialShowBlock) setShowBlockConfirm(true);
+    if (initialShowReport) setShowReportModal(true);
+    if (initialShowPrivacy) setShowPrivacyModal(true);
+  }, [
+    initialShowOptions,
+    initialShowDelete,
+    initialShowBlock,
+    initialShowReport,
+    initialShowPrivacy,
+  ]);
 
   // Close picker on scroll or unmount
   useEffect(() => {
@@ -87,6 +139,8 @@ export function PostCard({
       }
     };
   }, [showPicker]);
+
+  // Preview automation helper for visual QA
 
   const handleMouseEnter = (e: React.MouseEvent) => {
     // Only for desktop mouse
@@ -237,7 +291,7 @@ export function PostCard({
           )}
 
           {/* 3-dots Menu */}
-          <div className="relative">
+          <div className="post-options-wrap">
             <button
               type="button"
               className="post-options-trigger"
@@ -254,64 +308,325 @@ export function PostCard({
                   onClick={() => setShowOptions(false)}
                 />
                 <div className="post-options-menu">
-                  {post.isMine && onTogglePin && (
-                    <button
-                      type="button"
-                      className="post-menu-item"
-                      onClick={() => {
-                        onTogglePin(post.id);
-                        setShowOptions(false);
-                      }}
-                    >
-                      {post.isPinned ? <PinOff size={15} /> : <Pin size={15} />}
-                      <span>{post.isPinned ? "Bỏ ghim" : "Ghim bài viết"}</span>
-                    </button>
-                  )}
+                  {post.isMine ? (
+                    <>
+                      {onTogglePin && (
+                        <button
+                          type="button"
+                          className="post-menu-item"
+                          onClick={() => {
+                            onTogglePin(post.id);
+                            setShowOptions(false);
+                            onShowNotice(
+                              post.isPinned
+                                ? "Đã bỏ ghim bài viết."
+                                : "Đã ghim bài viết lên đầu trang cá nhân."
+                            );
+                          }}
+                        >
+                          <span className="post-menu-icon">
+                            {post.isPinned ? <PinOff size={16} /> : <Pin size={16} />}
+                          </span>
+                          <div className="post-menu-text-wrap">
+                            <span className="post-menu-title">
+                              {post.isPinned ? "Bỏ ghim bài viết" : "Ghim bài viết"}
+                            </span>
+                            <span className="post-menu-subtitle">
+                              {post.isPinned
+                                ? "Gỡ ghim khỏi đầu trang cá nhân"
+                                : "Ghim lên đầu trang cá nhân"}
+                            </span>
+                          </div>
+                        </button>
+                      )}
 
-                  {onToggleSave && (
-                    <button
-                      type="button"
-                      className="post-menu-item"
-                      onClick={() => {
-                        onToggleSave(post.id);
-                        setShowOptions(false);
-                        onShowNotice(
-                          post.isSaved
-                            ? "Đã bỏ lưu bài viết."
-                            : "Đã lưu bài viết vào danh sách."
-                        );
-                      }}
-                    >
-                      <Bookmark size={15} />
-                      <span>{post.isSaved ? "Bỏ lưu" : "Lưu bài viết"}</span>
-                    </button>
-                  )}
+                      {onToggleSave && (
+                        <button
+                          type="button"
+                          className="post-menu-item"
+                          onClick={() => {
+                            onToggleSave(post.id);
+                            setShowOptions(false);
+                            onShowNotice(
+                              post.isSaved
+                                ? "Đã bỏ lưu bài viết."
+                                : "Đã lưu bài viết vào danh sách."
+                            );
+                          }}
+                        >
+                          <span className="post-menu-icon">
+                            <Bookmark size={16} />
+                          </span>
+                          <div className="post-menu-text-wrap">
+                            <span className="post-menu-title">
+                              {post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"}
+                            </span>
+                            <span className="post-menu-subtitle">
+                              {post.isSaved
+                                ? "Xóa khỏi danh sách các mục đã lưu."
+                                : "Thêm vào danh sách các mục đã lưu."}
+                            </span>
+                          </div>
+                        </button>
+                      )}
 
-                  <button
-                    type="button"
-                    className="post-menu-item"
-                    onClick={() => {
-                      handleCopyLink();
-                      setShowOptions(false);
-                    }}
-                  >
-                    <Copy size={15} />
-                    <span>Sao chép liên kết</span>
-                  </button>
+                      <button
+                        type="button"
+                        className="post-menu-item"
+                        onClick={() => {
+                          setShowEditModal(true);
+                          setShowOptions(false);
+                        }}
+                      >
+                        <span className="post-menu-icon">
+                          <Edit3 size={16} />
+                        </span>
+                        <div className="post-menu-text-wrap">
+                          <span className="post-menu-title">Chỉnh sửa bài viết</span>
+                          <span className="post-menu-subtitle">
+                            Cập nhật nội dung hoặc chủ đề
+                          </span>
+                        </div>
+                      </button>
 
-                  {onHide && (
-                    <button
-                      type="button"
-                      className="post-menu-item text-danger"
-                      onClick={() => {
-                        onHide(post.id);
-                        setShowOptions(false);
-                        onShowNotice("Đã ẩn bài viết khỏi bảng tin.");
-                      }}
-                    >
-                      <EyeOff size={15} />
-                      <span>Ẩn bài viết</span>
-                    </button>
+                      <button
+                        type="button"
+                        className="post-menu-item"
+                        onClick={() => {
+                          setShowPrivacyModal(true);
+                          setShowOptions(false);
+                        }}
+                      >
+                        <span className="post-menu-icon">
+                          <Lock size={16} />
+                        </span>
+                        <div className="post-menu-text-wrap">
+                          <span className="post-menu-title">Chỉnh sửa quyền riêng tư</span>
+                          <span className="post-menu-subtitle">
+                            {post.privacy === "only_me"
+                              ? "Chế độ: Chỉ mình tôi"
+                              : post.privacy === "followers"
+                              ? "Chế độ: Người theo dõi"
+                              : "Chế độ: Công khai"}
+                          </span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="post-menu-item"
+                        onClick={() => {
+                          handleCopyLink();
+                          setShowOptions(false);
+                        }}
+                      >
+                        <span className="post-menu-icon">
+                          <Copy size={16} />
+                        </span>
+                        <div className="post-menu-text-wrap">
+                          <span className="post-menu-title">Sao chép liên kết</span>
+                          <span className="post-menu-subtitle">
+                            Sao chép liên kết bài viết vào clipboard
+                          </span>
+                        </div>
+                      </button>
+
+                      {onHide && (
+                        <button
+                          type="button"
+                          className="post-menu-item"
+                          onClick={() => {
+                            onHide(post.id);
+                            setShowOptions(false);
+                            onShowNotice("Đã ẩn bài viết khỏi bảng tin.");
+                          }}
+                        >
+                          <span className="post-menu-icon">
+                            <EyeOff size={16} />
+                          </span>
+                          <div className="post-menu-text-wrap">
+                            <span className="post-menu-title">Ẩn khỏi bảng tin</span>
+                            <span className="post-menu-subtitle">
+                              Tạm thời ẩn bài viết này khỏi bảng tin
+                            </span>
+                          </div>
+                        </button>
+                      )}
+
+                      {onDeletePost && (
+                        <>
+                          <div className="post-menu-divider" />
+                          <button
+                            type="button"
+                            className="post-menu-item danger"
+                            onClick={() => {
+                              setShowDeleteConfirm(true);
+                              setShowOptions(false);
+                            }}
+                          >
+                            <span className="post-menu-icon text-red-500">
+                              <Trash2 size={16} />
+                            </span>
+                            <div className="post-menu-text-wrap">
+                              <span className="post-menu-title text-red-500 font-semibold">
+                                Xóa bài viết
+                              </span>
+                              <span className="post-menu-subtitle text-red-400/80">
+                                Xóa vĩnh viễn bài đăng này
+                              </span>
+                            </div>
+                          </button>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {onToggleSave && (
+                        <button
+                          type="button"
+                          className="post-menu-item"
+                          onClick={() => {
+                            onToggleSave(post.id);
+                            setShowOptions(false);
+                            onShowNotice(
+                              post.isSaved
+                                ? "Đã bỏ lưu bài viết."
+                                : "Đã lưu bài viết vào danh sách."
+                            );
+                          }}
+                        >
+                          <span className="post-menu-icon">
+                            <Bookmark size={16} />
+                          </span>
+                          <div className="post-menu-text-wrap">
+                            <span className="post-menu-title">
+                              {post.isSaved ? "Bỏ lưu bài viết" : "Lưu bài viết"}
+                            </span>
+                            <span className="post-menu-subtitle">
+                              {post.isSaved
+                                ? "Xóa khỏi danh sách các mục đã lưu."
+                                : "Thêm vào danh sách các mục đã lưu."}
+                            </span>
+                          </div>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        className="post-menu-item"
+                        onClick={() => {
+                          handleCopyLink();
+                          setShowOptions(false);
+                        }}
+                      >
+                        <span className="post-menu-icon">
+                          <Copy size={16} />
+                        </span>
+                        <div className="post-menu-text-wrap">
+                          <span className="post-menu-title">Sao chép liên kết</span>
+                          <span className="post-menu-subtitle">
+                            Sao chép liên kết bài viết vào clipboard
+                          </span>
+                        </div>
+                      </button>
+
+                      {onHide && (
+                        <button
+                          type="button"
+                          className="post-menu-item"
+                          onClick={() => {
+                            onHide(post.id);
+                            setShowOptions(false);
+                            onShowNotice("Đã ẩn bài viết khỏi bảng tin.");
+                          }}
+                        >
+                          <span className="post-menu-icon">
+                            <EyeOff size={16} />
+                          </span>
+                          <div className="post-menu-text-wrap">
+                            <span className="post-menu-title">Ẩn bài viết này</span>
+                            <span className="post-menu-subtitle">
+                              Không hiển thị bài viết này trên bảng tin.
+                            </span>
+                          </div>
+                        </button>
+                      )}
+
+                      {post.author && onToggleFollow && (
+                        <button
+                          type="button"
+                          className="post-menu-item"
+                          onClick={() => {
+                            onToggleFollow(post.author!.handle);
+                            setShowOptions(false);
+                            onShowNotice(
+                              isFollowing
+                                ? `Đã bỏ theo dõi ${post.author!.displayName}.`
+                                : `Đang theo dõi ${post.author!.displayName}.`
+                            );
+                          }}
+                        >
+                          <span className="post-menu-icon">
+                            {isFollowing ? <UserMinus size={16} /> : <UserPlus size={16} />}
+                          </span>
+                          <div className="post-menu-text-wrap">
+                            <span className="post-menu-title">
+                              {isFollowing ? "Bỏ theo dõi tác giả" : "Theo dõi tác giả"}
+                            </span>
+                            <span className="post-menu-subtitle">
+                              {isFollowing
+                                ? "Ngừng nhận cập nhật từ người này."
+                                : "Nhận thông báo khi có bài viết mới."}
+                            </span>
+                          </div>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        className="post-menu-item"
+                        onClick={() => {
+                          setShowReportModal(true);
+                          setShowOptions(false);
+                        }}
+                      >
+                        <span className="post-menu-icon">
+                          <Flag size={16} />
+                        </span>
+                        <div className="post-menu-text-wrap">
+                          <span className="post-menu-title">Báo cáo bài viết</span>
+                          <span className="post-menu-subtitle">
+                            Báo cáo vi phạm tiêu chuẩn cộng đồng.
+                          </span>
+                        </div>
+                      </button>
+
+                      {post.author && onBlockUser && (
+                        <>
+                          <div className="post-menu-divider" />
+                          <button
+                            type="button"
+                            className="post-menu-item danger"
+                            onClick={() => {
+                              setShowBlockConfirm(true);
+                              setShowOptions(false);
+                            }}
+                          >
+                            <span className="post-menu-icon text-red-500">
+                              <Ban size={16} />
+                            </span>
+                            <div className="post-menu-text-wrap">
+                              <span className="post-menu-title text-red-500 font-semibold">
+                                Chặn @{post.author.handle}
+                              </span>
+                              <span className="post-menu-subtitle text-red-400/80">
+                                Không còn nhìn thấy bài viết từ người này
+                              </span>
+                            </div>
+                          </button>
+                        </>
+                      )}
+                    </>
                   )}
                 </div>
               </>
@@ -616,6 +931,58 @@ export function PostCard({
           onClose={() => setViewerIndex(null)}
         />
       )}
+
+      {/* Action Dialogs */}
+      <ConfirmDeleteModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          onDeletePost?.(post.id);
+          onShowNotice("Đã xóa bài viết.");
+        }}
+      />
+
+      {post.author && (
+        <ConfirmBlockModal
+          isOpen={showBlockConfirm}
+          onClose={() => setShowBlockConfirm(false)}
+          authorHandle={post.author.handle}
+          authorName={post.author.displayName}
+          onConfirm={() => {
+            onBlockUser?.(post.author!.handle);
+            onShowNotice("Đã chặn người dùng.");
+          }}
+        />
+      )}
+
+      <ReportPostModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        onSubmit={(_reason) => {
+          onShowNotice("Cảm ơn bạn. Báo cáo đã được gửi đến ban quản trị.");
+        }}
+      />
+
+      <PrivacyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        currentPrivacy={post.privacy || "public"}
+        onSave={(p) => {
+          onUpdatePrivacy?.(post.id, p);
+          onShowNotice("Đã cập nhật quyền riêng tư bài viết.");
+        }}
+      />
+
+      <EditPostModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        initialContent={post.content}
+        initialTopics={post.topics || []}
+        onSave={(content, topics) => {
+          onEditPost?.(post.id, content, topics);
+          onShowNotice("Đã cập nhật bài viết thành công.");
+        }}
+      />
     </article>
   );
 }

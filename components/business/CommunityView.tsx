@@ -31,10 +31,15 @@ const PRESET_TOPICS = [
   "ProductManagement",
 ];
 
-export function CommunityView() {
+interface CommunityViewProps {
+  preview?: string;
+}
+
+export function CommunityView({ preview }: CommunityViewProps = {}) {
   const {
     posts,
     followedHandles,
+    blockedHandles,
     isLoaded,
     publishPost,
     reactToPost,
@@ -46,6 +51,10 @@ export function CommunityView() {
     hidePost,
     restorePost,
     toggleFollowAuthor,
+    deletePost,
+    blockUser,
+    editPost,
+    updatePostPrivacy,
   } = useCommunityFeed();
 
   // Local composer state
@@ -73,10 +82,14 @@ export function CommunityView() {
     }, 2800);
   };
 
-  // Filtered & sorted feed: unhidden posts, pinned first, then by date
+  // Filtered & sorted feed: unhidden posts, unblocked authors, pinned first, then by date
   const feedPosts = useMemo(() => {
     return posts
-      .filter((p) => !p.isHidden)
+      .filter(
+        (p) =>
+          !p.isHidden &&
+          (!p.author || !blockedHandles.includes(p.author.handle))
+      )
       .sort((a, b) => {
         if (a.isPinned && !b.isPinned) return -1;
         if (!a.isPinned && b.isPinned) return 1;
@@ -84,7 +97,7 @@ export function CommunityView() {
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
       });
-  }, [posts]);
+  }, [posts, blockedHandles]);
 
   // Handle image upload from file input
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -339,24 +352,48 @@ export function CommunityView() {
             </p>
           </div>
         ) : (
-          feedPosts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              onReact={reactToPost}
-              onOpenComments={(p) => setCommentingPost(p)}
-              onTogglePin={togglePin}
-              onToggleSave={toggleSave}
-              onHide={hidePost}
-              onToggleFollow={toggleFollowAuthor}
-              isFollowing={
-                post.author
-                  ? followedHandles.includes(post.author.handle)
-                  : false
-              }
-              onShowNotice={showNotice}
-            />
-          ))
+          (() => {
+            const firstOwnIndex = feedPosts.findIndex((p) => p.isMine);
+            const firstOtherIndex = feedPosts.findIndex((p) => !p.isMine);
+
+            return feedPosts.map((post, idx) => {
+              const isTargetOwnPost =
+                idx === (firstOwnIndex !== -1 ? firstOwnIndex : 0);
+              const isTargetOtherPost =
+                idx === (firstOtherIndex !== -1 ? firstOtherIndex : 1);
+
+              return (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  onReact={reactToPost}
+                  onOpenComments={(p) => setCommentingPost(p)}
+                  onTogglePin={togglePin}
+                  onToggleSave={toggleSave}
+                  onHide={hidePost}
+                  onToggleFollow={toggleFollowAuthor}
+                  isFollowing={
+                    post.author
+                      ? followedHandles.includes(post.author.handle)
+                      : false
+                  }
+                  onShowNotice={showNotice}
+                  onDeletePost={deletePost}
+                  onBlockUser={blockUser}
+                  onEditPost={editPost}
+                  onUpdatePrivacy={updatePostPrivacy}
+                  initialShowOptions={
+                    (isTargetOwnPost && preview === "own-menu") ||
+                    (isTargetOtherPost && preview === "other-menu")
+                  }
+                  initialShowDelete={isTargetOwnPost && preview === "delete-modal"}
+                  initialShowPrivacy={isTargetOwnPost && preview === "privacy-modal"}
+                  initialShowBlock={isTargetOtherPost && preview === "block-modal"}
+                  initialShowReport={isTargetOtherPost && preview === "report-modal"}
+                />
+              );
+            });
+          })()
         )}
       </div>
 
@@ -385,6 +422,10 @@ export function CommunityView() {
         onRestore={restorePost}
         onToggleFollow={toggleFollowAuthor}
         onShowNotice={showNotice}
+        onDeletePost={deletePost}
+        onBlockUser={blockUser}
+        onEditPost={editPost}
+        onUpdatePrivacy={updatePostPrivacy}
       />
 
       {/* Profile Explorer Modal */}

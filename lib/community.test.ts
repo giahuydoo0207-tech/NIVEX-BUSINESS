@@ -361,4 +361,70 @@ test("normalizeCommunityPost safely migrates legacy localStorage data and enforc
   assert.equal(normalized3.reactionCount, 10); // Calibrated to valid sum
 });
 
+test("community post privacy and author blocking behavior", () => {
+  const posts: CommunityPost[] = [
+    {
+      id: "post-1",
+      content: "Post 1 from alice",
+      images: [],
+      timeLabel: "1 giờ trước",
+      createdAt: new Date().toISOString(),
+      isMine: false,
+      reactionCount: 0,
+      comments: [],
+      author: {
+        kind: "freelancer",
+        displayName: "Alice",
+        handle: "alice.dev",
+        headline: "Dev",
+        location: "HCM",
+        bio: "",
+        tags: [],
+        stats: [],
+      },
+    },
+    {
+      id: "post-2",
+      content: "Post 2 from bob",
+      images: [],
+      timeLabel: "2 giờ trước",
+      createdAt: new Date().toISOString(),
+      isMine: false,
+      reactionCount: 0,
+      comments: [],
+      author: {
+        kind: "freelancer",
+        displayName: "Bob",
+        handle: "bob.pm",
+        headline: "PM",
+        location: "HN",
+        bio: "",
+        tags: [],
+        stats: [],
+      },
+    },
+    {
+      id: "post-3",
+      content: "My post with followers privacy",
+      images: [],
+      timeLabel: "Vừa xong",
+      createdAt: new Date().toISOString(),
+      isMine: true,
+      privacy: "followers",
+      reactionCount: 0,
+      comments: [],
+    },
+  ];
+
+  const blockedHandles = ["alice.dev"];
+  const visibleFeed = posts.filter(
+    (p) => !p.isHidden && (!p.author || !blockedHandles.includes(p.author.handle))
+  );
+
+  assert.equal(visibleFeed.length, 2);
+  assert.ok(!visibleFeed.some((p) => p.author?.handle === "alice.dev"));
+  assert.ok(visibleFeed.some((p) => p.author?.handle === "bob.pm"));
+  assert.ok(visibleFeed.some((p) => p.id === "post-3" && p.privacy === "followers"));
+});
+
 

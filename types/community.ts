@@ -77,6 +77,8 @@ export interface PostComment {
   replies: PostCommentReply[];
 }
 
+export type PostPrivacy = "public" | "followers" | "only_me";
+
 export interface CommunityPost {
   id: string;
   content: string;
@@ -87,6 +89,7 @@ export interface CommunityPost {
   isPinned?: boolean;
   isSaved?: boolean;
   isHidden?: boolean;
+  privacy?: PostPrivacy;
   reactionCount: number;
   myReaction?: PostReactionType | null;
   reactionCounts?: Partial<Record<PostReactionType, number>>;

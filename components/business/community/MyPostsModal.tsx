@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CommunityPost, PostReactionType } from "@/types/community";
+import { CommunityPost, PostPrivacy, PostReactionType } from "@/types/community";
 import {
   Bookmark,
   Building2,
@@ -26,6 +26,10 @@ interface MyPostsModalProps {
   onRestore: (postId: string) => void;
   onToggleFollow: (handle: string) => void;
   onShowNotice: (msg: string) => void;
+  onDeletePost?: (postId: string) => void;
+  onBlockUser?: (handle: string) => void;
+  onEditPost?: (postId: string, content: string, topics?: string[]) => void;
+  onUpdatePrivacy?: (postId: string, privacy: PostPrivacy) => void;
 }
 
 type TabKey = "published" | "saved" | "hidden";
@@ -42,6 +46,10 @@ export function MyPostsModal({
   onRestore,
   onToggleFollow,
   onShowNotice,
+  onDeletePost,
+  onBlockUser,
+  onEditPost,
+  onUpdatePrivacy,
 }: MyPostsModalProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("published");
 
@@ -184,6 +192,10 @@ export function MyPostsModal({
                       onHide={onHide}
                       onToggleFollow={onToggleFollow}
                       onShowNotice={onShowNotice}
+                      onDeletePost={onDeletePost}
+                      onBlockUser={onBlockUser}
+                      onEditPost={onEditPost}
+                      onUpdatePrivacy={onUpdatePrivacy}
                     />
                   ))}
                 </div>
@@ -217,6 +229,10 @@ export function MyPostsModal({
                       onHide={onHide}
                       onToggleFollow={onToggleFollow}
                       onShowNotice={onShowNotice}
+                      onDeletePost={onDeletePost}
+                      onBlockUser={onBlockUser}
+                      onEditPost={onEditPost}
+                      onUpdatePrivacy={onUpdatePrivacy}
                     />
                   ))}
                 </div>

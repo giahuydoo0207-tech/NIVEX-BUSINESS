@@ -97,6 +97,10 @@ export function normalizeCommunityPost(item: unknown): CommunityPost | null {
         : undefined,
     isFollowingAuthor: Boolean(raw.isFollowingAuthor),
     repostCount: typeof raw.repostCount === "number" ? raw.repostCount : 0,
+    privacy:
+      raw.privacy === "followers" || raw.privacy === "only_me" || raw.privacy === "public"
+        ? raw.privacy
+        : undefined,
   };
 }
 

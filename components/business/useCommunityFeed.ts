@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CommunityPost, PostComment, PostCommentReply, PostReactionType, PublicProfileData } from "@/types/community";
+import { CommunityPost, PostComment, PostCommentReply, PostPrivacy, PostReactionType, PublicProfileData } from "@/types/community";
 import { INITIAL_DEMO_POSTS } from "@/lib/community-constants";
 import {
   addCommentToPost,
@@ -19,6 +19,8 @@ const COMMUNITY_POSTS_STORAGE_KEY = "nivex.demo.community_posts";
 const COMMUNITY_UPDATE_EVENT = "nova:community-updated";
 const FOLLOWED_AUTHORS_STORAGE_KEY = "nivex.demo.community_followed_authors";
 const FOLLOWED_UPDATE_EVENT = "nova:community-followed-updated";
+const BLOCKED_AUTHORS_STORAGE_KEY = "nivex.demo.community_blocked_authors";
+const BLOCKED_UPDATE_EVENT = "nova:community-blocked-updated";
 
 function loadStoredPosts(): CommunityPost[] {
   if (typeof window === "undefined") return INITIAL_DEMO_POSTS;
@@ -64,9 +66,22 @@ function loadFollowedAuthors(): string[] {
   }
 }
 
+function loadBlockedAuthors(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(BLOCKED_AUTHORS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export function useCommunityFeed() {
   const [posts, setPosts] = useState<CommunityPost[]>(INITIAL_DEMO_POSTS);
   const [followedHandles, setFollowedHandles] = useState<string[]>([]);
+  const [blockedHandles, setBlockedHandles] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Sync helper
@@ -96,10 +111,24 @@ export function useCommunityFeed() {
     }
   }, []);
 
+  const saveBlockedAndBroadcast = useCallback((updatedHandles: string[]) => {
+    setBlockedHandles(updatedHandles);
+    try {
+      localStorage.setItem(
+        BLOCKED_AUTHORS_STORAGE_KEY,
+        JSON.stringify(updatedHandles)
+      );
+      window.dispatchEvent(new CustomEvent(BLOCKED_UPDATE_EVENT));
+    } catch (err) {
+      console.error("Failed to persist blocked authors:", err);
+    }
+  }, []);
+
   // Initial load
   useEffect(() => {
     setPosts(loadStoredPosts());
     setFollowedHandles(loadFollowedAuthors());
+    setBlockedHandles(loadBlockedAuthors());
     setIsLoaded(true);
   }, []);
 
@@ -111,15 +140,20 @@ export function useCommunityFeed() {
     const handleFollowSync = () => {
       setFollowedHandles(loadFollowedAuthors());
     };
+    const handleBlockedSync = () => {
+      setBlockedHandles(loadBlockedAuthors());
+    };
 
     window.addEventListener("storage", handlePostsSync);
     window.addEventListener(COMMUNITY_UPDATE_EVENT, handlePostsSync);
     window.addEventListener(FOLLOWED_UPDATE_EVENT, handleFollowSync);
+    window.addEventListener(BLOCKED_UPDATE_EVENT, handleBlockedSync);
 
     return () => {
       window.removeEventListener("storage", handlePostsSync);
       window.removeEventListener(COMMUNITY_UPDATE_EVENT, handlePostsSync);
       window.removeEventListener(FOLLOWED_UPDATE_EVENT, handleFollowSync);
+      window.removeEventListener(BLOCKED_UPDATE_EVENT, handleBlockedSync);
     };
   }, []);
 
@@ -287,9 +321,76 @@ export function useCommunityFeed() {
     [followedHandles, saveFollowedAndBroadcast]
   );
 
+  const deletePost = useCallback(
+    (postId: string) => {
+      const nextPosts = posts.filter((p) => p.id !== postId);
+      saveAndBroadcast(nextPosts);
+    },
+    [posts, saveAndBroadcast]
+  );
+
+  const blockUser = useCallback(
+    (authorHandle: string) => {
+      if (!authorHandle) return;
+      const nextBlocked = blockedHandles.includes(authorHandle)
+        ? blockedHandles
+        : [...blockedHandles, authorHandle];
+      saveBlockedAndBroadcast(nextBlocked);
+
+      // Remove from followed list if currently followed
+      if (followedHandles.includes(authorHandle)) {
+        const nextFollowed = followedHandles.filter((h) => h !== authorHandle);
+        saveFollowedAndBroadcast(nextFollowed);
+      }
+    },
+    [blockedHandles, followedHandles, saveBlockedAndBroadcast, saveFollowedAndBroadcast]
+  );
+
+  const unblockUser = useCallback(
+    (authorHandle: string) => {
+      const nextBlocked = blockedHandles.filter((h) => h !== authorHandle);
+      saveBlockedAndBroadcast(nextBlocked);
+    },
+    [blockedHandles, saveBlockedAndBroadcast]
+  );
+
+  const editPost = useCallback(
+    (postId: string, content: string, topics?: string[]) => {
+      const nextPosts = posts.map((post) => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            content: content.trim(),
+            ...(topics !== undefined ? { topics } : {}),
+          };
+        }
+        return post;
+      });
+      saveAndBroadcast(nextPosts);
+    },
+    [posts, saveAndBroadcast]
+  );
+
+  const updatePostPrivacy = useCallback(
+    (postId: string, privacy: PostPrivacy) => {
+      const nextPosts = posts.map((post) => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            privacy,
+          };
+        }
+        return post;
+      });
+      saveAndBroadcast(nextPosts);
+    },
+    [posts, saveAndBroadcast]
+  );
+
   return {
     posts,
     followedHandles,
+    blockedHandles,
     isLoaded,
     publishPost,
     reactToPost,
@@ -301,5 +402,10 @@ export function useCommunityFeed() {
     hidePost,
     restorePost,
     toggleFollowAuthor,
+    deletePost,
+    blockUser,
+    unblockUser,
+    editPost,
+    updatePostPrivacy,
   };
 }
