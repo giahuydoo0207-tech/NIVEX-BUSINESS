@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 
 const UUID = "[0-9a-fA-F-]{36}";
-const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages(\?status=(PENDING|ACCEPTED))?|messages/${UUID}/(accept|decline|block|messages)|notifications|notifications/${UUID}/read)$`);
+const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages(\?status=(PENDING|ACCEPTED))?|messages/${UUID}/(accept|decline|block|messages)|notifications|notifications/${UUID}/read|business/profile(/(avatar|cover))?|media/business-profile/${UUID})$`);
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   // This demo is opt-in and proxied server-side so the backend key is never
@@ -14,13 +14,16 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   if (request.method !== "GET" && request.headers.get("origin") !== request.nextUrl.origin) {
     return new Response(null, { status: 403 });
   }
-  const body = request.method === "GET" ? undefined : await request.text();
-  if (body && body.length > 16000) return new Response(null, { status: 413 });
+  const body = request.method === "GET" ? undefined : await request.arrayBuffer();
+  if (body && body.byteLength > 8 * 1024 * 1024) return new Response(null, { status: 413 });
   try {
-    const response = await fetch(`${process.env.NOVA_API_URL}/api/v1/${path}`, {
+    const upstream = path.startsWith("media/")
+      ? `${process.env.NOVA_API_URL}/${path}`
+      : `${process.env.NOVA_API_URL}/api/v1/${path}`;
+    const response = await fetch(upstream, {
       method: request.method, body, cache: "no-store", signal: AbortSignal.timeout(60000),
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": request.headers.get("Content-Type") || "application/json",
         "Idempotency-Key": request.headers.get("Idempotency-Key") || "",
         "X-Nova-Demo-Key": process.env.NOVA_DEMO_API_KEY,
       },

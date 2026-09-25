@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -97,6 +97,27 @@ export function BusinessProfileView() {
   const [editName, setEditName] = useState(profile.name);
   const [editCategory, setEditCategory] = useState(profile.category);
   const [editBio, setEditBio] = useState(profile.bio);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_PAYMENT_MODE !== "devnet") return;
+    fetch("/api/devnet/business/profile", { cache: "no-store" }).then(async (response) => {
+      if (!response.ok) return;
+      const value = await response.json();
+      setProfile((current) => ({ ...current, name: value.name ?? current.name, category: value.category ?? current.category, bio: value.bio ?? current.bio, followerCount: value.followerCount ?? current.followerCount, logoUrl: value.avatarUrl ? `/api/devnet${value.avatarUrl}` : current.logoUrl, coverImageUrl: value.coverUrl ? `/api/devnet${value.coverUrl}` : current.coverImageUrl }));
+    }).catch(() => undefined);
+  }, []);
+
+  const uploadImage = async (kind: "avatar" | "cover", file?: File) => {
+    if (!file) return;
+    const form = new FormData(); form.append("file", file);
+    const response = await fetch(`/api/devnet/business/profile/${kind}`, { method: "POST", body: form });
+    if (!response.ok) { showNotice("Không thể tải ảnh. Chỉ dùng PNG, JPEG hoặc WebP."); return; }
+    const value = await response.json();
+    setProfile((current) => ({ ...current, logoUrl: value.avatarUrl ? `/api/devnet${value.avatarUrl}` : current.logoUrl, coverImageUrl: value.coverUrl ? `/api/devnet${value.coverUrl}` : current.coverImageUrl }));
+    showNotice(kind === "avatar" ? "Đã cập nhật avatar." : "Đã cập nhật ảnh nền.");
+  };
 
   // Data sources
   const {
@@ -201,7 +222,7 @@ export function BusinessProfileView() {
 
       {/* Profile Header Card */}
       <section className="business-profile-header-card" aria-label="Hồ sơ doanh nghiệp">
-        <div className="business-profile-cover">
+        <div className="business-profile-cover" style={profile.coverImageUrl ? { backgroundImage: `url(${profile.coverImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
           <div className="cover-gradient-accent" />
         </div>
 
@@ -209,7 +230,7 @@ export function BusinessProfileView() {
           <div className="business-profile-avatar-row">
             {/* Neutral avatar 🏢, NO reputation ring */}
             <div className="business-profile-avatar" aria-label={`Logo của ${profile.name}`}>
-              <Building2 size={38} strokeWidth={1.8} />
+              {profile.logoUrl ? <img src={profile.logoUrl} alt="" /> : <Building2 size={38} strokeWidth={1.8} />}
             </div>
 
             <div className="business-profile-actions">
@@ -531,6 +552,12 @@ export function BusinessProfileView() {
               </button>
             </div>
             <form onSubmit={handleSaveProfile} className="profile-edit-body">
+              <input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => uploadImage("avatar", event.target.files?.[0])} />
+              <input ref={coverInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => uploadImage("cover", event.target.files?.[0])} />
+              <div className="modal-footer">
+                <button type="button" className="business-secondary-button" onClick={() => avatarInputRef.current?.click()}>Đổi avatar</button>
+                <button type="button" className="business-secondary-button" onClick={() => coverInputRef.current?.click()}>Đổi ảnh nền</button>
+              </div>
               <div className="form-group">
                 <label htmlFor="edit-name">Tên tổ chức</label>
                 <input
