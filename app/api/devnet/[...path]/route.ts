@@ -28,8 +28,10 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
         "X-Nova-Demo-Key": process.env.NOVA_DEMO_API_KEY,
       },
     });
-    return new Response(await response.text(), {
-      status: response.status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    const contentType = response.headers.get("Content-Type") || "application/json";
+    const payload = path.startsWith("media/") ? await response.arrayBuffer() : await response.text();
+    return new Response(payload, {
+      status: response.status, headers: { "Content-Type": contentType, "Cache-Control": "no-store" },
     });
   } catch {
     return Response.json({ message: "Backend chua san sang. Thu lai sau." }, { status: 503 });

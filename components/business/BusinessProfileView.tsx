@@ -99,6 +99,7 @@ export function BusinessProfileView() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [commentingPost, setCommentingPost] = useState<CommunityPost | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState<"avatar" | "cover" | null>(null);
 
   // Edit form state
   const [editName, setEditName] = useState(profile.name);
@@ -118,12 +119,34 @@ export function BusinessProfileView() {
 
   const uploadImage = async (kind: "avatar" | "cover", file?: File) => {
     if (!file) return;
-    const form = new FormData(); form.append("file", file);
-    const response = await fetch(`/api/devnet/business/profile/${kind}`, { method: "POST", body: form });
-    if (!response.ok) { showNotice("Không thể tải ảnh. Chỉ dùng PNG, JPEG hoặc WebP."); return; }
-    const value = await response.json();
-    setProfile((current) => ({ ...current, logoUrl: toDevnetMediaUrl(value.avatarUrl) ?? current.logoUrl, coverImageUrl: toDevnetMediaUrl(value.coverUrl) ?? current.coverImageUrl }));
-    showNotice(kind === "avatar" ? "Đã cập nhật avatar." : "Đã cập nhật ảnh nền.");
+    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
+      showNotice("Chỉ dùng ảnh PNG, JPEG hoặc WebP.");
+      return;
+    }
+
+    const previousUrl = kind === "avatar" ? profile.logoUrl : profile.coverImageUrl;
+    const previewUrl = URL.createObjectURL(file);
+    setUploadingImage(kind);
+    setProfile((current) => kind === "avatar" ? { ...current, logoUrl: previewUrl } : { ...current, coverImageUrl: previewUrl });
+
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const response = await fetch(`/api/devnet/business/profile/${kind}`, { method: "POST", body: form });
+      if (!response.ok) {
+        const detail = await response.json().catch(() => null);
+        throw new Error(detail?.message || "Không thể tải ảnh lên.");
+      }
+      const value = await response.json();
+      setProfile((current) => ({ ...current, logoUrl: toDevnetMediaUrl(value.avatarUrl) ?? current.logoUrl, coverImageUrl: toDevnetMediaUrl(value.coverUrl) ?? current.coverImageUrl }));
+      showNotice(kind === "avatar" ? "Đã cập nhật avatar." : "Đã cập nhật ảnh nền.");
+    } catch (error) {
+      setProfile((current) => kind === "avatar" ? { ...current, logoUrl: previousUrl } : { ...current, coverImageUrl: previousUrl });
+      showNotice(error instanceof Error ? error.message : "Không thể tải ảnh lên.");
+    } finally {
+      URL.revokeObjectURL(previewUrl);
+      setUploadingImage(null);
+    }
   };
 
   // Data sources
@@ -572,9 +595,9 @@ export function BusinessProfileView() {
                       <strong>Avatar</strong>
                       <span>PNG, JPG hoặc WebP</span>
                     </div>
-                    <button type="button" className="business-secondary-button" onClick={() => avatarInputRef.current?.click()}>
+                    <button type="button" className="business-secondary-button" disabled={uploadingImage !== null} onClick={() => avatarInputRef.current?.click()}>
                       <ImageUp size={16} />
-                      Đổi avatar
+                      {uploadingImage === "avatar" ? "Đang tải..." : "Đổi avatar"}
                     </button>
                   </div>
                   <div className="profile-media-preview-card">
@@ -589,9 +612,9 @@ export function BusinessProfileView() {
                       <strong>Ảnh nền</strong>
                       <span>PNG, JPG hoặc WebP</span>
                     </div>
-                    <button type="button" className="business-secondary-button" onClick={() => coverInputRef.current?.click()}>
+                    <button type="button" className="business-secondary-button" disabled={uploadingImage !== null} onClick={() => coverInputRef.current?.click()}>
                       <ImageUp size={16} />
-                      Đổi ảnh nền
+                      {uploadingImage === "cover" ? "Đang tải..." : "Đổi ảnh nền"}
                     </button>
                   </div>
                 </div>
