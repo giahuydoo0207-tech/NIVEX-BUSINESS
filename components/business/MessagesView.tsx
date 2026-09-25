@@ -314,7 +314,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
             <div className="conversation-rail-title-row">
               <div>
                 <strong>Hội thoại</strong>
-                <small>{allConversations.length} ứng viên</small>
+                <small>{allConversations.length} hội thoại</small>
               </div>
               <div className="messages-tab-bar" role="tablist" aria-label="Bộ lọc hội thoại">
                 <button

@@ -93,8 +93,8 @@ export function JobsView() {
             <UsersRound size={18} />
           </span>
           <span>
-            <small>ỨNG VIÊN</small>
-            <strong>{applicants} hồ sơ</strong>
+            <small>PHẢN HỒI</small>
+            <strong>{applicants > 0 ? `${applicants} hồ sơ` : "Chưa có"}</strong>
           </span>
         </article>
         <article>
@@ -181,8 +181,8 @@ export function JobsView() {
                   <dd>{budgetLabel(job)}</dd>
                 </div>
                 <div>
-                  <dt>Ứng viên</dt>
-                  <dd>{getJobApplicationCount(job.id)}</dd>
+                  <dt>Phản hồi</dt>
+                  <dd>{getJobApplicationCount(job.id) > 0 ? `${getJobApplicationCount(job.id)} hồ sơ` : "Chưa có"}</dd>
                 </div>
                 <div>
                   <dt>Hạn ứng tuyển</dt>

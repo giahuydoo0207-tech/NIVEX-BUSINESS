@@ -10941,6 +10941,90 @@ body:has(.business-app) {
   font-weight: 600;
 }
 
+/* Workspace density pass: preserve the product structure while keeping labels readable. */
+.business-app .page-heading-row > div,
+.business-app .jobs-heading-actions,
+.business-app .application-queue-title-row > *,
+.business-app .candidate-header-meta,
+.business-app .candidate-header-actions {
+  min-width: 0;
+}
+
+.business-app .page-heading-row h1,
+.business-app .page-heading-row p,
+.business-app .job-post-title-link,
+.business-app .candidate-header-job-link,
+.business-app .candidate-name,
+.business-app .conversation-preview strong {
+  overflow-wrap: anywhere;
+}
+
+.business-app .page-heading-row h1 {
+  line-height: 1.15;
+}
+
+.business-app .business-primary-button,
+.business-app .business-secondary-button,
+.business-app .candidate-action-btn {
+  white-space: nowrap;
+}
+
+.conversation-rail-title-row > div:first-child {
+  min-width: 0;
+}
+
+.conversation-rail-title-row strong,
+.conversation-rail-title-row small,
+.messages-tab-btn {
+  white-space: nowrap;
+}
+
+.conversation-rail-title-row small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.messages-tab-bar {
+  flex: 0 0 auto;
+}
+
+.messages-tab-btn {
+  min-height: 34px;
+  padding-inline: 9px;
+}
+
+.conversation-rail-head {
+  min-height: 110px;
+}
+
+.job-post-metrics dd {
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.jobs-command-strip strong,
+.mobile-delivery-status strong {
+  line-height: 1.35;
+}
+
+@media (max-width: 520px) {
+  .conversation-rail-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .messages-tab-bar {
+    width: 100%;
+  }
+
+  .messages-tab-btn {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+}
+
 .messages-tab-badge {
   display: inline-flex;
   align-items: center;
