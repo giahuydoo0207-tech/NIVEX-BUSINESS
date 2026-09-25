@@ -43,7 +43,7 @@ public class CommunityController {
 
     @GetMapping("/posts/{postId}/reactions")
     public List<CommunityReaction> reactions(@PathVariable UUID postId) {
-        return repository.reactions(postId);
+        return repository.reactions(postId, BUSINESS_ACTOR);
     }
 
     @PostMapping("/posts")

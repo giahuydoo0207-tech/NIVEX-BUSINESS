@@ -61,13 +61,14 @@ public class CommunityRepository {
             reactionCounts, saved, hidden, following, base.author(), comments(postId, actorId));
     }
 
-    public List<CommunityReaction> reactions(UUID postId) {
-        requirePost(postId);
+    public List<CommunityReaction> reactions(UUID postId, String actorId) {
+        requireVisiblePost(postId, actorId);
         return jdbc.query("select r.reaction_type, r.created_at, a.id, a.kind, a.display_name, a.handle, a.headline, a.avatar_url " +
-                "from community_post_reactions r join community_profiles a on a.id=r.actor_id where r.post_id=? order by r.created_at desc",
+                "from community_post_reactions r join community_profiles a on a.id=r.actor_id where r.post_id=? " +
+                "and not exists (select 1 from community_blocks b where b.actor_id=? and b.blocked_profile_id=a.id) order by r.created_at desc",
             (rs, row) -> new CommunityReaction(rs.getString("reaction_type"), new CommunityProfile(
                 rs.getString("id"), rs.getString("kind"), rs.getString("display_name"), rs.getString("handle"),
-                rs.getString("headline"), rs.getString("avatar_url")), rs.getTimestamp("created_at").toInstant()), postId);
+                rs.getString("headline"), rs.getString("avatar_url")), rs.getTimestamp("created_at").toInstant()), postId, actorId);
     }
 
     @Transactional
@@ -230,6 +231,10 @@ public class CommunityRepository {
         }
     }
     private void requirePost(UUID postId) { if (!exists("select 1 from community_posts where id=? and deleted_at is null", postId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community post not found"); }
+    private void requireVisiblePost(UUID postId, String actorId) { if (!exists("select 1 from community_posts p where p.id=? and p.deleted_at is null " +
+            "and not exists (select 1 from community_blocks b where b.actor_id=? and b.blocked_profile_id=p.author_id) " +
+            "and not exists (select 1 from community_hidden_posts h where h.actor_id=? and h.post_id=p.id) " +
+            "and (p.privacy='PUBLIC' or p.author_id=? or (p.privacy='FOLLOWERS' and exists (select 1 from community_follows f where f.actor_id=? and f.followed_profile_id=p.author_id)))", postId, actorId, actorId, actorId, actorId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community post not found"); }
     private void requireComment(UUID postId, UUID commentId) { if (!exists("select 1 from community_comments where id=? and post_id=? and deleted_at is null", commentId, postId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"); }
     private void requireProfile(String profileId) { if (!profileExists(profileId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community profile not found"); }
     private boolean exists(String sql, Object... arguments) { return !jdbc.query(sql, (rs, row) -> 1, arguments).isEmpty(); }
