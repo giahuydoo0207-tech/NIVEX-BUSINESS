@@ -144,7 +144,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
     );
   }, [currentList, query]);
 
-  const selected = conversations.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
+  const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });

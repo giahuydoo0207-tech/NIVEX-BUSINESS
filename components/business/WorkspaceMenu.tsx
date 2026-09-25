@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { type RefObject, useEffect, useRef } from "react";
 import {
   BUSINESS_THEMES,
   type BusinessThemeId,
@@ -18,6 +18,7 @@ interface WorkspaceMenuProps {
   currentThemeId: BusinessThemeId;
   onSelectTheme: (themeId: BusinessThemeId) => void;
   onClose: () => void;
+  triggerRef?: RefObject<HTMLElement | null>;
 }
 
 export function WorkspaceMenu({
@@ -25,6 +26,7 @@ export function WorkspaceMenu({
   currentThemeId,
   onSelectTheme,
   onClose,
+  triggerRef,
 }: WorkspaceMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -41,7 +43,7 @@ export function WorkspaceMenu({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, triggerRef]);
 
   // Close on outside click
   useEffect(() => {
@@ -50,7 +52,8 @@ export function WorkspaceMenu({
     const handlePointerDown = (event: MouseEvent | TouchEvent) => {
       if (
         menuRef.current &&
-        !menuRef.current.contains(event.target as Node)
+        !menuRef.current.contains(event.target as Node) &&
+        !triggerRef?.current?.contains(event.target as Node)
       ) {
         onClose();
       }
@@ -63,7 +66,7 @@ export function WorkspaceMenu({
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("touchstart", handlePointerDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, triggerRef]);
 
   if (!isOpen) return null;
 

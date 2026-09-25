@@ -151,6 +151,7 @@ export function BusinessShell({
   );
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
+  const workspaceMenuTriggerRef = useRef<HTMLButtonElement>(null);
   const [dialog, setDialog] = useState<
     "wallet" | "help" | "notifications" | null
   >(null);
@@ -205,6 +206,7 @@ export function BusinessShell({
         </Link>
         <div className="organization-switcher-wrap">
           <button
+            ref={workspaceMenuTriggerRef}
             type="button"
             className={`organization-switcher ${workspaceMenuOpen ? "open" : ""}`}
             onClick={() => setWorkspaceMenuOpen((prev) => !prev)}
@@ -229,6 +231,7 @@ export function BusinessShell({
             currentThemeId={themeId}
             onSelectTheme={handleSelectTheme}
             onClose={() => setWorkspaceMenuOpen(false)}
+            triggerRef={workspaceMenuTriggerRef}
           />
         </div>
         <nav
