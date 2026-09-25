@@ -25,7 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Validated
 @RequestMapping("/api/v1/business/profile")
 public class BusinessProfileController {
-    private static final Map<String, Integer> MAX_BYTES = Map.of("AVATAR", 5 * 1024 * 1024, "COVER", 8 * 1024 * 1024);
+    private static final Map<String, Integer> MAX_BYTES = Map.of("AVATAR", 5 * 1024 * 1024, "COVER", 8 * 1024 * 1024, "COVER_ORIGINAL", 8 * 1024 * 1024);
     private final BusinessProfileRepository repository;
 
     public BusinessProfileController(BusinessProfileRepository repository) { this.repository = repository; }
@@ -42,16 +42,31 @@ public class BusinessProfileController {
     public BusinessProfile avatar(@RequestPart("file") MultipartFile file) { return upload("AVATAR", file); }
 
     @PostMapping(value = "/cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public BusinessProfile cover(@RequestPart("file") MultipartFile file) { return upload("COVER", file); }
+    public BusinessProfile cover(@RequestPart("file") MultipartFile file,
+                                 @RequestPart(value = "original", required = false) MultipartFile original) {
+        return uploadCover(file, original == null || original.isEmpty() ? file : original);
+    }
 
     private BusinessProfile upload(String type, MultipartFile file) {
+        ImageUpload image = readImage(type, file);
+        return repository.storeAsset(type, image.filename(), image.contentType(), image.content());
+    }
+
+    private BusinessProfile uploadCover(MultipartFile file, MultipartFile original) {
+        ImageUpload cropped = readImage("COVER", file);
+        ImageUpload source = readImage("COVER_ORIGINAL", original);
+        return repository.storeCoverAssets(cropped.filename(), cropped.contentType(), cropped.content(),
+            source.filename(), source.contentType(), source.content());
+    }
+
+    private ImageUpload readImage(String type, MultipartFile file) {
         if (file == null || file.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "An image file is required");
         if (file.getSize() > MAX_BYTES.get(type)) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, type + " image is too large");
         try {
             byte[] content = file.getBytes();
             String contentType = imageType(content);
             String filename = file.getOriginalFilename() == null ? type.toLowerCase(Locale.ROOT) : file.getOriginalFilename();
-            return repository.storeAsset(type, filename.substring(0, Math.min(filename.length(), 255)), contentType, content);
+            return new ImageUpload(filename.substring(0, Math.min(filename.length(), 255)), contentType, content);
         } catch (IOException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unable to read the image", exception);
         }
@@ -65,4 +80,5 @@ public class BusinessProfileController {
     }
 
     public record UpdateProfileRequest(@NotBlank @Size(max = 160) String name, @NotBlank @Size(max = 240) String category, @NotBlank @Size(max = 2000) String bio) {}
+    private record ImageUpload(String filename, String contentType, byte[] content) {}
 }

@@ -51,4 +51,26 @@ class BusinessProfileControllerTest {
                 .header("X-Nova-Demo-Key", "test-profile-key"))
             .andExpect(status().isUnsupportedMediaType());
     }
+
+    @Test
+    void storesACroppedCoverAndItsOriginalForTheFullScreenViewer() throws Exception {
+        MockMultipartFile cropped = new MockMultipartFile("file", "cover-crop.jpg", MediaType.IMAGE_JPEG_VALUE,
+            new byte[] {(byte) 0xff, (byte) 0xd8, (byte) 0xff, 0x01});
+        MockMultipartFile original = new MockMultipartFile("original", "cover-original.png", MediaType.IMAGE_PNG_VALUE,
+            new byte[] {(byte) 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a});
+
+        String body = mvc.perform(multipart("/api/v1/business/profile/cover").file(cropped).file(original)
+                .header("X-Nova-Demo-Key", "test-profile-key"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.coverUrl").isString())
+            .andExpect(jsonPath("$.coverOriginalUrl").isString())
+            .andReturn().getResponse().getContentAsString();
+
+        String croppedPath = body.replaceFirst(".*\\\"coverUrl\\\":\\\"([^\\\"]+)\\\".*", "$1");
+        String originalPath = body.replaceFirst(".*\\\"coverOriginalUrl\\\":\\\"([^\\\"]+)\\\".*", "$1");
+        mvc.perform(get(croppedPath)).andExpect(status().isOk())
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentType(MediaType.IMAGE_JPEG));
+        mvc.perform(get(originalPath)).andExpect(status().isOk())
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentType(MediaType.IMAGE_PNG));
+    }
 }

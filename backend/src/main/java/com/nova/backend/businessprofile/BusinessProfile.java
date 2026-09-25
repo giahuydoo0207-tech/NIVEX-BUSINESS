@@ -14,5 +14,6 @@ public record BusinessProfile(
     int followerCount,
     String avatarUrl,
     String coverUrl,
+    String coverOriginalUrl,
     Instant updatedAt
 ) {}

@@ -18,6 +18,7 @@ import {
   Globe2,
   ImageUp,
   MailCheck,
+  Maximize2,
   MessageSquare,
   ShieldCheck,
   TrendingUp,
@@ -41,6 +42,7 @@ export interface BusinessProfile {
   handle: string;
   name: string;
   coverImageUrl?: string;
+  coverOriginalUrl?: string;
   logoUrl?: string;
   isVerified: boolean;
   category: string;
@@ -109,7 +111,7 @@ async function cropImage(source: string, area: Area, kind: ProfileImageKind) {
   const image = await loadImage(source);
   const canvas = document.createElement("canvas");
   canvas.width = kind === "avatar" ? 640 : 1600;
-  canvas.height = kind === "avatar" ? 640 : 500;
+  canvas.height = kind === "avatar" ? 640 : 250;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Không thể tạo ảnh đã cắt.");
   context.drawImage(image, area.x, area.y, area.width, area.height, 0, 0, canvas.width, canvas.height);
@@ -127,9 +129,11 @@ export function BusinessProfileView() {
   const [uploadingImage, setUploadingImage] = useState<ProfileImageKind | null>(null);
   const [cropTarget, setCropTarget] = useState<ProfileImageKind | null>(null);
   const [cropSource, setCropSource] = useState<string | null>(null);
+  const [cropOriginalFile, setCropOriginalFile] = useState<File | null>(null);
   const [cropPosition, setCropPosition] = useState({ x: 0, y: 0 });
   const [cropZoom, setCropZoom] = useState(1);
   const [croppedArea, setCroppedArea] = useState<Area | null>(null);
+  const [isCoverViewerOpen, setIsCoverViewerOpen] = useState(false);
 
   // Edit form state
   const [editName, setEditName] = useState(profile.name);
@@ -143,11 +147,11 @@ export function BusinessProfileView() {
     fetch("/api/devnet/business/profile", { cache: "no-store" }).then(async (response) => {
       if (!response.ok) return;
       const value = await response.json();
-      setProfile((current) => ({ ...current, name: value.name ?? current.name, category: value.category ?? current.category, bio: value.bio ?? current.bio, followerCount: value.followerCount ?? current.followerCount, logoUrl: toDevnetMediaUrl(value.avatarUrl) ?? current.logoUrl, coverImageUrl: toDevnetMediaUrl(value.coverUrl) ?? current.coverImageUrl }));
+      setProfile((current) => ({ ...current, name: value.name ?? current.name, category: value.category ?? current.category, bio: value.bio ?? current.bio, followerCount: value.followerCount ?? current.followerCount, logoUrl: toDevnetMediaUrl(value.avatarUrl) ?? current.logoUrl, coverImageUrl: toDevnetMediaUrl(value.coverUrl) ?? current.coverImageUrl, coverOriginalUrl: toDevnetMediaUrl(value.coverOriginalUrl) ?? current.coverOriginalUrl }));
     }).catch(() => undefined);
   }, []);
 
-  const uploadImage = async (kind: ProfileImageKind, file?: File) => {
+  const uploadImage = async (kind: ProfileImageKind, file?: File, original?: File) => {
     if (!file) return;
     if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
       showNotice("Chỉ dùng ảnh PNG, JPEG hoặc WebP.");
@@ -162,13 +166,14 @@ export function BusinessProfileView() {
     try {
       const form = new FormData();
       form.append("file", file);
+      if (kind === "cover" && original) form.append("original", original);
       const response = await fetch(`/api/devnet/business/profile/${kind}`, { method: "POST", body: form });
       if (!response.ok) {
         const detail = await response.json().catch(() => null);
         throw new Error(detail?.message || "Không thể tải ảnh lên.");
       }
       const value = await response.json();
-      setProfile((current) => ({ ...current, logoUrl: toDevnetMediaUrl(value.avatarUrl) ?? current.logoUrl, coverImageUrl: toDevnetMediaUrl(value.coverUrl) ?? current.coverImageUrl }));
+      setProfile((current) => ({ ...current, logoUrl: toDevnetMediaUrl(value.avatarUrl) ?? current.logoUrl, coverImageUrl: toDevnetMediaUrl(value.coverUrl) ?? current.coverImageUrl, coverOriginalUrl: toDevnetMediaUrl(value.coverOriginalUrl) ?? current.coverOriginalUrl }));
       showNotice(kind === "avatar" ? "Đã cập nhật avatar." : "Đã cập nhật ảnh nền.");
     } catch (error) {
       setProfile((current) => kind === "avatar" ? { ...current, logoUrl: previousUrl } : { ...current, coverImageUrl: previousUrl });
@@ -187,6 +192,7 @@ export function BusinessProfileView() {
     }
     setCropTarget(kind);
     setCropSource(URL.createObjectURL(file));
+    setCropOriginalFile(file);
     setCropPosition({ x: 0, y: 0 });
     setCropZoom(1);
     setCroppedArea(null);
@@ -195,6 +201,7 @@ export function BusinessProfileView() {
   const closeImageCropper = () => {
     if (cropSource) URL.revokeObjectURL(cropSource);
     setCropSource(null);
+    setCropOriginalFile(null);
     setCropTarget(null);
     setCroppedArea(null);
   };
@@ -203,10 +210,11 @@ export function BusinessProfileView() {
     if (!cropSource || !cropTarget || !croppedArea) return;
     const source = cropSource;
     const target = cropTarget;
+    const original = cropOriginalFile;
     try {
       const file = await cropImage(source, croppedArea, target);
       closeImageCropper();
-      await uploadImage(target, file);
+      await uploadImage(target, file, target === "cover" ? original ?? undefined : undefined);
     } catch (error) {
       showNotice(error instanceof Error ? error.message : "Không thể cắt ảnh.");
     }
@@ -305,6 +313,8 @@ export function BusinessProfileView() {
     showNotice("Đã cập nhật hồ sơ doanh nghiệp.");
   };
 
+  const coverViewerUrl = profile.coverOriginalUrl ?? profile.coverImageUrl;
+
   return (
     <div className="business-profile-view">
       {notice && (
@@ -317,8 +327,22 @@ export function BusinessProfileView() {
 
       {/* Profile Header Card */}
       <section className="business-profile-header-card" aria-label="Hồ sơ doanh nghiệp">
-        <div className="business-profile-cover" style={profile.coverImageUrl ? { backgroundImage: `url(${profile.coverImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
+        <div
+          className={`business-profile-cover ${profile.coverImageUrl ? "has-image" : ""}`}
+          style={profile.coverImageUrl ? { backgroundImage: `url(${profile.coverImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+          role={coverViewerUrl ? "button" : undefined}
+          tabIndex={coverViewerUrl ? 0 : undefined}
+          aria-label={coverViewerUrl ? "Xem toàn bộ ảnh nền" : undefined}
+          onClick={() => coverViewerUrl && setIsCoverViewerOpen(true)}
+          onKeyDown={(event) => {
+            if (coverViewerUrl && (event.key === "Enter" || event.key === " ")) {
+              event.preventDefault();
+              setIsCoverViewerOpen(true);
+            }
+          }}
+        >
           <div className="cover-gradient-accent" />
+          {profile.coverImageUrl && <span className="profile-cover-expand" aria-hidden="true"><Maximize2 size={17} /></span>}
         </div>
 
         <div className="business-profile-body">
@@ -746,7 +770,7 @@ export function BusinessProfileView() {
                   image={cropSource}
                   crop={cropPosition}
                   zoom={cropZoom}
-                  aspect={cropTarget === "avatar" ? 1 : 16 / 5}
+                  aspect={cropTarget === "avatar" ? 1 : 32 / 5}
                   cropShape={cropTarget === "avatar" ? "rect" : "rect"}
                   showGrid={false}
                   onCropChange={setCropPosition}
@@ -759,10 +783,24 @@ export function BusinessProfileView() {
                 <input id="profile-image-zoom" type="range" min="1" max="3" step="0.01" value={cropZoom} onChange={(event) => setCropZoom(Number(event.target.value))} />
               </label>
               <p className="profile-crop-help">Kéo ảnh để đổi vị trí trong khung.</p>
-              <div className="modal-footer">
+              <div className="profile-crop-actions">
                 <button type="button" className="business-secondary-button" onClick={closeImageCropper}>Hủy</button>
                 <button type="button" className="business-primary-button" onClick={confirmImageCrop}>Dùng ảnh này</button>
               </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {isCoverViewerOpen && coverViewerUrl && (
+        <div className="action-dialog-backdrop profile-cover-viewer-backdrop" onClick={() => setIsCoverViewerOpen(false)}>
+          <section className="action-dialog-content profile-cover-viewer" role="dialog" aria-modal="true" aria-labelledby="cover-viewer-title" onClick={(event) => event.stopPropagation()}>
+            <div className="action-dialog-header profile-edit-header">
+              <h2 id="cover-viewer-title">Ảnh nền</h2>
+              <button type="button" className="icon-button" aria-label="Đóng" onClick={() => setIsCoverViewerOpen(false)}><X size={18} /></button>
+            </div>
+            <div className="profile-cover-full-image-wrap">
+              <img src={coverViewerUrl} alt={`Ảnh nền của ${profile.name}`} />
             </div>
           </section>
         </div>
