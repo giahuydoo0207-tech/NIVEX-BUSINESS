@@ -8,6 +8,7 @@ import {
   addCommentToPost,
   addReplyToPost,
   toggleCommentLikeInPost,
+  reactToCommentInPost,
   togglePostPin,
   togglePostSave,
   hidePost,
@@ -166,6 +167,30 @@ test("toggleCommentLikeInPost toggles like for top comment and nested reply", ()
   const likedReplyPost = toggleCommentLikeInPost(post, "r-1");
   assert.equal(likedReplyPost.comments[0].replies[0].isLiked, true);
   assert.equal(likedReplyPost.comments[0].replies[0].likeCount, 3);
+});
+
+test("reactToCommentInPost replaces and removes a comment reaction", () => {
+  const post = addCommentToPost(mockPost, {
+    id: "c-reaction",
+    authorName: "Commenter",
+    headline: "Engineer",
+    content: "Useful update",
+    timeLabel: "now",
+    likeCount: 2,
+    isLiked: true,
+    reactionCounts: { like: 2 },
+    replies: [],
+  });
+
+  const smiled = reactToCommentInPost(post, "c-reaction", "deal");
+  assert.equal(smiled.comments[0].myReaction, "deal");
+  assert.equal(smiled.comments[0].reactionCounts?.like, 1);
+  assert.equal(smiled.comments[0].reactionCounts?.deal, 1);
+  assert.equal(smiled.comments[0].likeCount, 2);
+
+  const removed = reactToCommentInPost(smiled, "c-reaction", "deal");
+  assert.equal(removed.comments[0].myReaction, null);
+  assert.equal(removed.comments[0].likeCount, 1);
 });
 
 test("togglePostPin, togglePostSave, hidePost and restorePost work properly", () => {

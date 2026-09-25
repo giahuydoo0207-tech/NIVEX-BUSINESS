@@ -9,7 +9,7 @@ import {
   hidePost as hidePostUtil,
   normalizeCommunityPost,
   restorePost as restorePostUtil,
-  toggleCommentLikeInPost,
+  reactToCommentInPost,
   togglePostPin as togglePinUtil,
   togglePostReaction as toggleReactionUtil,
   togglePostSave as toggleSaveUtil,
@@ -24,7 +24,7 @@ const BLOCKED_UPDATE_EVENT = "nova:community-blocked-updated";
 const liveCommunity = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
 
 type ApiProfile = { id: string; kind: string; displayName: string; handle: string; headline: string; avatarUrl?: string | null };
-type ApiComment = { id: string; content: string; createdAt: string; author: ApiProfile; likeCount: number; isLiked: boolean; replies: ApiComment[] };
+type ApiComment = { id: string; content: string; createdAt: string; author: ApiProfile; likeCount: number; isLiked: boolean; myReaction?: string | null; reactionCounts?: Record<string, number>; replies: ApiComment[] };
 type ApiPost = { id: string; content: string; images: string[]; topics: string[]; privacy: string; isPinned: boolean; createdAt: string; reactionCount: number; myReaction?: string | null; reactionCounts?: Record<string, number>; isSaved: boolean; isHidden: boolean; isFollowingAuthor: boolean; author: ApiProfile; comments: ApiComment[] };
 
 function timeLabel(iso: string) {
@@ -39,25 +39,28 @@ function mapProfile(profile: ApiProfile): PublicProfileData {
   return { kind: profile.kind.toLowerCase() === "business" ? "business" : "freelancer", displayName: profile.displayName, handle: profile.handle, headline: profile.headline, location: "", bio: "", tags: [], stats: [], avatarUrl: profile.avatarUrl ?? undefined };
 }
 
+function mapReactionType(value?: string | null): PostReactionType | null {
+  const reaction = value?.toLowerCase() as PostReactionType | undefined;
+  return ["like", "love", "trust", "build", "insightful", "deal", "launch"].includes(reaction ?? "") ? reaction! : null;
+}
+
 function mapComment(comment: ApiComment, replyingToName?: string): PostComment {
   return {
     id: comment.id, authorName: comment.author.displayName, headline: comment.author.headline, content: comment.content,
     timeLabel: timeLabel(comment.createdAt), createdAt: comment.createdAt, avatarUrl: comment.author.avatarUrl ?? undefined,
     isMine: comment.author.id === "nova-labs", likeCount: comment.likeCount, isLiked: comment.isLiked,
+    myReaction: mapReactionType(comment.myReaction),
+    reactionCounts: Object.fromEntries(Object.entries(comment.reactionCounts ?? {}).map(([key, value]) => [key.toLowerCase(), value])) as Partial<Record<PostReactionType, number>>,
     replies: comment.replies.map((reply) => ({ ...mapComment(reply, comment.author.displayName), replyingToName: comment.author.displayName, replies: undefined } as PostCommentReply)),
   };
 }
 
 function mapPost(post: ApiPost): CommunityPost {
-  const type = (value?: string | null) => {
-    const reaction = value?.toLowerCase() as PostReactionType | undefined;
-    return ["like", "love", "trust", "build", "insightful", "deal", "launch"].includes(reaction ?? "") ? reaction! : null;
-  };
   return {
     id: post.id, content: post.content, images: post.images.map((image) => image.startsWith("/") ? `/api/devnet${image}` : image),
     topics: post.topics, privacy: post.privacy.toLowerCase() as PostPrivacy, isPinned: post.isPinned,
     timeLabel: timeLabel(post.createdAt), createdAt: post.createdAt, isMine: post.author.id === "nova-labs",
-    reactionCount: post.reactionCount, myReaction: type(post.myReaction),
+    reactionCount: post.reactionCount, myReaction: mapReactionType(post.myReaction),
     reactionCounts: Object.fromEntries(Object.entries(post.reactionCounts ?? {}).map(([key, value]) => [key.toLowerCase(), value])) as Partial<Record<PostReactionType, number>>,
     isSaved: post.isSaved, isHidden: post.isHidden, isFollowingAuthor: post.isFollowingAuthor,
     author: mapProfile(post.author), comments: post.comments.map((comment) => mapComment(comment)),
@@ -331,20 +334,17 @@ export function useCommunityFeed() {
     [posts, saveAndBroadcast, synchronize]
   );
 
-  const toggleCommentLike = useCallback(
-    (postId: string, targetId: string) => {
-      const target = posts.find((post) => post.id === postId)?.comments
-        .flatMap((comment) => [comment, ...comment.replies])
-        .find((comment) => comment.id === targetId);
+  const reactToComment = useCallback(
+    (postId: string, targetId: string, reaction: PostReactionType) => {
       const nextPosts = posts.map((post) => {
         if (post.id === postId) {
-          return toggleCommentLikeInPost(post, targetId);
+          return reactToCommentInPost(post, targetId, reaction);
         }
         return post;
       });
       saveAndBroadcast(nextPosts);
-      synchronize(() => communityRequest(`/posts/${postId}/comments/${targetId}/liked`, {
-        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: !target?.isLiked }),
+      synchronize(() => communityRequest(`/posts/${postId}/comments/${targetId}/reaction`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reaction }),
       }));
     },
     [posts, saveAndBroadcast, synchronize]
@@ -537,7 +537,7 @@ export function useCommunityFeed() {
     reactToPost,
     addComment,
     addReply,
-    toggleCommentLike,
+    reactToComment,
     togglePin,
     toggleSave,
     hidePost,

@@ -144,11 +144,19 @@ public class CommunityRepository {
 
     @Transactional
     public CommunityPost toggleCommentLike(UUID postId, UUID commentId, String actorId, boolean liked) {
-        if (!exists("select 1 from community_comments where id=? and post_id=? and deleted_at is null", commentId, postId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found");
-        }
-        if (liked) jdbc.update("insert into community_comment_likes (comment_id, actor_id) values (?, ?) on conflict do nothing", commentId, actorId);
+        requireComment(postId, commentId);
+        if (liked) jdbc.update("insert into community_comment_likes (comment_id, actor_id, reaction_type) values (?, ?, 'LIKE') on conflict (comment_id, actor_id) do update set reaction_type='LIKE'", commentId, actorId);
         else jdbc.update("delete from community_comment_likes where comment_id=? and actor_id=?", commentId, actorId);
+        return post(postId, actorId);
+    }
+
+    @Transactional
+    public CommunityPost reactToComment(UUID postId, UUID commentId, String actorId, String reaction) {
+        requireComment(postId, commentId);
+        String current = jdbc.query("select reaction_type from community_comment_likes where comment_id=? and actor_id=?",
+            (rs, row) -> rs.getString(1), commentId, actorId).stream().findFirst().orElse(null);
+        if (reaction.equals(current)) jdbc.update("delete from community_comment_likes where comment_id=? and actor_id=?", commentId, actorId);
+        else jdbc.update("insert into community_comment_likes (comment_id, actor_id, reaction_type) values (?, ?, ?) on conflict (comment_id, actor_id) do update set reaction_type=excluded.reaction_type", commentId, actorId, reaction);
         return post(postId, actorId);
     }
 
@@ -178,13 +186,11 @@ public class CommunityRepository {
     }
 
     private List<CommunityComment> comments(UUID postId, String actorId) {
-        List<CommentRow> rows = jdbc.query("select c.id, c.parent_comment_id, c.content, c.created_at, a.id author_id, a.kind, a.display_name, a.handle, a.headline, a.avatar_url, " +
-                "(select count(*) from community_comment_likes l where l.comment_id=c.id) likes, " +
-                "exists(select 1 from community_comment_likes l where l.comment_id=c.id and l.actor_id=?) liked " +
+        List<CommentRow> rows = jdbc.query("select c.id, c.parent_comment_id, c.content, c.created_at, a.id author_id, a.kind, a.display_name, a.handle, a.headline, a.avatar_url " +
                 "from community_comments c join community_profiles a on a.id=c.author_id where c.post_id=? and c.deleted_at is null order by c.created_at",
-            this::mapCommentRow, actorId, postId);
+            this::mapCommentRow, postId);
         Map<UUID, MutableComment> byId = new LinkedHashMap<>();
-        for (CommentRow row : rows) byId.put(row.id(), new MutableComment(row));
+        for (CommentRow row : rows) byId.put(row.id(), new MutableComment(row, commentReactionCounts(row.id()), commentReaction(row.id(), actorId)));
         List<MutableComment> roots = new ArrayList<>();
         for (MutableComment comment : byId.values()) {
             if (comment.parentId != null && byId.containsKey(comment.parentId)) byId.get(comment.parentId).replies.add(comment);
@@ -215,12 +221,15 @@ public class CommunityRepository {
         }
     }
     private void requirePost(UUID postId) { if (!exists("select 1 from community_posts where id=? and deleted_at is null", postId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community post not found"); }
+    private void requireComment(UUID postId, UUID commentId) { if (!exists("select 1 from community_comments where id=? and post_id=? and deleted_at is null", commentId, postId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"); }
     private void requireProfile(String profileId) { if (!profileExists(profileId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community profile not found"); }
     private boolean exists(String sql, Object... arguments) { return !jdbc.query(sql, (rs, row) -> 1, arguments).isEmpty(); }
 
     private BasePost mapPostBase(ResultSet rs, int row) throws SQLException { return new BasePost(rs.getObject("id", UUID.class), rs.getString("content"), rs.getString("privacy"), rs.getBoolean("is_pinned"), rs.getTimestamp("created_at").toInstant(), rs.getTimestamp("updated_at").toInstant(), new CommunityProfile(rs.getString("author_id"), rs.getString("author_kind"), rs.getString("display_name"), rs.getString("handle"), rs.getString("headline"), rs.getString("avatar_url"))); }
-    private CommentRow mapCommentRow(ResultSet rs, int row) throws SQLException { return new CommentRow(rs.getObject("id", UUID.class), rs.getObject("parent_comment_id", UUID.class), rs.getString("content"), rs.getTimestamp("created_at").toInstant(), new CommunityProfile(rs.getString("author_id"), rs.getString("kind"), rs.getString("display_name"), rs.getString("handle"), rs.getString("headline"), rs.getString("avatar_url")), rs.getLong("likes"), rs.getBoolean("liked")); }
+    private Map<String, Long> commentReactionCounts(UUID commentId) { Map<String, Long> counts = new LinkedHashMap<>(); jdbc.query("select reaction_type, count(*) from community_comment_likes where comment_id=? group by reaction_type", (rs, row) -> Map.entry(rs.getString(1), rs.getLong(2)), commentId).forEach(entry -> counts.put(entry.getKey(), entry.getValue())); return counts; }
+    private String commentReaction(UUID commentId, String actorId) { return jdbc.query("select reaction_type from community_comment_likes where comment_id=? and actor_id=?", (rs, row) -> rs.getString(1), commentId, actorId).stream().findFirst().orElse(null); }
+    private CommentRow mapCommentRow(ResultSet rs, int row) throws SQLException { return new CommentRow(rs.getObject("id", UUID.class), rs.getObject("parent_comment_id", UUID.class), rs.getString("content"), rs.getTimestamp("created_at").toInstant(), new CommunityProfile(rs.getString("author_id"), rs.getString("kind"), rs.getString("display_name"), rs.getString("handle"), rs.getString("headline"), rs.getString("avatar_url"))); }
     private record BasePost(UUID id, String content, String privacy, boolean pinned, Instant createdAt, Instant updatedAt, CommunityProfile author) {}
-    private record CommentRow(UUID id, UUID parentId, String content, Instant createdAt, CommunityProfile author, long likes, boolean liked) {}
-    private static final class MutableComment { private final UUID id, parentId; private final String content; private final Instant createdAt; private final CommunityProfile author; private final long likes; private final boolean liked; private final List<MutableComment> replies = new ArrayList<>(); MutableComment(CommentRow row) { id=row.id(); parentId=row.parentId(); content=row.content(); createdAt=row.createdAt(); author=row.author(); likes=row.likes(); liked=row.liked(); } CommunityComment toRecord() { return new CommunityComment(id, parentId, content, createdAt, author, likes, liked, replies.stream().map(MutableComment::toRecord).toList()); } }
+    private record CommentRow(UUID id, UUID parentId, String content, Instant createdAt, CommunityProfile author) {}
+    private static final class MutableComment { private final UUID id, parentId; private final String content; private final Instant createdAt; private final CommunityProfile author; private final Map<String, Long> reactionCounts; private final String myReaction; private final List<MutableComment> replies = new ArrayList<>(); MutableComment(CommentRow row, Map<String, Long> reactionCounts, String myReaction) { id=row.id(); parentId=row.parentId(); content=row.content(); createdAt=row.createdAt(); author=row.author(); this.reactionCounts=reactionCounts; this.myReaction=myReaction; } CommunityComment toRecord() { long total = reactionCounts.values().stream().mapToLong(Long::longValue).sum(); return new CommunityComment(id, parentId, content, createdAt, author, total, "LIKE".equals(myReaction), myReaction, reactionCounts, replies.stream().map(MutableComment::toRecord).toList()); } }
 }

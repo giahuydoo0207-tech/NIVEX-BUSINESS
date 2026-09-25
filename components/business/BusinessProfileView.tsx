@@ -226,7 +226,7 @@ export function BusinessProfileView() {
     reactToPost,
     addComment,
     addReply,
-    toggleCommentLike,
+    reactToComment,
     togglePin,
     toggleSave,
     hidePost,
@@ -824,7 +824,7 @@ export function BusinessProfileView() {
               prev ? { ...prev, comments: posts.find((p) => p.id === postId)?.comments || prev.comments } : null,
             );
           }}
-          onToggleLike={toggleCommentLike}
+          onReact={reactToComment}
         />
       )}
     </div>

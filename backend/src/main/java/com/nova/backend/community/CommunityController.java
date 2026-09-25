@@ -93,6 +93,11 @@ public class CommunityController {
         return repository.toggleCommentLike(postId, commentId, BUSINESS_ACTOR, request.enabled());
     }
 
+    @PutMapping("/posts/{postId}/comments/{commentId}/reaction")
+    public CommunityPost commentReaction(@PathVariable UUID postId, @PathVariable UUID commentId, @Valid @RequestBody ReactionRequest request) {
+        return repository.reactToComment(postId, commentId, BUSINESS_ACTOR, reaction(request.reaction()));
+    }
+
     @PutMapping("/profiles/{profileId}/following")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void following(@PathVariable String profileId, @Valid @RequestBody ToggleRequest request) {

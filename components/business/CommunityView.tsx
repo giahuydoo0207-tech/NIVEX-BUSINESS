@@ -45,7 +45,7 @@ export function CommunityView({ preview }: CommunityViewProps = {}) {
     reactToPost,
     addComment,
     addReply,
-    toggleCommentLike,
+    reactToComment,
     togglePin,
     toggleSave,
     hidePost,
@@ -401,7 +401,7 @@ export function CommunityView({ preview }: CommunityViewProps = {}) {
           onClose={() => setCommentingPost(null)}
           onAddComment={addComment}
           onAddReply={addReply}
-          onToggleLike={toggleCommentLike}
+          onReact={reactToComment}
         />
       )}
 

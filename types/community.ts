@@ -61,6 +61,8 @@ export interface PostCommentReply {
   isMine?: boolean;
   likeCount: number;
   isLiked?: boolean;
+  myReaction?: PostReactionType | null;
+  reactionCounts?: Partial<Record<PostReactionType, number>>;
 }
 
 export interface PostComment {
@@ -74,6 +76,8 @@ export interface PostComment {
   isMine?: boolean;
   likeCount: number;
   isLiked?: boolean;
+  myReaction?: PostReactionType | null;
+  reactionCounts?: Partial<Record<PostReactionType, number>>;
   replies: PostCommentReply[];
 }
 

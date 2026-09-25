@@ -257,20 +257,40 @@ export function addReplyToPost(
 /**
  * Pure function to toggle like on a comment or nested reply.
  */
-export function toggleCommentLikeInPost(
+export function reactToCommentInPost(
   post: CommunityPost,
-  targetId: string
+  targetId: string,
+  reaction: PostReactionType
 ): CommunityPost {
+  const applyReaction = <T extends PostComment | PostCommentReply>(comment: T): T => {
+    const previousReaction = comment.myReaction ?? (comment.isLiked ? "like" : null);
+    const nextReaction = previousReaction === reaction ? null : reaction;
+    const reactionCounts = {
+      ...(comment.reactionCounts ?? (comment.likeCount > 0 ? { like: comment.likeCount } : {})),
+    };
+
+    if (previousReaction) {
+      reactionCounts[previousReaction] = Math.max(0, (reactionCounts[previousReaction] ?? comment.likeCount) - 1);
+    }
+    if (nextReaction) {
+      reactionCounts[nextReaction] = (reactionCounts[nextReaction] ?? 0) + 1;
+    }
+
+    const total = Object.values(reactionCounts).reduce((sum, value) => sum + (value ?? 0), 0);
+    return {
+      ...comment,
+      myReaction: nextReaction,
+      reactionCounts,
+      likeCount: total,
+      isLiked: nextReaction === "like",
+    };
+  };
+
   return {
     ...post,
     comments: post.comments.map((c) => {
       if (c.id === targetId) {
-        const nextLiked = !c.isLiked;
-        return {
-          ...c,
-          isLiked: nextLiked,
-          likeCount: nextLiked ? c.likeCount + 1 : Math.max(0, c.likeCount - 1),
-        };
+        return applyReaction(c);
       }
 
       // Check replies
@@ -280,12 +300,7 @@ export function toggleCommentLikeInPost(
           ...c,
           replies: c.replies.map((r) => {
             if (r.id === targetId) {
-              const nextLiked = !r.isLiked;
-              return {
-                ...r,
-                isLiked: nextLiked,
-                likeCount: nextLiked ? r.likeCount + 1 : Math.max(0, r.likeCount - 1),
-              };
+              return applyReaction(r);
             }
             return r;
           }),
@@ -295,6 +310,10 @@ export function toggleCommentLikeInPost(
       return c;
     }),
   };
+}
+
+export function toggleCommentLikeInPost(post: CommunityPost, targetId: string): CommunityPost {
+  return reactToCommentInPost(post, targetId, "like");
 }
 
 /**

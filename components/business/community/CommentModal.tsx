@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { CommunityPost } from "@/types/community";
+import { CommunityPost, PostComment, PostCommentReply, PostReactionType } from "@/types/community";
 import { calculateTotalComments } from "@/lib/community-utils";
+import { POST_REACTIONS } from "@/lib/community-constants";
+import { ReactionPicker } from "./ReactionPicker";
 import {
   Building2,
   CornerDownRight,
   Send,
+  Smile,
   ThumbsUp,
   User,
   X,
@@ -23,7 +26,52 @@ interface CommentModalProps {
     content: string,
     replyingToName?: string
   ) => void;
-  onToggleLike: (postId: string, targetId: string) => void;
+  onReact: (postId: string, targetId: string, reaction: PostReactionType) => void;
+}
+
+interface CommentReactionControlProps {
+  postId: string;
+  item: PostComment | PostCommentReply;
+  onReact: (postId: string, targetId: string, reaction: PostReactionType) => void;
+}
+
+function CommentReactionControl({ postId, item, onReact }: CommentReactionControlProps) {
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const selectedReaction = item.myReaction ?? (item.isLiked ? "like" : null);
+  const config = selectedReaction ? POST_REACTIONS[selectedReaction] : null;
+  const Icon = config?.icon ?? ThumbsUp;
+
+  return (
+    <div className="comment-reaction-control">
+      {isPickerOpen && (
+        <ReactionPicker
+          onSelect={(reaction) => onReact(postId, item.id, reaction)}
+          onClose={() => setIsPickerOpen(false)}
+        />
+      )}
+      <button
+        type="button"
+        className={`comment-like-btn ${selectedReaction ? "liked" : ""}`}
+        style={config ? { color: config.color } : undefined}
+        onClick={() => onReact(postId, item.id, selectedReaction ?? "like")}
+      >
+        <Icon size={13} />
+        <span>
+          {config?.label ?? "Thích"}
+          {item.likeCount > 0 && ` (${item.likeCount})`}
+        </span>
+      </button>
+      <button
+        type="button"
+        className="comment-reaction-picker-toggle"
+        onClick={() => setIsPickerOpen((open) => !open)}
+        aria-label="Chọn cảm xúc"
+        aria-expanded={isPickerOpen}
+      >
+        <Smile size={14} />
+      </button>
+    </div>
+  );
 }
 
 export function CommentModal({
@@ -32,7 +80,7 @@ export function CommentModal({
   onClose,
   onAddComment,
   onAddReply,
-  onToggleLike,
+  onReact,
 }: CommentModalProps) {
   const [text, setText] = useState("");
   const [replyingTo, setReplyingTo] = useState<{
@@ -131,19 +179,11 @@ export function CommentModal({
 
                       <div className="comment-actions-bar">
                         <span className="comment-time">{comment.timeLabel}</span>
-                        <button
-                          type="button"
-                          className={`comment-like-btn ${
-                            comment.isLiked ? "liked" : ""
-                          }`}
-                          onClick={() => onToggleLike(post.id, comment.id)}
-                        >
-                          <ThumbsUp size={13} />
-                          <span>
-                            {comment.isLiked ? "Đã thích" : "Thích"}
-                            {comment.likeCount > 0 && ` (${comment.likeCount})`}
-                          </span>
-                        </button>
+                        <CommentReactionControl
+                          postId={post.id}
+                          item={comment}
+                          onReact={onReact}
+                        />
                         <button
                           type="button"
                           className="comment-reply-btn"
@@ -206,20 +246,11 @@ export function CommentModal({
                                 <span className="comment-time">
                                   {reply.timeLabel}
                                 </span>
-                                <button
-                                  type="button"
-                                  className={`comment-like-btn ${
-                                    reply.isLiked ? "liked" : ""
-                                  }`}
-                                  onClick={() => onToggleLike(post.id, reply.id)}
-                                >
-                                  <ThumbsUp size={13} />
-                                  <span>
-                                    {reply.isLiked ? "Đã thích" : "Thích"}
-                                    {reply.likeCount > 0 &&
-                                      ` (${reply.likeCount})`}
-                                  </span>
-                                </button>
+                                <CommentReactionControl
+                                  postId={post.id}
+                                  item={reply}
+                                  onReact={onReact}
+                                />
                               </div>
                             </div>
                           </div>

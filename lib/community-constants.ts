@@ -9,7 +9,7 @@ import {
   ShieldCheck,
   Wrench,
   Lightbulb,
-  Handshake,
+  Smile,
   Rocket,
 } from "lucide-react";
 
@@ -53,9 +53,9 @@ export const POST_REACTIONS: Record<PostReactionType, ReactionConfig> = {
   },
   deal: {
     key: "deal",
-    label: "Hợp tác",
-    color: "#A855F7",
-    icon: Handshake,
+    label: "Cười",
+    color: "#F59E0B",
+    icon: Smile,
   },
   launch: {
     key: "launch",
@@ -68,10 +68,10 @@ export const POST_REACTIONS: Record<PostReactionType, ReactionConfig> = {
 export const REACTION_LIST: ReactionConfig[] = [
   POST_REACTIONS.like,
   POST_REACTIONS.love,
+  POST_REACTIONS.deal,
   POST_REACTIONS.trust,
   POST_REACTIONS.build,
   POST_REACTIONS.insightful,
-  POST_REACTIONS.deal,
   POST_REACTIONS.launch,
 ];
 
