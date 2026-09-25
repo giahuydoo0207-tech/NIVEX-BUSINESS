@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 
 const UUID = "[0-9a-fA-F-]{36}";
-const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages(\?status=(PENDING|ACCEPTED))?|messages/${UUID}/(accept|decline|block|messages)|notifications|notifications/${UUID}/read|business/profile(/(avatar|cover))?|media/business-profile/${UUID})$`);
+const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages|messages/${UUID}/(accept|decline|block|messages)|notifications|notifications/${UUID}/read|business/profile(/(avatar|cover))?|media/business-profile/${UUID})$`);
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   // This demo is opt-in and proxied server-side so the backend key is never
