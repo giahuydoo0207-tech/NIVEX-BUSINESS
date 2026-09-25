@@ -87,6 +87,12 @@ function formatActivityTime(value?: string) {
   return value;
 }
 
+function toDevnetMediaUrl(value?: string) {
+  if (!value) return undefined;
+  const path = value.replace(/^https?:\/\/[^/]+/i, "").replace(/^\/api\/v1\//, "/");
+  return path.startsWith("/media/business-profile/") ? `/api/devnet${path}` : value;
+}
+
 export function BusinessProfileView() {
   const [profile, setProfile] = useState<BusinessProfile>(INITIAL_PROFILE);
   const [activeTab, setActiveTab] = useState<"posts" | "jobs" | "about" | "activity">("posts");
@@ -106,7 +112,7 @@ export function BusinessProfileView() {
     fetch("/api/devnet/business/profile", { cache: "no-store" }).then(async (response) => {
       if (!response.ok) return;
       const value = await response.json();
-      setProfile((current) => ({ ...current, name: value.name ?? current.name, category: value.category ?? current.category, bio: value.bio ?? current.bio, followerCount: value.followerCount ?? current.followerCount, logoUrl: value.avatarUrl ? `/api/devnet${value.avatarUrl}` : current.logoUrl, coverImageUrl: value.coverUrl ? `/api/devnet${value.coverUrl}` : current.coverImageUrl }));
+      setProfile((current) => ({ ...current, name: value.name ?? current.name, category: value.category ?? current.category, bio: value.bio ?? current.bio, followerCount: value.followerCount ?? current.followerCount, logoUrl: toDevnetMediaUrl(value.avatarUrl) ?? current.logoUrl, coverImageUrl: toDevnetMediaUrl(value.coverUrl) ?? current.coverImageUrl }));
     }).catch(() => undefined);
   }, []);
 
@@ -116,7 +122,7 @@ export function BusinessProfileView() {
     const response = await fetch(`/api/devnet/business/profile/${kind}`, { method: "POST", body: form });
     if (!response.ok) { showNotice("Không thể tải ảnh. Chỉ dùng PNG, JPEG hoặc WebP."); return; }
     const value = await response.json();
-    setProfile((current) => ({ ...current, logoUrl: value.avatarUrl ? `/api/devnet${value.avatarUrl}` : current.logoUrl, coverImageUrl: value.coverUrl ? `/api/devnet${value.coverUrl}` : current.coverImageUrl }));
+    setProfile((current) => ({ ...current, logoUrl: toDevnetMediaUrl(value.avatarUrl) ?? current.logoUrl, coverImageUrl: toDevnetMediaUrl(value.coverUrl) ?? current.coverImageUrl }));
     showNotice(kind === "avatar" ? "Đã cập nhật avatar." : "Đã cập nhật ảnh nền.");
   };
 
@@ -233,7 +239,7 @@ export function BusinessProfileView() {
           <div className="business-profile-avatar-row">
             {/* Neutral avatar 🏢, NO reputation ring */}
             <div className="business-profile-avatar" aria-label={`Logo của ${profile.name}`}>
-              {profile.logoUrl ? <img src={profile.logoUrl} alt="" /> : <Building2 size={38} strokeWidth={1.8} />}
+              {profile.logoUrl ? <img src={profile.logoUrl} alt="" onError={() => setProfile((current) => ({ ...current, logoUrl: undefined }))} /> : <Building2 size={38} strokeWidth={1.8} />}
             </div>
 
             <div className="business-profile-actions">
@@ -560,7 +566,7 @@ export function BusinessProfileView() {
                 <div className="profile-media-preview-grid">
                   <div className="profile-media-preview-card">
                     <div className="profile-avatar-preview" aria-label="Xem trước avatar">
-                      {profile.logoUrl ? <img src={profile.logoUrl} alt="Avatar hiện tại" /> : <Building2 size={28} strokeWidth={1.8} />}
+                      {profile.logoUrl ? <img src={profile.logoUrl} alt="Avatar hiện tại" onError={() => setProfile((current) => ({ ...current, logoUrl: undefined }))} /> : <Building2 size={28} strokeWidth={1.8} />}
                     </div>
                     <div className="profile-media-preview-copy">
                       <strong>Avatar</strong>
