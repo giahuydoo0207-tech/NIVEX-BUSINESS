@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import {
   BUSINESS_THEMES,
@@ -12,6 +13,7 @@ import {
   Palette,
   ShieldCheck,
   Sparkles,
+  UserCircle,
 } from "lucide-react";
 
 interface WorkspaceMenuProps {
@@ -69,6 +71,7 @@ export function WorkspaceMenu({
   if (!isOpen) return null;
 
   const themesList: ThemeConfig[] = Object.values(BUSINESS_THEMES);
+  const currentTheme = themesList.find((t) => t.id === currentThemeId) ?? themesList[0];
 
   return (
     <div
@@ -98,9 +101,21 @@ export function WorkspaceMenu({
         </div>
       </div>
 
+      {/* Profile quick link */}
+      <div className="workspace-menu-actions">
+        <Link
+          href="/business/profile"
+          className="workspace-menu-profile-link"
+          onClick={onClose}
+        >
+          <UserCircle size={15} />
+          <span>Xem trang cá nhân</span>
+        </Link>
+      </div>
+
       <div className="workspace-menu-divider" />
 
-      {/* Theme Section */}
+      {/* Theme Section: Compact Swatches */}
       <div className="workspace-menu-section">
         <div className="workspace-menu-section-header">
           <div className="workspace-menu-section-title">
@@ -110,9 +125,11 @@ export function WorkspaceMenu({
           <span className="workspace-menu-section-hint">Đồng bộ Mobile</span>
         </div>
 
-        <div className="workspace-theme-list" role="radiogroup" aria-label="Chọn chủ đề giao diện">
+        {/* 1 Row of Circular Swatches ~36px */}
+        <div className="workspace-theme-swatches-row" role="radiogroup" aria-label="Chọn chủ đề giao diện">
           {themesList.map((theme) => {
             const isSelected = theme.id === currentThemeId;
+            const isDefault = theme.id === "cyberNight";
             return (
               <button
                 key={theme.id}
@@ -120,54 +137,36 @@ export function WorkspaceMenu({
                 role="radio"
                 data-theme-id={theme.id}
                 aria-checked={isSelected}
-                className={`workspace-theme-option ${isSelected ? "active" : ""}`}
+                className={`workspace-swatch-circle-btn ${isSelected ? "active" : ""}`}
+                title={`${theme.label} — ${theme.description}${isDefault ? " (Mặc định)" : ""}`}
+                aria-label={`${theme.label}: ${theme.description}`}
                 onClick={() => {
                   onSelectTheme(theme.id);
-                  onClose();
                 }}
               >
-                {/* Visual 3-dot palette preview */}
-                <div
-                  className="workspace-theme-swatch"
-                  aria-hidden="true"
-                  style={{ backgroundColor: theme.swatch.background }}
+                <span
+                  className="workspace-swatch-circle"
+                  style={{
+                    background: `linear-gradient(135deg, ${theme.swatch.background} 0%, ${theme.swatch.surface} 50%, ${theme.swatch.primary} 100%)`,
+                  }}
                 >
-                  <span
-                    className="swatch-dot primary"
-                    style={{ backgroundColor: theme.swatch.primary }}
-                  />
-                  <span
-                    className="swatch-dot surface"
-                    style={{ backgroundColor: theme.swatch.surface }}
-                  />
-                  <span
-                    className="swatch-dot border"
-                    style={{ backgroundColor: theme.swatch.border }}
-                  />
-                </div>
-
-                {/* Theme metadata */}
-                <div className="workspace-theme-text">
-                  <div className="workspace-theme-name-row">
-                    <span className="workspace-theme-name">{theme.label}</span>
-                    {theme.id === "cyberNight" && (
-                      <span className="workspace-theme-tag">Mặc định</span>
-                    )}
-                  </div>
-                  <p className="workspace-theme-desc">{theme.description}</p>
-                </div>
-
-                {/* Selection state */}
-                <div className="workspace-theme-status">
                   {isSelected && (
-                    <span className="workspace-theme-check" aria-hidden="true">
-                      <Check size={14} strokeWidth={2.5} />
+                    <span className="swatch-check-badge" aria-hidden="true">
+                      <Check size={11} strokeWidth={3} />
                     </span>
                   )}
-                </div>
+                  {isDefault && (
+                    <span className="swatch-default-dot" title="Mặc định" aria-label="Mặc định" />
+                  )}
+                </span>
               </button>
             );
           })}
+        </div>
+
+        {/* Current Theme Label */}
+        <div className="workspace-theme-current-label">
+          <span>Đang dùng: <strong>{currentTheme.label}</strong></span>
         </div>
       </div>
 

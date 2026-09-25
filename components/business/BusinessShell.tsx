@@ -15,6 +15,7 @@ import {
   Menu,
   MessagesSquare,
   Plus,
+  UserCircle,
   UserRoundCheck,
   UsersRound,
   WalletCards,
@@ -31,50 +32,96 @@ import {
 } from "@/types/theme";
 import { WorkspaceMenu } from "./WorkspaceMenu";
 
-const navigation = [
+export interface NavItem {
+  key: string;
+  label: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+  badge?: string | number;
+}
+
+export interface NavGroup {
+  groupLabel?: string;
+  items: NavItem[];
+}
+
+export const NAV_GROUPS: NavGroup[] = [
   {
-    key: "dashboard",
-    href: "/business/dashboard",
-    label: "Tổng quan",
-    icon: LayoutDashboard,
+    groupLabel: "Không gian làm việc",
+    items: [
+      {
+        key: "dashboard",
+        label: "Tổng quan",
+        href: "/business/dashboard",
+        icon: LayoutDashboard,
+      },
+    ],
   },
   {
-    key: "jobs",
-    href: "/business/jobs",
-    label: "Cơ hội việc làm",
-    icon: BriefcaseBusiness,
+    groupLabel: "Mạng lưới",
+    items: [
+      {
+        key: "community",
+        label: "Cộng đồng",
+        href: "/business/community",
+        icon: Globe2,
+      },
+      {
+        key: "profile",
+        label: "Trang cá nhân",
+        href: "/business/profile",
+        icon: UserCircle,
+      },
+      {
+        key: "messages",
+        label: "Tin nhắn",
+        href: "/business/messages",
+        icon: MessagesSquare,
+        badge: 2,
+      },
+    ],
   },
   {
-    key: "applications",
-    href: "/business/applications",
-    label: "Ứng viên",
-    icon: UserRoundCheck,
+    groupLabel: "Tuyển dụng",
+    items: [
+      {
+        key: "jobs",
+        label: "Cơ hội việc làm",
+        href: "/business/jobs",
+        icon: BriefcaseBusiness,
+        badge: "NEW",
+      },
+      {
+        key: "applications",
+        label: "Ứng viên",
+        href: "/business/applications",
+        icon: UserRoundCheck,
+        badge: 3,
+      },
+    ],
   },
   {
-    key: "messages",
-    href: "/business/messages",
-    label: "Tin nhắn",
-    icon: MessagesSquare,
-  },
-  {
-    key: "community",
-    href: "/business/community",
-    label: "Cộng đồng",
-    icon: Globe2,
-  },
-  {
-    key: "invoices",
-    href: "/business/invoices",
-    label: "Hóa đơn",
-    icon: FileText,
-  },
-  {
-    key: "contractors",
-    href: "/business/contractors",
-    label: "Nhân sự",
-    icon: UsersRound,
+    groupLabel: "Tài chính",
+    items: [
+      {
+        key: "invoices",
+        label: "Hóa đơn",
+        href: "/business/invoices",
+        icon: FileText,
+        badge: "USDC",
+      },
+      {
+        key: "contractors",
+        label: "Nhân sự",
+        href: "/business/contractors",
+        icon: UsersRound,
+      },
+    ],
   },
 ];
+
+const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
+
 export function BusinessShell({
   children,
   active,
@@ -91,7 +138,8 @@ export function BusinessShell({
     | "messages"
     | "community"
     | "contractors"
-    | "invoices";
+    | "invoices"
+    | "profile";
   breadcrumbLabel?: string;
   activeAction?: "newJob" | "newInvoice";
   hideTopbar?: boolean;
@@ -183,33 +231,44 @@ export function BusinessShell({
             onClose={() => setWorkspaceMenuOpen(false)}
           />
         </div>
-        <span className="nav-label">KHÔNG GIAN LÀM VIỆC</span>
         <nav
           className="business-navigation"
           aria-label="Điều hướng doanh nghiệp"
         >
-          {navigation.map(({ key, href, label, icon: Icon }) => {
-            const isNavActive = active === key;
-            const navClassName =
-              isNavActive && activeAction === undefined ? "active" : undefined;
-            return (
-              <Link
-                key={key}
-                href={href}
-                className={navClassName}
-                aria-current={
-                  isNavActive && activeAction === undefined ? "page" : undefined
-                }
-              >
-                <Icon size={18} />
-                <span>{label}</span>
-                {key === "invoices" && <span className="nav-count">USDC</span>}
-                {key === "jobs" && <span className="nav-count">NEW</span>}
-                {key === "applications" && <span className="nav-count">3</span>}
-                {key === "messages" && <span className="nav-count unread">2</span>}
-              </Link>
-            );
-          })}
+          {NAV_GROUPS.map((group, groupIdx) => (
+            <div key={group.groupLabel ?? groupIdx} className="nav-group-section">
+              {group.groupLabel && (
+                <span className="nav-label">{group.groupLabel}</span>
+              )}
+              <div className="nav-group-items">
+                {group.items.map(({ key, href, label, icon: Icon, badge }) => {
+                  const isNavActive = active === key;
+                  const navClassName =
+                    isNavActive && activeAction === undefined ? "active" : undefined;
+                  return (
+                    <Link
+                      key={key}
+                      href={href}
+                      className={navClassName}
+                      aria-current={
+                        isNavActive && activeAction === undefined ? "page" : undefined
+                      }
+                    >
+                      <Icon size={18} />
+                      <span>{label}</span>
+                      {badge !== undefined && (
+                        <span
+                          className={`nav-count ${key === "messages" ? "unread" : ""}`}
+                        >
+                          {badge}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
         <div className="sidebar-quick-actions">
           <Link
@@ -278,7 +337,7 @@ export function BusinessShell({
             <span>/</span>
             <strong>
               {breadcrumbLabel ??
-                navigation.find((item) => item.key === active)?.label}
+                ALL_NAV_ITEMS.find((item) => item.key === active)?.label}
             </strong>
           </div>
           <div className="topbar-actions">
