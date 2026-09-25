@@ -219,6 +219,8 @@ export function BusinessProfileView() {
           <span>{notice}</span>
         </div>
       )}
+      <input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => uploadImage("avatar", event.target.files?.[0])} />
+      <input ref={coverInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => uploadImage("cover", event.target.files?.[0])} />
 
       {/* Profile Header Card */}
       <section className="business-profile-header-card" aria-label="Hồ sơ doanh nghiệp">
@@ -234,6 +236,12 @@ export function BusinessProfileView() {
             </div>
 
             <div className="business-profile-actions">
+              <button type="button" className="business-secondary-button profile-edit-btn" onClick={() => avatarInputRef.current?.click()}>
+                Đổi avatar
+              </button>
+              <button type="button" className="business-secondary-button profile-edit-btn" onClick={() => coverInputRef.current?.click()}>
+                Đổi ảnh nền
+              </button>
               <button
                 type="button"
                 className="business-secondary-button profile-edit-btn"
@@ -552,12 +560,6 @@ export function BusinessProfileView() {
               </button>
             </div>
             <form onSubmit={handleSaveProfile} className="profile-edit-body">
-              <input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => uploadImage("avatar", event.target.files?.[0])} />
-              <input ref={coverInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => uploadImage("cover", event.target.files?.[0])} />
-              <div className="modal-footer">
-                <button type="button" className="business-secondary-button" onClick={() => avatarInputRef.current?.click()}>Đổi avatar</button>
-                <button type="button" className="business-secondary-button" onClick={() => coverInputRef.current?.click()}>Đổi ảnh nền</button>
-              </div>
               <div className="form-group">
                 <label htmlFor="edit-name">Tên tổ chức</label>
                 <input
