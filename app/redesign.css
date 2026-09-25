@@ -10801,7 +10801,7 @@ body:has(.business-app) {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 4px 4px 4px;
+  padding: 2px 4px 2px 4px;
 }
 
 .workspace-swatch-circle-btn {
@@ -10852,7 +10852,7 @@ body:has(.business-app) {
 }
 
 .workspace-theme-current-label {
-  margin-top: 10px;
+  margin-top: 6px;
   font-size: 11.5px;
   color: var(--muted, #8493a8);
   text-align: left;

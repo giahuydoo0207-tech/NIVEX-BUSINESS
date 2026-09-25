@@ -9,7 +9,6 @@ import {
 import {
   Building2,
   Check,
-  Palette,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -99,16 +98,10 @@ export function WorkspaceMenu({
         </div>
       </div>
 
+      <div className="workspace-menu-divider" />
+
       {/* Theme Section: Compact Swatches */}
       <div className="workspace-menu-section">
-        <div className="workspace-menu-section-header">
-          <div className="workspace-menu-section-title">
-            <Palette size={14} />
-            <span>ẢNH NỀN & GIAO DIỆN</span>
-          </div>
-          <span className="workspace-menu-section-hint">Đồng bộ Mobile</span>
-        </div>
-
         {/* 1 Row of Circular Swatches ~26px */}
         <div className="workspace-theme-swatches-row" role="radiogroup" aria-label="Chọn chủ đề giao diện">
           {themesList.map((theme) => {
