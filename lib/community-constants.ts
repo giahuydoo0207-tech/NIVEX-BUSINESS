@@ -53,7 +53,7 @@ export const POST_REACTIONS: Record<PostReactionType, ReactionConfig> = {
   },
   deal: {
     key: "deal",
-    label: "Cười",
+    label: "Haha",
     color: "#F59E0B",
     icon: Smile,
   },

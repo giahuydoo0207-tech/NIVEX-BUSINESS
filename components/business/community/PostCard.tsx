@@ -38,6 +38,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { ReactionPicker } from "./ReactionPicker";
+import { ReactionDetailsModal } from "./ReactionDetailsModal";
 import { FullscreenImageViewer } from "./FullscreenImageViewer";
 import {
   ConfirmBlockModal,
@@ -90,6 +91,7 @@ export function PostCard({
 }: PostCardProps) {
   const [showOptions, setShowOptions] = useState(initialShowOptions);
   const [showPicker, setShowPicker] = useState(false);
+  const [showReactionDetails, setShowReactionDetails] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(initialShowDelete);
   const [showBlockConfirm, setShowBlockConfirm] = useState(initialShowBlock);
@@ -220,7 +222,7 @@ export function PostCard({
   const reactionLabel = myReactionConfig ? myReactionConfig.label : "Thích";
   const reactionColor = myReactionConfig ? myReactionConfig.color : undefined;
 
-  // Dynamic reaction badges from real counts (max 2)
+  // Dynamic reaction badges from real counts (max 3).
   const dynamicBadges = getTopReactions(post);
   const badges: PostReactionType[] =
     dynamicBadges.length > 0
@@ -814,7 +816,12 @@ export function PostCard({
       {/* Reaction Summary & Comments count */}
       <div className="post-summary-row">
         {post.reactionCount > 0 ? (
-          <div className="reaction-summary-stack">
+          <button
+            type="button"
+            className="reaction-summary-stack reaction-summary-button"
+            onClick={() => setShowReactionDetails(true)}
+            aria-label={`Xem ${post.reactionCount} cảm xúc`}
+          >
             <div className="mini-badges-cluster">
               {badges.map((bKey, idx) => {
                 const bConfig = POST_REACTIONS[bKey];
@@ -842,7 +849,7 @@ export function PostCard({
             >
               {post.reactionCount}
             </span>
-          </div>
+          </button>
         ) : (
           <div />
         )}
@@ -931,6 +938,12 @@ export function PostCard({
           onClose={() => setViewerIndex(null)}
         />
       )}
+
+      <ReactionDetailsModal
+        post={post}
+        isOpen={showReactionDetails}
+        onClose={() => setShowReactionDetails(false)}
+      />
 
       {/* Action Dialogs */}
       <ConfirmDeleteModal

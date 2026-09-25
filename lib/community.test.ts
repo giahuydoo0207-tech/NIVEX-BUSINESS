@@ -253,7 +253,7 @@ test("restored post returns to exact chronological order based on createdAt", ()
   assert.deepEqual(activeFeedAfter.map((p) => p.id), ["post-new", "post-middle", "post-old"]);
 });
 
-test("getTopReactions returns up to 2 top reactions sorted descending and ignores zero/negative counts", () => {
+test("getTopReactions returns up to 3 top reactions sorted descending and ignores zero/negative counts", () => {
   const postWithCounts: CommunityPost = {
     ...mockPost,
     reactionCount: 40,
@@ -264,8 +264,8 @@ test("getTopReactions returns up to 2 top reactions sorted descending and ignore
       deal: 0,
     },
   };
-  const top2 = getTopReactions(postWithCounts);
-  assert.deepEqual(top2, ["love", "like"]);
+  const top3 = getTopReactions(postWithCounts);
+  assert.deepEqual(top3, ["love", "like", "trust"]);
 
   // Single reaction
   const singlePost: CommunityPost = {

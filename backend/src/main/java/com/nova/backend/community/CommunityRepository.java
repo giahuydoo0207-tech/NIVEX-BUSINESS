@@ -61,6 +61,15 @@ public class CommunityRepository {
             reactionCounts, saved, hidden, following, base.author(), comments(postId, actorId));
     }
 
+    public List<CommunityReaction> reactions(UUID postId) {
+        requirePost(postId);
+        return jdbc.query("select r.reaction_type, r.created_at, a.id, a.kind, a.display_name, a.handle, a.headline, a.avatar_url " +
+                "from community_post_reactions r join community_profiles a on a.id=r.actor_id where r.post_id=? order by r.created_at desc",
+            (rs, row) -> new CommunityReaction(rs.getString("reaction_type"), new CommunityProfile(
+                rs.getString("id"), rs.getString("kind"), rs.getString("display_name"), rs.getString("handle"),
+                rs.getString("headline"), rs.getString("avatar_url")), rs.getTimestamp("created_at").toInstant()), postId);
+    }
+
     @Transactional
     public CommunityPost create(String actorId, String content, List<String> images, List<String> topics, String privacy) {
         UUID id = UUID.randomUUID();

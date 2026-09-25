@@ -120,7 +120,7 @@ export function determineGalleryLayout(count: number): "none" | "single" | "doub
 }
 
 /**
- * Returns top reactions (up to 2) sorted by count descending.
+ * Returns top reactions (up to 3) sorted by count descending.
  * Ignores reactions with count <= 0.
  */
 export function getTopReactions(post: CommunityPost): PostReactionType[] {
@@ -133,7 +133,7 @@ export function getTopReactions(post: CommunityPost): PostReactionType[] {
 
     if (validEntries.length > 0) {
       validEntries.sort((a, b) => b[1] - a[1]);
-      return validEntries.slice(0, 2).map(([key]) => key);
+      return validEntries.slice(0, 3).map(([key]) => key);
     }
   }
 

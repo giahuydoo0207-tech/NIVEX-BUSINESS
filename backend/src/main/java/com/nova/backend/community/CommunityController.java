@@ -41,6 +41,11 @@ public class CommunityController {
     @GetMapping("/posts/{postId}")
     public CommunityPost post(@PathVariable UUID postId) { return repository.post(postId, BUSINESS_ACTOR); }
 
+    @GetMapping("/posts/{postId}/reactions")
+    public List<CommunityReaction> reactions(@PathVariable UUID postId) {
+        return repository.reactions(postId);
+    }
+
     @PostMapping("/posts")
     @ResponseStatus(HttpStatus.CREATED)
     public CommunityPost create(@Valid @RequestBody CreatePostRequest request) {
