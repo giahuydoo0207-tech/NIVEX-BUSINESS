@@ -121,6 +121,7 @@ export const NAV_GROUPS: NavGroup[] = [
 ];
 
 const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
+type NotificationItem = { id: string; type: string; title: string; body: string; readAt: string | null; createdAt: string };
 
 export function BusinessShell({
   children,
@@ -155,6 +156,23 @@ export function BusinessShell({
   const [dialog, setDialog] = useState<
     "wallet" | "help" | "notifications" | null
   >(null);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+
+  const loadNotifications = async () => {
+    if (process.env.NEXT_PUBLIC_PAYMENT_MODE !== "devnet") return;
+    const response = await fetch("/api/devnet/notifications", { cache: "no-store" });
+    if (!response.ok) return;
+    setNotifications(await response.json());
+  };
+
+  const openNotifications = async () => {
+    await loadNotifications();
+    setDialog("notifications");
+  };
+
+  useEffect(() => {
+    loadNotifications().catch(() => undefined);
+  }, []);
 
   const handleSelectTheme = (newThemeId: BusinessThemeId) => {
     setThemeId(newThemeId);
@@ -356,9 +374,14 @@ export function BusinessShell({
               className="icon-button"
               title="Thông báo"
               aria-label="Thông báo"
-              onClick={() => setDialog("notifications")}
+              onClick={openNotifications}
             >
               <Bell size={18} />
+              {notifications.filter((item) => !item.readAt).length > 0 && (
+                <span className="messages-tab-badge" aria-label={`${notifications.filter((item) => !item.readAt).length} thông báo chưa đọc`}>
+                  {notifications.filter((item) => !item.readAt).length}
+                </span>
+              )}
             </button>
             <span className="avatar topbar-avatar">GH</span>
           </div>
@@ -420,11 +443,18 @@ export function BusinessShell({
               <ArrowUpRight size={16} />
             </Link>
           </div>
+        ) : notifications.length === 0 ? (
+          <div className="empty-state"><Bell size={30} /><h3>Bạn đã xem hết thông báo</h3><p>Chưa có cập nhật mới.</p></div>
         ) : (
-          <div className="empty-state">
-            <Bell size={30} />
-            <h3>Bạn đã xem hết thông báo</h3>
-            <p>Chưa có cập nhật mới trong phiên trải nghiệm.</p>
+          <div className="dialog-body">
+            {notifications.map((item) => (
+              <button key={item.id} type="button" className="business-secondary-button" onClick={async () => {
+                await fetch(`/api/devnet/notifications/${item.id}/read`, { method: "POST" });
+                setNotifications((current) => current.map((entry) => entry.id === item.id ? { ...entry, readAt: entry.readAt ?? new Date().toISOString() } : entry));
+              }}>
+                <span><strong>{item.title}</strong><small>{item.body}</small></span>
+              </button>
+            ))}
           </div>
         )}
       </PortalDialog>

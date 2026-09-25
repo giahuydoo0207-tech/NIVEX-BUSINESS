@@ -10,11 +10,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import com.nova.backend.notification.NotificationRepository;
 
 @Repository
 public class JobApplicationRepository {
     private final JdbcTemplate jdbc;
-    public JobApplicationRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
+    private final NotificationRepository notifications;
+    public JobApplicationRepository(JdbcTemplate jdbc, NotificationRepository notifications) { this.jdbc = jdbc; this.notifications = notifications; }
 
     public List<JobApplication> forOrganization(UUID organizationId, int offset, int limit) {
         return jdbc.query(select() + " where a.organization_id=? order by a.submitted_at desc, a.id desc limit ? offset ?", this::map, organizationId, limit, offset);
@@ -37,6 +39,7 @@ public class JobApplicationRepository {
                 "select ?, ?, ?, t.contractor_id, ?, jsonb_build_object('displayName',t.display_name,'headline',t.headline,'email',t.email,'location',t.location,'skills',t.skills) from talent_profiles t where t.contractor_id=?",
             id, jobId, job.getFirst()[0], coverNote.trim(), contractorId);
         jdbc.update("insert into application_status_events (id, application_id, next_status, actor_type, note) values (?, ?, 'submitted', 'TALENT', 'Đã gửi ứng tuyển')", UUID.randomUUID(), id);
+        notifications.business((UUID) job.getFirst()[0], "APPLICATION_SUBMITTED", "Có hồ sơ ứng tuyển mới", "Minh Anh đã ứng tuyển: " + job.getFirst()[1], "{\"applicationId\":\"" + id + "\"}");
         return find(id).orElseThrow();
     }
 
@@ -47,6 +50,7 @@ public class JobApplicationRepository {
         if (!allowed(current.status(), nextStatus)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Invalid application status transition");
         jdbc.update("update job_applications set status=?, updated_at=now() where id=?", nextStatus, id);
         jdbc.update("insert into application_status_events (id, application_id, previous_status, next_status, actor_type, note) values (?, ?, ?, ?, 'BUSINESS', ?)", UUID.randomUUID(), id, current.status(), nextStatus, blankToNull(note));
+        notifications.talent(current.contractorId(), "APPLICATION_STATUS", "Hồ sơ đã được cập nhật", "Trạng thái mới: " + nextStatus, "{\"applicationId\":\"" + id + "\"}");
         return find(id).orElseThrow();
     }
 

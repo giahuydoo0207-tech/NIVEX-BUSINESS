@@ -10,11 +10,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import com.nova.backend.notification.NotificationRepository;
 
 @Repository
 public class MessageRepository {
     private final JdbcTemplate jdbc;
-    public MessageRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
+    private final NotificationRepository notifications;
+    public MessageRepository(JdbcTemplate jdbc, NotificationRepository notifications) { this.jdbc = jdbc; this.notifications = notifications; }
 
     public List<MessageThread> businessThreads(UUID organizationId, String status) { return jdbc.query(threadSelect() + " where t.organization_id=? and t.request_status=? order by t.updated_at desc", this::mapThread, organizationId, status); }
     @Transactional public List<MessageThread> contractorThreads(String contractorId) {
@@ -26,14 +28,14 @@ public class MessageRepository {
         UUID id;
         if(existing.isEmpty()){ id=UUID.randomUUID(); jdbc.update("insert into message_threads(id,organization_id,contractor_id,request_status) values(?,?,?,'PENDING')",id,organizationId,contractorId); }
         else { id=(UUID)existing.getFirst()[0]; String status=(String)existing.getFirst()[1]; if("BLOCKED".equals(status))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"You cannot contact this business"); if("ACCEPTED".equals(status))throw new ResponseStatusException(HttpStatus.CONFLICT,"Use the existing conversation"); jdbc.update("update message_threads set request_status='PENDING',updated_at=now() where id=?",id); }
-        message(id,"TALENT",body); return thread(id);
+        message(id,"TALENT",body); notifications.business(organizationId,"MESSAGE_REQUEST","Yêu cầu tin nhắn mới","Có một yêu cầu tin nhắn đang chờ xử lý","{\"threadId\":\""+id+"\"}"); return thread(id);
     }
     @Transactional public MessageThread decide(UUID id, UUID organizationId, String decision) {
         owns(id,organizationId); String current=status(id);
         if(!"PENDING".equals(current))throw new ResponseStatusException(HttpStatus.CONFLICT,"Only pending requests can be decided");
         if("ACCEPTED".equals(decision)) { jdbc.update("update message_threads set request_status='ACCEPTED',accepted_at=now(),updated_at=now() where id=?",id); jdbc.update("update thread_messages set delivered_at=coalesce(delivered_at,now()), seen_at=coalesce(seen_at,now()) where thread_id=? and sender_type='TALENT'",id); }
         else jdbc.update("update message_threads set request_status=?,updated_at=now() where id=?",decision,id);
-        return thread(id);
+        if("ACCEPTED".equals(decision)) notifications.talent(thread(id).contractorId(),"MESSAGE_REQUEST_ACCEPTED","Yêu cầu tin nhắn đã được chấp nhận","Bạn có thể bắt đầu trò chuyện với doanh nghiệp.","{\"threadId\":\""+id+"\"}"); return thread(id);
     }
     @Transactional public ThreadMessage sendBusiness(UUID id,UUID organizationId,String body){owns(id,organizationId);accepted(id);return message(id,"BUSINESS",body);}
     @Transactional public ThreadMessage sendTalent(UUID id,String contractorId,String body){if(!owner(id,contractorId))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Thread belongs to another contractor");accepted(id);return message(id,"TALENT",body);}

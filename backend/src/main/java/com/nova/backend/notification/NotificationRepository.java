@@ -1,0 +1,9 @@
+package com.nova.backend.notification;
+import java.sql.*; import java.util.*; import org.springframework.jdbc.core.JdbcTemplate; import org.springframework.stereotype.Repository;
+@Repository public class NotificationRepository { private final JdbcTemplate jdbc; public NotificationRepository(JdbcTemplate jdbc){this.jdbc=jdbc;}
+ public void business(UUID org,String type,String title,String body,String data){jdbc.update("insert into notifications(id,recipient_type,organization_id,type,title,body,data) values(?,'BUSINESS',?,?,?,?,?::jsonb)",UUID.randomUUID(),org,type,title,body,data);}
+ public void talent(String contractor,String type,String title,String body,String data){jdbc.update("insert into notifications(id,recipient_type,contractor_id,type,title,body,data) values(?,'TALENT',?,?,?,?,?::jsonb)",UUID.randomUUID(),contractor,type,title,body,data);}
+ public List<NovaNotification> business(UUID org){return jdbc.query("select id,type,title,body,data::text,read_at,created_at from notifications where organization_id=? order by created_at desc",this::map,org);}
+ public List<NovaNotification> talent(String contractor){return jdbc.query("select id,type,title,body,data::text,read_at,created_at from notifications where contractor_id=? order by created_at desc",this::map,contractor);}
+ public void read(UUID id,UUID org){jdbc.update("update notifications set read_at=coalesce(read_at,now()) where id=? and organization_id=?",id,org);} public void readTalent(UUID id,String contractor){jdbc.update("update notifications set read_at=coalesce(read_at,now()) where id=? and contractor_id=?",id,contractor);}
+ private NovaNotification map(ResultSet rs,int row)throws SQLException{return new NovaNotification(rs.getObject(1,UUID.class),rs.getString(2),rs.getString(3),rs.getString(4),rs.getString(5),rs.getTimestamp(6)==null?null:rs.getTimestamp(6).toInstant(),rs.getTimestamp(7).toInstant());}}
