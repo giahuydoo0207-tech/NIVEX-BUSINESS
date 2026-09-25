@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 
 const UUID = "[0-9a-fA-F-]{36}";
-const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?)$`);
+const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages(\?status=(PENDING|ACCEPTED))?|messages/${UUID}/(accept|decline|block|messages))$`);
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   // This demo is opt-in and proxied server-side so the backend key is never
@@ -11,10 +11,10 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   }
   const path = (await context.params).path.join("/");
   if (!allowed.test(path)) return new Response(null, { status: 404 });
-  if (request.method === "POST" && request.headers.get("origin") !== request.nextUrl.origin) {
+  if (request.method !== "GET" && request.headers.get("origin") !== request.nextUrl.origin) {
     return new Response(null, { status: 403 });
   }
-  const body = request.method === "POST" ? await request.text() : undefined;
+  const body = request.method === "GET" ? undefined : await request.text();
   if (body && body.length > 16000) return new Response(null, { status: 413 });
   try {
     const response = await fetch(`${process.env.NOVA_API_URL}/api/v1/${path}`, {
@@ -33,4 +33,4 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   }
 }
 
-export { proxy as GET, proxy as POST };
+export { proxy as GET, proxy as POST, proxy as PATCH };

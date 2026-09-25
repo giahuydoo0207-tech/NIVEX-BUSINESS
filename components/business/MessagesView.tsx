@@ -24,6 +24,21 @@ import { demoApplications } from "@/lib/application-demo-data";
 import { statusCopy } from "@/lib/application-status";
 import type { ApplicationMessage, CandidateApplication } from "@/types/application";
 
+const liveMessages = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
+
+type ApiThread = { id: string; contractorId: string; candidateName: string; headline: string; requestStatus: "PENDING" | "ACCEPTED"; createdAt: string; messages: Array<{ id: string; senderType: "BUSINESS" | "TALENT"; body: string; sentAt: string; deliveredAt?: string | null; seenAt?: string | null }> };
+
+function mapThread(thread: ApiThread): ConversationItem {
+  return {
+    id: thread.id, jobId: "general-inquiry", jobTitle: "Liên hệ bên ngoài", applicantUserId: thread.contractorId,
+    candidateName: thread.candidateName, initials: thread.candidateName.split(" ").map((part) => part[0]).slice(-2).join("").toUpperCase(),
+    headline: thread.headline, email: "", location: "", matchScore: 0, skills: [], coverNote: "", portfolioLabel: "", portfolioPreview: [], availability: "Sẵn sàng trao đổi", status: "withdrawn",
+    submittedAt: thread.createdAt, createdAt: thread.createdAt, updatedAt: thread.createdAt, hasActiveApplication: false,
+    requestState: thread.requestStatus.toLowerCase() as ConversationItem["requestState"],
+    messages: thread.messages.map((message) => ({ id: message.id, role: message.senderType, senderName: message.senderType === "BUSINESS" ? "Nova Labs" : thread.candidateName, body: message.body, sentAt: new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit" }).format(new Date(message.sentAt)), deliveryStatus: message.seenAt ? "SEEN" : message.deliveredAt ? "DELIVERED" : "SENT" })),
+  };
+}
+
 function nowLabel() {
   return new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit" }).format(new Date());
 }
@@ -125,6 +140,22 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
   const bottomRef = useRef<HTMLDivElement>(null);
   const timersRef = useRef<number[]>([]);
 
+  async function refreshLiveThreads() {
+    if (!liveMessages) return;
+    const [pending, accepted] = await Promise.all(["PENDING", "ACCEPTED"].map(async (status) => {
+      const response = await fetch(`/api/devnet/messages?status=${status}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`API ${response.status}`);
+      return response.json() as Promise<ApiThread[]>;
+    }));
+    const next = [...pending, ...accepted].map(mapThread);
+    setConversations(next);
+    setSelectedId((current) => next.some((item) => item.id === current) ? current : next[0]?.id ?? "");
+  }
+
+  useEffect(() => {
+    refreshLiveThreads().catch(() => undefined);
+  }, []);
+
   const pendingRequests = useMemo(
     () => conversations.filter((c) => c.requestState === "pending"),
     [conversations],
@@ -152,7 +183,12 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
 
   useEffect(() => () => timersRef.current.forEach(window.clearTimeout), []);
 
-  function handleAcceptRequest(applicationId: string) {
+  async function handleAcceptRequest(applicationId: string) {
+    if (liveMessages) {
+      const response = await fetch(`/api/devnet/messages/${applicationId}/accept`, { method: "POST" });
+      if (!response.ok) return;
+      await refreshLiveThreads();
+    }
     setConversations((current) =>
       current.map((item) => (item.id === applicationId ? { ...item, requestState: "accepted" } : item)),
     );
@@ -161,7 +197,12 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
     setMobileThreadOpen(true);
   }
 
-  function handleDeclineRequest(applicationId: string) {
+  async function handleDeclineRequest(applicationId: string) {
+    if (liveMessages) {
+      const response = await fetch(`/api/devnet/messages/${applicationId}/decline`, { method: "POST" });
+      if (!response.ok) return;
+      await refreshLiveThreads();
+    }
     setConversations((current) =>
       current.map((item) => (item.id === applicationId ? { ...item, requestState: "declined" } : item)),
     );
@@ -191,11 +232,19 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
     );
   }
 
-  function sendMessage(event?: FormEvent<HTMLFormElement>) {
+  async function sendMessage(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
     const body = draft.trim();
     if (!body || !selected || selected.requestState === "pending") return;
     const applicationId = selected.id;
+    if (liveMessages) {
+      const response = await fetch(`/api/devnet/messages/${applicationId}/messages`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ body }) });
+      if (!response.ok) return;
+      setDraft("");
+      setReplyingTo(null);
+      await refreshLiveThreads();
+      return;
+    }
     const messageId = `business-message-${Date.now()}`;
     const outgoing: ApplicationMessage = {
       id: messageId,
