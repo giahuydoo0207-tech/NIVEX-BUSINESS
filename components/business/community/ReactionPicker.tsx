@@ -11,8 +11,6 @@ interface ReactionPickerProps {
 
 export function ReactionPicker({ onSelect, onClose }: ReactionPickerProps) {
   const [hoveredKey, setHoveredKey] = useState<PostReactionType | null>(null);
-  const primaryReactions = REACTION_LIST.slice(0, 3);
-  const secondaryReactions = REACTION_LIST.slice(3);
 
   const renderReaction = (r: (typeof REACTION_LIST)[number]) => {
     const Icon = r.icon;
@@ -59,10 +57,7 @@ export function ReactionPicker({ onSelect, onClose }: ReactionPickerProps) {
         setHoveredKey(null);
       }}
     >
-      <div className="reaction-picker-row">{primaryReactions.map(renderReaction)}</div>
-      <div className="reaction-picker-row reaction-picker-row-secondary">
-        {secondaryReactions.map(renderReaction)}
-      </div>
+      <div className="reaction-picker-row">{REACTION_LIST.map(renderReaction)}</div>
     </div>
   );
 }
