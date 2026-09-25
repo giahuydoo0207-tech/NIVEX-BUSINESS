@@ -15,6 +15,6 @@ public class DemoApiSecurityConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(interceptor)
-            .addPathPatterns("/api/v1/invoices/**", "/api/v1/payment-requests/**", "/api/v1/community/**", "/api/v1/business/**", "/api/v1/applications/**");
+            .addPathPatterns("/api/v1/invoices/**", "/api/v1/payment-requests/**", "/api/v1/community/**", "/api/v1/business/**", "/api/v1/applications/**", "/api/v1/messages/**");
     }
 }
