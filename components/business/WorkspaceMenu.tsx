@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef } from "react";
 import {
   BUSINESS_THEMES,
@@ -13,7 +12,6 @@ import {
   Palette,
   ShieldCheck,
   Sparkles,
-  UserCircle,
 } from "lucide-react";
 
 interface WorkspaceMenuProps {
@@ -101,20 +99,6 @@ export function WorkspaceMenu({
         </div>
       </div>
 
-      {/* Profile quick link */}
-      <div className="workspace-menu-actions">
-        <Link
-          href="/business/profile"
-          className="workspace-menu-profile-link"
-          onClick={onClose}
-        >
-          <UserCircle size={15} />
-          <span>Xem trang cá nhân</span>
-        </Link>
-      </div>
-
-      <div className="workspace-menu-divider" />
-
       {/* Theme Section: Compact Swatches */}
       <div className="workspace-menu-section">
         <div className="workspace-menu-section-header">
@@ -125,11 +109,10 @@ export function WorkspaceMenu({
           <span className="workspace-menu-section-hint">Đồng bộ Mobile</span>
         </div>
 
-        {/* 1 Row of Circular Swatches ~36px */}
+        {/* 1 Row of Circular Swatches ~26px */}
         <div className="workspace-theme-swatches-row" role="radiogroup" aria-label="Chọn chủ đề giao diện">
           {themesList.map((theme) => {
             const isSelected = theme.id === currentThemeId;
-            const isDefault = theme.id === "cyberNight";
             return (
               <button
                 key={theme.id}
@@ -138,7 +121,7 @@ export function WorkspaceMenu({
                 data-theme-id={theme.id}
                 aria-checked={isSelected}
                 className={`workspace-swatch-circle-btn ${isSelected ? "active" : ""}`}
-                title={`${theme.label} — ${theme.description}${isDefault ? " (Mặc định)" : ""}`}
+                title={`${theme.label} — ${theme.description}${theme.id === "cyberNight" ? " (Mặc định)" : ""}`}
                 aria-label={`${theme.label}: ${theme.description}`}
                 onClick={() => {
                   onSelectTheme(theme.id);
@@ -147,16 +130,13 @@ export function WorkspaceMenu({
                 <span
                   className="workspace-swatch-circle"
                   style={{
-                    background: `linear-gradient(135deg, ${theme.swatch.background} 0%, ${theme.swatch.surface} 50%, ${theme.swatch.primary} 100%)`,
+                    background: `linear-gradient(135deg, ${theme.swatch.surface} 0%, ${theme.swatch.primary} 100%)`,
                   }}
                 >
                   {isSelected && (
                     <span className="swatch-check-badge" aria-hidden="true">
-                      <Check size={11} strokeWidth={3} />
+                      <Check size={8} strokeWidth={3} />
                     </span>
-                  )}
-                  {isDefault && (
-                    <span className="swatch-default-dot" title="Mặc định" aria-label="Mặc định" />
                   )}
                 </span>
               </button>

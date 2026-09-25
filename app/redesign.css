@@ -10795,38 +10795,12 @@ body:has(.business-app) {
 }
 
 /* ==========================================================================
-   WORKSPACE MENU COMPACT SWATCHES & PROFILE QUICK LINK (Mục 1)
+   WORKSPACE MENU COMPACT SWATCHES (Mục 1)
    ========================================================================== */
-.workspace-menu-actions {
-  padding: 4px 0 8px 0;
-}
-
-.workspace-menu-profile-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 7px;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--ink, #f5f8fc);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
-  text-decoration: none;
-  transition: all 0.15s ease;
-}
-
-.workspace-menu-profile-link:hover {
-  background: var(--surface-hover, rgba(56, 189, 248, 0.08));
-  border-color: var(--app-accent, #38bdf8);
-  color: var(--app-accent, #38bdf8);
-}
-
 .workspace-theme-swatches-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
   padding: 8px 4px 4px 4px;
 }
 
@@ -10834,64 +10808,54 @@ body:has(.business-app) {
   position: relative;
   background: transparent;
   border: none;
-  padding: 2px;
+  padding: 0;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 .workspace-swatch-circle-btn:hover {
-  transform: scale(1.1);
+  opacity: 0.85;
 }
 
 .workspace-swatch-circle {
   position: relative;
-  display: block;
-  width: 36px;
-  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.15);
-  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-sizing: border-box;
 }
 
 .workspace-swatch-circle-btn.active .workspace-swatch-circle {
-  box-shadow: 0 0 0 2.5px var(--app-accent, #38bdf8), 0 3px 10px rgba(0, 0, 0, 0.5);
+  border: 1.5px solid var(--app-accent, #38bdf8);
 }
 
 .swatch-check-badge {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  width: 15px;
-  height: 15px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   background: var(--app-accent, #38bdf8);
-  color: #0b131f;
+  color: #08101d;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.swatch-default-dot {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
 }
 
 .workspace-theme-current-label {
   margin-top: 10px;
   font-size: 11.5px;
   color: var(--muted, #8493a8);
-  text-align: center;
+  text-align: left;
 }
 
 .workspace-theme-current-label strong {
