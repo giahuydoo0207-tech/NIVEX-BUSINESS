@@ -511,15 +511,15 @@ export function BusinessProfileView() {
 
       {/* Edit Profile Modal */}
       {isEditOpen && (
-        <div className="modal-backdrop" onClick={() => setIsEditOpen(false)}>
+        <div className="action-dialog-backdrop" onClick={() => setIsEditOpen(false)}>
           <div
-            className="modal-container profile-edit-modal"
+            className="action-dialog-content profile-edit-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-profile-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="modal-header">
+            <div className="action-dialog-header profile-edit-header">
               <h2 id="edit-profile-title">Chỉnh sửa hồ sơ</h2>
               <button
                 type="button"
@@ -530,7 +530,7 @@ export function BusinessProfileView() {
                 <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleSaveProfile} className="modal-body">
+            <form onSubmit={handleSaveProfile} className="profile-edit-body">
               <div className="form-group">
                 <label htmlFor="edit-name">Tên tổ chức</label>
                 <input

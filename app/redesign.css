@@ -11085,25 +11085,25 @@ body:has(.business-app) {
 }
 
 .business-profile-header-card {
-  background: var(--surface-card, #121c2a);
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  background: var(--card-bg, var(--surface, #121c2a));
+  border: 1px solid var(--card-border, var(--border, rgba(255, 255, 255, 0.08)));
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   margin-bottom: 20px;
 }
 
 .business-profile-cover {
   position: relative;
   height: 140px;
-  background: linear-gradient(135deg, #0e1e38 0%, #15294e 45%, #1e3a6a 100%);
+  background: linear-gradient(135deg, #091325 0%, #0d1e38 45%, #152d52 100%);
   overflow: hidden;
 }
 
 .cover-gradient-accent {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.25) 0%, transparent 60%);
+  background: radial-gradient(circle at 80% 20%, rgba(120, 170, 245, 0.28) 0%, transparent 60%);
 }
 
 .business-profile-body {
@@ -11125,13 +11125,13 @@ body:has(.business-app) {
   width: 76px;
   height: 76px;
   border-radius: 14px;
-  background: #172438;
-  border: 3px solid var(--surface-card, #121c2a);
+  background: var(--surface-subtle, #0d1c33);
+  border: 3px solid var(--card-bg, var(--surface, #121c2a));
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--app-accent, #38bdf8);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  color: var(--app-accent, #78aaf5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .business-profile-actions {
@@ -11218,9 +11218,7 @@ body:has(.business-app) {
   align-items: center;
   gap: 8px;
   padding: 0 24px;
-  background: rgba(18, 28, 42, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--card-bg, var(--surface, #121c2a));
   border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
   border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
 }
@@ -11254,8 +11252,14 @@ body:has(.business-app) {
   font-size: 11px;
   padding: 1px 6px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  color: inherit;
+  background: var(--surface-subtle, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--border-subtle, transparent);
+  color: var(--muted, inherit);
+}
+
+.profile-tab-button.active .profile-tab-count {
+  color: var(--app-accent, #38bdf8);
+  border-color: var(--app-accent, #38bdf8);
 }
 
 .business-profile-content {
@@ -11274,8 +11278,8 @@ body:has(.business-app) {
   align-items: center;
   justify-content: center;
   padding: 48px 16px;
-  background: var(--surface-card, #121c2a);
-  border: 1px dashed var(--border-subtle, rgba(255, 255, 255, 0.12));
+  background: var(--card-bg, var(--surface, #121c2a));
+  border: 1px dashed var(--card-border, var(--border-subtle, rgba(255, 255, 255, 0.12)));
   border-radius: 12px;
   color: var(--muted, #8493a8);
   text-align: center;
@@ -11289,8 +11293,8 @@ body:has(.business-app) {
 
 /* About Tab */
 .profile-about-card {
-  background: var(--surface-card, #121c2a);
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  background: var(--card-bg, var(--surface, #121c2a));
+  border: 1px solid var(--card-border, var(--border-subtle, rgba(255, 255, 255, 0.08)));
   border-radius: 12px;
   padding: 24px;
   display: flex;
@@ -11333,7 +11337,7 @@ body:has(.business-app) {
 }
 
 .about-stat-item {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-subtle, rgba(255, 255, 255, 0.03));
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
   border-radius: 8px;
   padding: 14px 16px;
@@ -11361,8 +11365,8 @@ body:has(.business-app) {
   max-width: 380px;
   padding: 10px 14px;
   border-radius: 8px;
-  background: rgba(56, 189, 248, 0.08);
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  background: var(--surface-subtle, rgba(56, 189, 248, 0.08));
+  border: 1px solid var(--border, rgba(56, 189, 248, 0.2));
   color: var(--ink, #f5f8fc);
   font-size: 13.5px;
   cursor: pointer;
@@ -11370,7 +11374,7 @@ body:has(.business-app) {
 }
 
 .open-positions-link-btn:hover {
-  background: rgba(56, 189, 248, 0.15);
+  background: var(--surface-hover, rgba(56, 189, 248, 0.15));
   border-color: var(--app-accent, #38bdf8);
   color: var(--app-accent, #38bdf8);
 }
@@ -11390,6 +11394,7 @@ body:has(.business-app) {
   align-items: center;
   gap: 8px;
   font-size: 13.5px;
+  color: var(--ink, #f5f8fc);
 }
 
 .verification-badge-item.verified {
@@ -11398,8 +11403,8 @@ body:has(.business-app) {
 
 /* Activity Tab */
 .profile-activity-card {
-  background: var(--surface-card, #121c2a);
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  background: var(--card-bg, var(--surface, #121c2a));
+  border: 1px solid var(--card-border, var(--border-subtle, rgba(255, 255, 255, 0.08)));
   border-radius: 12px;
   padding: 20px;
 }
@@ -11433,7 +11438,7 @@ body:has(.business-app) {
 
 .activity-icon.job_published {
   background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
+  color: var(--app-accent, #38bdf8);
 }
 
 .activity-icon.applicant_hired {
@@ -11470,19 +11475,202 @@ body:has(.business-app) {
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-subtle, rgba(255, 255, 255, 0.04));
   color: var(--muted, #8493a8);
+  border: 1px solid var(--border-subtle, transparent);
   transition: all 0.15s ease;
 }
 
 .activity-link-btn:hover {
   background: var(--surface-hover, rgba(56, 189, 248, 0.15));
   color: var(--app-accent, #38bdf8);
+  border-color: var(--app-accent, #38bdf8);
 }
 
-/* Edit Profile Modal */
+/* Edit Profile Modal & Form */
 .profile-edit-modal {
   max-width: 480px;
+}
+
+.profile-edit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.profile-edit-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink, #f5f8fc);
+}
+
+.profile-edit-body {
+  padding: 0 20px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-edit-body .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-edit-body label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink, #f5f8fc);
+}
+
+.profile-edit-body input,
+.profile-edit-body textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface, #0f1c2e);
+  border: 1px solid var(--border, #273448);
+  color: var(--ink, #f5f8fc);
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.profile-edit-body input:focus,
+.profile-edit-body textarea:focus {
+  border-color: var(--app-accent, #38bdf8);
+  box-shadow: 0 0 0 1px var(--app-accent, #38bdf8);
+}
+
+.profile-edit-body .modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* ==========================================================================
+   THEME SYNCHRONIZATION FOR PROFILE PAGE
+   ========================================================================== */
+
+/* 1. Cyber Night (Dark Cyan) */
+.business-app[data-theme="cyberNight"] .business-profile-cover {
+  background: linear-gradient(135deg, #091325 0%, #0d1e38 45%, #152d52 100%);
+}
+.business-app[data-theme="cyberNight"] .cover-gradient-accent {
+  background: radial-gradient(circle at 80% 20%, rgba(120, 170, 245, 0.28) 0%, transparent 60%);
+}
+.business-app[data-theme="cyberNight"] .business-profile-avatar {
+  background: #0d1c33;
+  border-color: #081321;
+  color: #78aaf5;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+/* 2. Blockchain Flow (Dark Web3 Cosmic Sky) */
+.business-app[data-theme="blockchainFlow"] .business-profile-cover {
+  background: linear-gradient(135deg, #0c1738 0%, #152756 45%, #1e3775 100%);
+}
+.business-app[data-theme="blockchainFlow"] .cover-gradient-accent {
+  background: radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.3) 0%, transparent 60%);
+}
+.business-app[data-theme="blockchainFlow"] .business-profile-avatar {
+  background: #14244d;
+  border-color: #101c3d;
+  color: #38bdf8;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+/* 3. Nova Banking (Light Crisp Corporate Blue) */
+.business-app[data-theme="defaultTheme"] .business-profile-cover {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+}
+.business-app[data-theme="defaultTheme"] .cover-gradient-accent {
+  background: radial-gradient(circle at 80% 20%, rgba(191, 219, 254, 0.45) 0%, transparent 60%);
+}
+.business-app[data-theme="defaultTheme"] .business-profile-avatar {
+  background: #eff6ff;
+  border-color: #ffffff;
+  color: #1d4ed8;
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.16);
+}
+.business-app[data-theme="defaultTheme"] .business-profile-header-card,
+.business-app[data-theme="defaultTheme"] .profile-about-card,
+.business-app[data-theme="defaultTheme"] .profile-activity-card,
+.business-app[data-theme="defaultTheme"] .profile-empty-state {
+  box-shadow: 0 2px 14px rgba(15, 23, 42, 0.05);
+}
+.business-app[data-theme="defaultTheme"] .profile-tab-count {
+  background: #e2e8f0;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+.business-app[data-theme="defaultTheme"] .profile-tab-button.active .profile-tab-count {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+.business-app[data-theme="defaultTheme"] .open-positions-link-btn {
+  background: rgba(29, 78, 216, 0.06);
+  border-color: rgba(29, 78, 216, 0.2);
+  color: #0f172a;
+}
+.business-app[data-theme="defaultTheme"] .about-stat-item {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+.business-app[data-theme="defaultTheme"] .activity-link-btn {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+/* 4. Vietnam Future (Warm Light Bronze & Golden Amber) */
+.business-app[data-theme="vietnamFuture"] .business-profile-cover {
+  background: linear-gradient(135deg, #78350f 0%, #9a5b0d 50%, #d97706 100%);
+}
+.business-app[data-theme="vietnamFuture"] .cover-gradient-accent {
+  background: radial-gradient(circle at 80% 20%, rgba(251, 191, 36, 0.45) 0%, transparent 60%);
+}
+.business-app[data-theme="vietnamFuture"] .business-profile-avatar {
+  background: #fbf5eb;
+  border-color: #ffffff;
+  color: #9a5b0d;
+  box-shadow: 0 4px 14px rgba(154, 91, 13, 0.16);
+}
+.business-app[data-theme="vietnamFuture"] .business-profile-header-card,
+.business-app[data-theme="vietnamFuture"] .profile-about-card,
+.business-app[data-theme="vietnamFuture"] .profile-activity-card,
+.business-app[data-theme="vietnamFuture"] .profile-empty-state {
+  box-shadow: 0 2px 14px rgba(28, 25, 23, 0.05);
+}
+.business-app[data-theme="vietnamFuture"] .profile-tab-count {
+  background: #ebe4d5;
+  color: #44403c;
+  border-color: #dcd3c1;
+}
+.business-app[data-theme="vietnamFuture"] .profile-tab-button.active .profile-tab-count {
+  background: #faebd3;
+  color: #9a5b0d;
+  border-color: #f3d4a6;
+}
+.business-app[data-theme="vietnamFuture"] .open-positions-link-btn {
+  background: rgba(154, 91, 13, 0.06);
+  border-color: rgba(154, 91, 13, 0.2);
+  color: #1c1917;
+}
+.business-app[data-theme="vietnamFuture"] .about-stat-item {
+  background: #faf8f5;
+  border-color: #ebe4d5;
+}
+.business-app[data-theme="vietnamFuture"] .activity-link-btn {
+  background: #f5f2eb;
+  border-color: #ebe4d5;
+  color: #57534e;
 }
 
 @media (prefers-reduced-motion: reduce) {
