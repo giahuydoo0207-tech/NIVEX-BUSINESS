@@ -10969,6 +10969,35 @@ body:has(.business-app) {
   white-space: nowrap;
 }
 
+.jobs-heading-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.jobs-heading-actions > .business-primary-button,
+.jobs-heading-actions > .business-secondary-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding-inline: 16px;
+}
+
+.jobs-toolbar .table-tabs {
+  flex: 0 0 auto;
+  min-width: max-content;
+  gap: 24px;
+}
+
+.jobs-toolbar .table-tabs > button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .conversation-rail-title-row > div:first-child {
   min-width: 0;
 }
@@ -11022,6 +11051,17 @@ body:has(.business-app) {
   .messages-tab-btn {
     flex: 1 1 0;
     justify-content: center;
+  }
+
+  .jobs-heading-actions {
+    width: 100%;
+  }
+
+  .jobs-heading-actions > .business-primary-button,
+  .jobs-heading-actions > .business-secondary-button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 10px;
   }
 }
 
