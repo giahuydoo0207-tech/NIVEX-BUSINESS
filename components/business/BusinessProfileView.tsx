@@ -15,6 +15,7 @@ import {
   FileCheck2,
   FileText,
   Globe2,
+  ImageUp,
   MailCheck,
   MessageSquare,
   ShieldCheck,
@@ -236,12 +237,6 @@ export function BusinessProfileView() {
             </div>
 
             <div className="business-profile-actions">
-              <button type="button" className="business-secondary-button profile-edit-btn" onClick={() => avatarInputRef.current?.click()}>
-                Đổi avatar
-              </button>
-              <button type="button" className="business-secondary-button profile-edit-btn" onClick={() => coverInputRef.current?.click()}>
-                Đổi ảnh nền
-              </button>
               <button
                 type="button"
                 className="business-secondary-button profile-edit-btn"
@@ -560,6 +555,42 @@ export function BusinessProfileView() {
               </button>
             </div>
             <form onSubmit={handleSaveProfile} className="profile-edit-body">
+              <div className="form-group">
+                <label>Hình ảnh hồ sơ</label>
+                <div className="profile-media-preview-grid">
+                  <div className="profile-media-preview-card">
+                    <div className="profile-avatar-preview" aria-label="Xem trước avatar">
+                      {profile.logoUrl ? <img src={profile.logoUrl} alt="Avatar hiện tại" /> : <Building2 size={28} strokeWidth={1.8} />}
+                    </div>
+                    <div className="profile-media-preview-copy">
+                      <strong>Avatar</strong>
+                      <span>PNG, JPG hoặc WebP</span>
+                    </div>
+                    <button type="button" className="business-secondary-button" onClick={() => avatarInputRef.current?.click()}>
+                      <ImageUp size={16} />
+                      Đổi avatar
+                    </button>
+                  </div>
+                  <div className="profile-media-preview-card">
+                    <div
+                      className="profile-cover-preview"
+                      aria-label="Xem trước ảnh nền"
+                      style={profile.coverImageUrl ? { backgroundImage: `url(${profile.coverImageUrl})` } : undefined}
+                    >
+                      {!profile.coverImageUrl && <ImageUp size={22} />}
+                    </div>
+                    <div className="profile-media-preview-copy">
+                      <strong>Ảnh nền</strong>
+                      <span>PNG, JPG hoặc WebP</span>
+                    </div>
+                    <button type="button" className="business-secondary-button" onClick={() => coverInputRef.current?.click()}>
+                      <ImageUp size={16} />
+                      Đổi ảnh nền
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <div className="form-group">
                 <label htmlFor="edit-name">Tên tổ chức</label>
                 <input
