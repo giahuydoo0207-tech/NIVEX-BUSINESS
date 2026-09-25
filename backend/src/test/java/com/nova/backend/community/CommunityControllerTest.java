@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,5 +79,20 @@ class CommunityControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"content\":\"Bài viết\",\"privacy\":\"friends_only\"}"))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void storesCommunityImagesAndServesTheirOriginalContentType() throws Exception {
+        String response = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/v1/community/media")
+                .file(new MockMultipartFile("file", "payment.png", "image/png", new byte[] {1, 2, 3}))
+                .header("X-Nova-Demo-Key", "test-community-key"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.url").value(org.hamcrest.Matchers.startsWith("/media/community/")))
+            .andReturn().getResponse().getContentAsString();
+
+        String url = response.replaceFirst(".*\\\"url\\\":\\\"([^\\\"]+)\\\".*", "$1");
+        mvc.perform(get(url).header("X-Nova-Demo-Key", "test-community-key"))
+            .andExpect(status().isOk())
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentType(MediaType.IMAGE_PNG));
     }
 }

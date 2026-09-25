@@ -55,6 +55,7 @@ export function CommunityView({ preview }: CommunityViewProps = {}) {
     blockUser,
     editPost,
     updatePostPrivacy,
+    uploadPostImage,
   } = useCommunityFeed();
 
   // Local composer state
@@ -100,7 +101,7 @@ export function CommunityView({ preview }: CommunityViewProps = {}) {
   }, [posts, blockedHandles]);
 
   // Handle image upload from file input
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -110,19 +111,14 @@ export function CommunityView({ preview }: CommunityViewProps = {}) {
       return;
     }
 
-    const filesToLoad = Array.from(files).slice(0, remainingSlots);
-    filesToLoad.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (loadEvt) => {
-        if (typeof loadEvt.target?.result === "string") {
-          setSelectedImages((prev) => [...prev, loadEvt.target!.result as string]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+    try {
+      const uploads = await Promise.all(Array.from(files).slice(0, remainingSlots).map(uploadPostImage));
+      setSelectedImages((previous) => [...previous, ...uploads]);
+    } catch (error) {
+      showNotice(error instanceof Error ? error.message : "Không thể tải ảnh lên.");
     }
   };
 

@@ -156,6 +156,21 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
     refreshLiveThreads().catch(() => undefined);
   }, []);
 
+  useEffect(() => {
+    if (!liveMessages) return;
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") refreshLiveThreads().catch(() => undefined);
+    };
+    const interval = window.setInterval(refreshWhenVisible, 8000);
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, []);
+
   const pendingRequests = useMemo(
     () => conversations.filter((c) => c.requestState === "pending"),
     [conversations],

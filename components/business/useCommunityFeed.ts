@@ -21,6 +21,55 @@ const FOLLOWED_AUTHORS_STORAGE_KEY = "nivex.demo.community_followed_authors";
 const FOLLOWED_UPDATE_EVENT = "nova:community-followed-updated";
 const BLOCKED_AUTHORS_STORAGE_KEY = "nivex.demo.community_blocked_authors";
 const BLOCKED_UPDATE_EVENT = "nova:community-blocked-updated";
+const liveCommunity = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
+
+type ApiProfile = { id: string; kind: string; displayName: string; handle: string; headline: string; avatarUrl?: string | null };
+type ApiComment = { id: string; content: string; createdAt: string; author: ApiProfile; likeCount: number; isLiked: boolean; replies: ApiComment[] };
+type ApiPost = { id: string; content: string; images: string[]; topics: string[]; privacy: string; isPinned: boolean; createdAt: string; reactionCount: number; myReaction?: string | null; reactionCounts?: Record<string, number>; isSaved: boolean; isHidden: boolean; isFollowingAuthor: boolean; author: ApiProfile; comments: ApiComment[] };
+
+function timeLabel(iso: string) {
+  const minutes = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  if (minutes < 1) return "Vừa xong";
+  if (minutes < 60) return `${minutes} phút`;
+  if (minutes < 1440) return `${Math.floor(minutes / 60)} giờ`;
+  return `${Math.floor(minutes / 1440)} ngày`;
+}
+
+function mapProfile(profile: ApiProfile): PublicProfileData {
+  return { kind: profile.kind.toLowerCase() === "business" ? "business" : "freelancer", displayName: profile.displayName, handle: profile.handle, headline: profile.headline, location: "", bio: "", tags: [], stats: [], avatarUrl: profile.avatarUrl ?? undefined };
+}
+
+function mapComment(comment: ApiComment, replyingToName?: string): PostComment {
+  return {
+    id: comment.id, authorName: comment.author.displayName, headline: comment.author.headline, content: comment.content,
+    timeLabel: timeLabel(comment.createdAt), createdAt: comment.createdAt, avatarUrl: comment.author.avatarUrl ?? undefined,
+    isMine: comment.author.id === "nova-labs", likeCount: comment.likeCount, isLiked: comment.isLiked,
+    replies: comment.replies.map((reply) => ({ ...mapComment(reply, comment.author.displayName), replyingToName: comment.author.displayName, replies: undefined } as PostCommentReply)),
+  };
+}
+
+function mapPost(post: ApiPost): CommunityPost {
+  const type = (value?: string | null) => {
+    const reaction = value?.toLowerCase() as PostReactionType | undefined;
+    return ["like", "love", "trust", "build", "insightful", "deal", "launch"].includes(reaction ?? "") ? reaction! : null;
+  };
+  return {
+    id: post.id, content: post.content, images: post.images.map((image) => image.startsWith("/") ? `/api/devnet${image}` : image),
+    topics: post.topics, privacy: post.privacy.toLowerCase() as PostPrivacy, isPinned: post.isPinned,
+    timeLabel: timeLabel(post.createdAt), createdAt: post.createdAt, isMine: post.author.id === "nova-labs",
+    reactionCount: post.reactionCount, myReaction: type(post.myReaction),
+    reactionCounts: Object.fromEntries(Object.entries(post.reactionCounts ?? {}).map(([key, value]) => [key.toLowerCase(), value])) as Partial<Record<PostReactionType, number>>,
+    isSaved: post.isSaved, isHidden: post.isHidden, isFollowingAuthor: post.isFollowingAuthor,
+    author: mapProfile(post.author), comments: post.comments.map((comment) => mapComment(comment)),
+  };
+}
+
+async function communityRequest<T>(path: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`/api/devnet/community${path}`, { cache: "no-store", ...options });
+  if (!response.ok) throw new Error(`Community API ${response.status}`);
+  if (response.status === 204) return undefined as T;
+  return response.json() as Promise<T>;
+}
 
 function loadStoredPosts(): CommunityPost[] {
   if (typeof window === "undefined") return INITIAL_DEMO_POSTS;
@@ -98,6 +147,19 @@ export function useCommunityFeed() {
     }
   }, []);
 
+  const refreshLivePosts = useCallback(async () => {
+    if (!liveCommunity) return;
+    const remote = await communityRequest<ApiPost[]>("/posts");
+    saveAndBroadcast(remote.map(mapPost));
+  }, [saveAndBroadcast]);
+
+  const synchronize = useCallback((operation: () => Promise<unknown>) => {
+    if (!liveCommunity) return;
+    void operation().then(() => refreshLivePosts()).catch((error) => {
+      console.error("Community API request failed:", error);
+    });
+  }, [refreshLivePosts]);
+
   const saveFollowedAndBroadcast = useCallback((updatedHandles: string[]) => {
     setFollowedHandles(updatedHandles);
     try {
@@ -131,6 +193,11 @@ export function useCommunityFeed() {
     setBlockedHandles(loadBlockedAuthors());
     setIsLoaded(true);
   }, []);
+
+  useEffect(() => {
+    if (!liveCommunity) return;
+    void refreshLivePosts().catch(() => undefined);
+  }, [refreshLivePosts]);
 
   // Listeners for storage changes
   useEffect(() => {
@@ -175,9 +242,19 @@ export function useCommunityFeed() {
 
       const nextPosts = [newPost, ...posts];
       saveAndBroadcast(nextPosts);
+      synchronize(() => communityRequest("/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: newPost.content || "Ảnh mới",
+          images: images.map((image) => image.replace("/api/devnet", "")),
+          topics,
+          privacy: "public",
+        }),
+      }));
       return newPost;
     },
-    [posts, saveAndBroadcast]
+    [posts, saveAndBroadcast, synchronize]
   );
 
   const reactToPost = useCallback(
@@ -189,8 +266,11 @@ export function useCommunityFeed() {
         return post;
       });
       saveAndBroadcast(nextPosts);
+      synchronize(() => communityRequest(`/posts/${postId}/reaction`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reaction }),
+      }));
     },
-    [posts, saveAndBroadcast]
+    [posts, saveAndBroadcast, synchronize]
   );
 
   const addComment = useCallback(
@@ -215,8 +295,11 @@ export function useCommunityFeed() {
         return post;
       });
       saveAndBroadcast(nextPosts);
+      synchronize(() => communityRequest(`/posts/${postId}/comments`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content }),
+      }));
     },
-    [posts, saveAndBroadcast]
+    [posts, saveAndBroadcast, synchronize]
   );
 
   const addReply = useCallback(
@@ -241,12 +324,18 @@ export function useCommunityFeed() {
         return post;
       });
       saveAndBroadcast(nextPosts);
+      synchronize(() => communityRequest(`/posts/${postId}/comments`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content, parentCommentId }),
+      }));
     },
-    [posts, saveAndBroadcast]
+    [posts, saveAndBroadcast, synchronize]
   );
 
   const toggleCommentLike = useCallback(
     (postId: string, targetId: string) => {
+      const target = posts.find((post) => post.id === postId)?.comments
+        .flatMap((comment) => [comment, ...comment.replies])
+        .find((comment) => comment.id === targetId);
       const nextPosts = posts.map((post) => {
         if (post.id === postId) {
           return toggleCommentLikeInPost(post, targetId);
@@ -254,12 +343,16 @@ export function useCommunityFeed() {
         return post;
       });
       saveAndBroadcast(nextPosts);
+      synchronize(() => communityRequest(`/posts/${postId}/comments/${targetId}/liked`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: !target?.isLiked }),
+      }));
     },
-    [posts, saveAndBroadcast]
+    [posts, saveAndBroadcast, synchronize]
   );
 
   const togglePin = useCallback(
     (postId: string) => {
+      const current = posts.find((post) => post.id === postId);
       const nextPosts = posts.map((post) => {
         if (post.id === postId) {
           return togglePinUtil(post);
@@ -267,12 +360,16 @@ export function useCommunityFeed() {
         return post;
       });
       saveAndBroadcast(nextPosts);
+      if (current) synchronize(() => communityRequest(`/posts/${postId}/pin`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: !current.isPinned }),
+      }));
     },
-    [posts, saveAndBroadcast]
+    [posts, saveAndBroadcast, synchronize]
   );
 
   const toggleSave = useCallback(
     (postId: string) => {
+      const current = posts.find((post) => post.id === postId);
       const nextPosts = posts.map((post) => {
         if (post.id === postId) {
           return toggleSaveUtil(post);
@@ -280,8 +377,11 @@ export function useCommunityFeed() {
         return post;
       });
       saveAndBroadcast(nextPosts);
+      if (current) synchronize(() => communityRequest(`/posts/${postId}/saved`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: !current.isSaved }),
+      }));
     },
-    [posts, saveAndBroadcast]
+    [posts, saveAndBroadcast, synchronize]
   );
 
   const hidePost = useCallback(
@@ -293,8 +393,11 @@ export function useCommunityFeed() {
         return post;
       });
       saveAndBroadcast(nextPosts);
+      synchronize(() => communityRequest(`/posts/${postId}/hidden`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: true }),
+      }));
     },
-    [posts, saveAndBroadcast]
+    [posts, saveAndBroadcast, synchronize]
   );
 
   const restorePost = useCallback(
@@ -306,8 +409,11 @@ export function useCommunityFeed() {
         return post;
       });
       saveAndBroadcast(nextPosts);
+      synchronize(() => communityRequest(`/posts/${postId}/hidden`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: false }),
+      }));
     },
-    [posts, saveAndBroadcast]
+    [posts, saveAndBroadcast, synchronize]
   );
 
   const toggleFollowAuthor = useCallback(
@@ -317,16 +423,20 @@ export function useCommunityFeed() {
         ? followedHandles.filter((h) => h !== handle)
         : [...followedHandles, handle];
       saveFollowedAndBroadcast(nextHandles);
+      synchronize(() => communityRequest(`/profiles/${handle}/following`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: !isFollowed }),
+      }));
     },
-    [followedHandles, saveFollowedAndBroadcast]
+    [followedHandles, saveFollowedAndBroadcast, synchronize]
   );
 
   const deletePost = useCallback(
     (postId: string) => {
       const nextPosts = posts.filter((p) => p.id !== postId);
       saveAndBroadcast(nextPosts);
+      synchronize(() => communityRequest(`/posts/${postId}`, { method: "DELETE" }));
     },
-    [posts, saveAndBroadcast]
+    [posts, saveAndBroadcast, synchronize]
   );
 
   const blockUser = useCallback(
@@ -342,17 +452,40 @@ export function useCommunityFeed() {
         const nextFollowed = followedHandles.filter((h) => h !== authorHandle);
         saveFollowedAndBroadcast(nextFollowed);
       }
+      synchronize(() => communityRequest(`/profiles/${authorHandle}/blocked`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: true }),
+      }));
     },
-    [blockedHandles, followedHandles, saveBlockedAndBroadcast, saveFollowedAndBroadcast]
+    [blockedHandles, followedHandles, saveBlockedAndBroadcast, saveFollowedAndBroadcast, synchronize]
   );
 
   const unblockUser = useCallback(
     (authorHandle: string) => {
       const nextBlocked = blockedHandles.filter((h) => h !== authorHandle);
       saveBlockedAndBroadcast(nextBlocked);
+      synchronize(() => communityRequest(`/profiles/${authorHandle}/blocked`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: false }),
+      }));
     },
-    [blockedHandles, saveBlockedAndBroadcast]
+    [blockedHandles, saveBlockedAndBroadcast, synchronize]
   );
+
+  const uploadPostImage = useCallback(async (file: File) => {
+    if (!liveCommunity) {
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Không thể đọc ảnh."));
+        reader.onerror = () => reject(new Error("Không thể đọc ảnh."));
+        reader.readAsDataURL(file);
+      });
+    }
+    const form = new FormData();
+    form.append("file", file);
+    const response = await fetch("/api/devnet/community/media", { method: "POST", body: form });
+    if (!response.ok) throw new Error("Không thể tải ảnh lên. Ảnh phải là PNG, JPEG hoặc WebP dưới 5 MB.");
+    const result = await response.json() as { url: string };
+    return `/api/devnet${result.url}`;
+  }, []);
 
   const editPost = useCallback(
     (postId: string, content: string, topics?: string[]) => {
@@ -367,8 +500,13 @@ export function useCommunityFeed() {
         return post;
       });
       saveAndBroadcast(nextPosts);
+      const current = posts.find((post) => post.id === postId);
+      if (current) synchronize(() => communityRequest(`/posts/${postId}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content, topics: topics ?? current.topics ?? [], privacy: current.privacy ?? "public" }),
+      }));
     },
-    [posts, saveAndBroadcast]
+    [posts, saveAndBroadcast, synchronize]
   );
 
   const updatePostPrivacy = useCallback(
@@ -383,8 +521,11 @@ export function useCommunityFeed() {
         return post;
       });
       saveAndBroadcast(nextPosts);
+      synchronize(() => communityRequest(`/posts/${postId}/privacy`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ privacy }),
+      }));
     },
-    [posts, saveAndBroadcast]
+    [posts, saveAndBroadcast, synchronize]
   );
 
   return {
@@ -407,5 +548,6 @@ export function useCommunityFeed() {
     unblockUser,
     editPost,
     updatePostPrivacy,
+    uploadPostImage,
   };
 }

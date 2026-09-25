@@ -37,12 +37,19 @@ public class MessageRepository {
         else jdbc.update("update message_threads set request_status=?,updated_at=now() where id=?",decision,id);
         if("ACCEPTED".equals(decision)) notifications.talent(thread(id).contractorId(),"MESSAGE_REQUEST_ACCEPTED","Yêu cầu tin nhắn đã được chấp nhận","Bạn có thể bắt đầu trò chuyện với doanh nghiệp.","{\"threadId\":\""+id+"\"}"); return thread(id);
     }
-    @Transactional public ThreadMessage sendBusiness(UUID id,UUID organizationId,String body){owns(id,organizationId);accepted(id);return message(id,"BUSINESS",body);}
-    @Transactional public ThreadMessage sendTalent(UUID id,String contractorId,String body){if(!owner(id,contractorId))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Thread belongs to another contractor");accepted(id);return message(id,"TALENT",body);}
+    @Transactional public ThreadMessage sendBusiness(UUID id,UUID organizationId,String body){
+        owns(id,organizationId); accepted(id); ThreadMessage sent=message(id,"BUSINESS",body); MessageThread thread=thread(id);
+        notifications.talent(thread.contractorId(),"MESSAGE_RECEIVED","Tin nhắn mới từ Nova Labs",body.trim(),"{\"threadId\":\""+id+"\"}"); return sent;
+    }
+    @Transactional public ThreadMessage sendTalent(UUID id,String contractorId,String body){
+        if(!owner(id,contractorId))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Thread belongs to another contractor"); accepted(id); ThreadMessage sent=message(id,"TALENT",body);
+        notifications.business(organization(id),"MESSAGE_RECEIVED","Tin nhắn mới",body.trim(),"{\"threadId\":\""+id+"\"}"); return sent;
+    }
     private ThreadMessage message(UUID id,String sender,String body){UUID messageId=UUID.randomUUID();jdbc.update("insert into thread_messages(id,thread_id,sender_type,body) values(?,?,?,?)",messageId,id,sender,body.trim());jdbc.update("update message_threads set updated_at=now() where id=?",id);return jdbc.query("select id,sender_type,body,sent_at,delivered_at,seen_at from thread_messages where id=?",this::mapMessage,messageId).getFirst();}
     private MessageThread thread(UUID id){return jdbc.query(threadSelect()+" where t.id=?",this::mapThread,id).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Thread not found"));}
     private void accepted(UUID id){if(!"ACCEPTED".equals(status(id)))throw new ResponseStatusException(HttpStatus.CONFLICT,"Message request has not been accepted");}
     private String status(UUID id){return jdbc.query("select request_status from message_threads where id=?",(rs,row)->rs.getString(1),id).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Thread not found"));}
+    private UUID organization(UUID id){return jdbc.query("select organization_id from message_threads where id=?",(rs,row)->rs.getObject(1,UUID.class),id).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Thread not found"));}
     private void owns(UUID id,UUID org){if(!jdbc.queryForObject("select exists(select 1 from message_threads where id=? and organization_id=?)",Boolean.class,id,org))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Thread belongs to another organization");}
     private boolean owner(UUID id,String contractor){return jdbc.queryForObject("select exists(select 1 from message_threads where id=? and contractor_id=?)",Boolean.class,id,contractor);}
     private String threadSelect(){return "select t.id,t.contractor_id,p.display_name,p.headline,t.request_status,t.created_at,t.accepted_at,t.updated_at from message_threads t join talent_profiles p on p.contractor_id=t.contractor_id";}

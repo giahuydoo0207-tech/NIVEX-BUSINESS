@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
 
 const UUID = "[0-9a-fA-F-]{36}";
-const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages|messages/${UUID}/(accept|decline|block|messages)|notifications|notifications/${UUID}/read|business/profile(/(avatar|cover))?|media/business-profile/${UUID})$`);
+const communityPost = `community/posts(?:/${UUID}(?:/(?:pin|privacy|reaction|saved|hidden|comments(?:/${UUID}/liked)?))?)?`;
+const communityProfile = "community/profiles/[^/]+/(?:following|blocked)";
+const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages|messages/${UUID}/(accept|decline|block|messages)|notifications|notifications/${UUID}/read|business/profile(/(avatar|cover))?|${communityPost}|${communityProfile}|community/(?:reports|media)|media/(?:business-profile|community)/${UUID})$`);
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   // This demo is opt-in and proxied server-side so the backend key is never
@@ -38,4 +40,4 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   }
 }
 
-export { proxy as GET, proxy as POST, proxy as PATCH };
+export { proxy as GET, proxy as POST, proxy as PATCH, proxy as PUT, proxy as DELETE };
