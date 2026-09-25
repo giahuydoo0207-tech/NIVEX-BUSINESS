@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import Cropper, { type Area } from "react-easy-crop";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -57,6 +58,8 @@ export interface ActivityItem {
   linkHref?: string;
 }
 
+type ProfileImageKind = "avatar" | "cover";
+
 const INITIAL_PROFILE: BusinessProfile = {
   handle: "nova.labs",
   name: "Nova Labs",
@@ -93,13 +96,40 @@ function toDevnetMediaUrl(value?: string) {
   return path.startsWith("/media/business-profile/") ? `/api/devnet${path}` : value;
 }
 
+function loadImage(source: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Không thể đọc ảnh đã chọn."));
+    image.src = source;
+  });
+}
+
+async function cropImage(source: string, area: Area, kind: ProfileImageKind) {
+  const image = await loadImage(source);
+  const canvas = document.createElement("canvas");
+  canvas.width = kind === "avatar" ? 640 : 1600;
+  canvas.height = kind === "avatar" ? 640 : 500;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Không thể tạo ảnh đã cắt.");
+  context.drawImage(image, area.x, area.y, area.width, area.height, 0, 0, canvas.width, canvas.height);
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+  if (!blob) throw new Error("Không thể tạo ảnh đã cắt.");
+  return new File([blob], `nova-${kind}.jpg`, { type: "image/jpeg" });
+}
+
 export function BusinessProfileView() {
   const [profile, setProfile] = useState<BusinessProfile>(INITIAL_PROFILE);
   const [activeTab, setActiveTab] = useState<"posts" | "jobs" | "about" | "activity">("posts");
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [commentingPost, setCommentingPost] = useState<CommunityPost | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [uploadingImage, setUploadingImage] = useState<"avatar" | "cover" | null>(null);
+  const [uploadingImage, setUploadingImage] = useState<ProfileImageKind | null>(null);
+  const [cropTarget, setCropTarget] = useState<ProfileImageKind | null>(null);
+  const [cropSource, setCropSource] = useState<string | null>(null);
+  const [cropPosition, setCropPosition] = useState({ x: 0, y: 0 });
+  const [cropZoom, setCropZoom] = useState(1);
+  const [croppedArea, setCroppedArea] = useState<Area | null>(null);
 
   // Edit form state
   const [editName, setEditName] = useState(profile.name);
@@ -117,7 +147,7 @@ export function BusinessProfileView() {
     }).catch(() => undefined);
   }, []);
 
-  const uploadImage = async (kind: "avatar" | "cover", file?: File) => {
+  const uploadImage = async (kind: ProfileImageKind, file?: File) => {
     if (!file) return;
     if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
       showNotice("Chỉ dùng ảnh PNG, JPEG hoặc WebP.");
@@ -146,6 +176,39 @@ export function BusinessProfileView() {
     } finally {
       URL.revokeObjectURL(previewUrl);
       setUploadingImage(null);
+    }
+  };
+
+  const openImageCropper = (kind: ProfileImageKind, file?: File) => {
+    if (!file) return;
+    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
+      showNotice("Chỉ dùng ảnh PNG, JPEG hoặc WebP.");
+      return;
+    }
+    setCropTarget(kind);
+    setCropSource(URL.createObjectURL(file));
+    setCropPosition({ x: 0, y: 0 });
+    setCropZoom(1);
+    setCroppedArea(null);
+  };
+
+  const closeImageCropper = () => {
+    if (cropSource) URL.revokeObjectURL(cropSource);
+    setCropSource(null);
+    setCropTarget(null);
+    setCroppedArea(null);
+  };
+
+  const confirmImageCrop = async () => {
+    if (!cropSource || !cropTarget || !croppedArea) return;
+    const source = cropSource;
+    const target = cropTarget;
+    try {
+      const file = await cropImage(source, croppedArea, target);
+      closeImageCropper();
+      await uploadImage(target, file);
+    } catch (error) {
+      showNotice(error instanceof Error ? error.message : "Không thể cắt ảnh.");
     }
   };
 
@@ -249,8 +312,8 @@ export function BusinessProfileView() {
           <span>{notice}</span>
         </div>
       )}
-      <input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => uploadImage("avatar", event.target.files?.[0])} />
-      <input ref={coverInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => uploadImage("cover", event.target.files?.[0])} />
+      <input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => { openImageCropper("avatar", event.target.files?.[0]); event.currentTarget.value = ""; }} />
+      <input ref={coverInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => { openImageCropper("cover", event.target.files?.[0]); event.currentTarget.value = ""; }} />
 
       {/* Profile Header Card */}
       <section className="business-profile-header-card" aria-label="Hồ sơ doanh nghiệp">
@@ -667,6 +730,41 @@ export function BusinessProfileView() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {cropSource && cropTarget && (
+        <div className="action-dialog-backdrop profile-crop-backdrop" onClick={closeImageCropper}>
+          <section className="action-dialog-content profile-crop-modal" role="dialog" aria-modal="true" aria-labelledby="crop-image-title" onClick={(event) => event.stopPropagation()}>
+            <div className="action-dialog-header profile-edit-header">
+              <h2 id="crop-image-title">Căn chỉnh {cropTarget === "avatar" ? "avatar" : "ảnh nền"}</h2>
+              <button type="button" className="icon-button" aria-label="Đóng" onClick={closeImageCropper}><X size={18} /></button>
+            </div>
+            <div className="profile-crop-body">
+              <div className={`profile-crop-viewport ${cropTarget === "avatar" ? "is-avatar" : "is-cover"}`}>
+                <Cropper
+                  image={cropSource}
+                  crop={cropPosition}
+                  zoom={cropZoom}
+                  aspect={cropTarget === "avatar" ? 1 : 16 / 5}
+                  cropShape={cropTarget === "avatar" ? "rect" : "rect"}
+                  showGrid={false}
+                  onCropChange={setCropPosition}
+                  onCropComplete={(_, pixels) => setCroppedArea(pixels)}
+                  onZoomChange={setCropZoom}
+                />
+              </div>
+              <label className="profile-crop-zoom" htmlFor="profile-image-zoom">
+                <span>Phóng to / thu nhỏ</span>
+                <input id="profile-image-zoom" type="range" min="1" max="3" step="0.01" value={cropZoom} onChange={(event) => setCropZoom(Number(event.target.value))} />
+              </label>
+              <p className="profile-crop-help">Kéo ảnh để đổi vị trí trong khung.</p>
+              <div className="modal-footer">
+                <button type="button" className="business-secondary-button" onClick={closeImageCropper}>Hủy</button>
+                <button type="button" className="business-primary-button" onClick={confirmImageCrop}>Dùng ảnh này</button>
+              </div>
+            </div>
+          </section>
         </div>
       )}
 
