@@ -45,6 +45,13 @@ public class MobileAuthController {
         return auth.refresh(request.refreshToken());
     }
 
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(@RequestHeader(name = "Authorization", required = false) String authorization,
+                       @RequestBody(required = false) LogoutRequest request) {
+        auth.logout(authorization, request == null ? null : request.refreshToken());
+    }
+
     @PostMapping("/phone/request-otp")
     public MobileAuthService.PhoneChallenge requestPhoneOtp(@Valid @RequestBody PhoneOtpRequest request, HttpServletResponse response) {
         noStore(response);
@@ -82,6 +89,8 @@ public class MobileAuthController {
     public record RefreshRequest(
         @NotBlank @Pattern(regexp = "^[A-Za-z0-9_-]{43,128}$") String refreshToken
     ) {}
+
+    public record LogoutRequest(String refreshToken) {}
 
     public record PhoneOtpRequest(
         @NotBlank @Pattern(regexp = "^\\+[1-9][0-9]{7,14}$") String phoneE164

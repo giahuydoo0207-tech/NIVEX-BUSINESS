@@ -25,14 +25,25 @@ public class CommunityRepository {
             "select exists(select 1 from community_profiles where id = ?)", Boolean.class, profileId));
     }
 
+    /** Privacy and block rules for alias {@code p}; binds the actor id three times. */
+    private static final String READABLE_BY_ACTOR =
+        "and not exists (select 1 from community_blocks b where b.actor_id=? and b.blocked_profile_id=p.author_id) " +
+        "and (p.privacy='PUBLIC' or p.author_id=? or (p.privacy='FOLLOWERS' and exists " +
+        "(select 1 from community_follows f where f.actor_id=? and f.followed_profile_id=p.author_id))) ";
+
     public List<CommunityPost> feed(String actorId, int offset, int limit) {
-        return jdbc.query("select p.id from community_posts p where p.deleted_at is null " +
-                "and not exists (select 1 from community_blocks b where b.actor_id=? and b.blocked_profile_id=p.author_id) " +
+        return jdbc.query("select p.id from community_posts p where p.deleted_at is null " + READABLE_BY_ACTOR +
                 "and not exists (select 1 from community_hidden_posts h where h.actor_id=? and h.post_id=p.id) " +
-                "and (p.privacy='PUBLIC' or p.author_id=? or (p.privacy='FOLLOWERS' and exists " +
-                "(select 1 from community_follows f where f.actor_id=? and f.followed_profile_id=p.author_id))) " +
                 "order by p.is_pinned desc, p.created_at desc, p.id desc limit ? offset ?",
             (rs, row) -> rs.getObject(1, UUID.class), actorId, actorId, actorId, actorId, limit, offset)
+            .stream().map(id -> post(id, actorId)).toList();
+    }
+
+    /** Posts shown on a profile wall, filtered by the viewer's privacy and block rules. */
+    public List<CommunityPost> authorPosts(String authorId, String actorId, int limit) {
+        return jdbc.query("select p.id from community_posts p where p.author_id=? and p.deleted_at is null " + READABLE_BY_ACTOR +
+                "order by p.is_pinned desc, p.created_at desc, p.id desc limit ?",
+            (rs, row) -> rs.getObject(1, UUID.class), authorId, actorId, actorId, actorId, limit)
             .stream().map(id -> post(id, actorId)).toList();
     }
 
@@ -113,7 +124,7 @@ public class CommunityRepository {
 
     @Transactional
     public CommunityPost react(UUID postId, String actorId, String reaction) {
-        requirePost(postId);
+        requireVisiblePost(postId, actorId);
         String current = jdbc.query("select reaction_type from community_post_reactions where post_id=? and actor_id=?",
             (rs, row) -> rs.getString(1), postId, actorId).stream().findFirst().orElse(null);
         if (reaction.equals(current)) {
@@ -128,7 +139,7 @@ public class CommunityRepository {
 
     @Transactional
     public CommunityPost toggleSaved(UUID postId, String actorId, boolean saved) {
-        requirePost(postId);
+        requireReadablePost(postId, actorId);
         if (saved) jdbc.update("insert into community_saved_posts (actor_id, post_id) values (?, ?) on conflict do nothing", actorId, postId);
         else jdbc.update("delete from community_saved_posts where actor_id=? and post_id=?", actorId, postId);
         return post(postId, actorId);
@@ -136,14 +147,14 @@ public class CommunityRepository {
 
     @Transactional
     public void setHidden(UUID postId, String actorId, boolean hidden) {
-        requirePost(postId);
+        requireReadablePost(postId, actorId);
         if (hidden) jdbc.update("insert into community_hidden_posts (actor_id, post_id) values (?, ?) on conflict do nothing", actorId, postId);
         else jdbc.update("delete from community_hidden_posts where actor_id=? and post_id=?", actorId, postId);
     }
 
     @Transactional
     public CommunityComment comment(UUID postId, String actorId, String content, UUID parentCommentId) {
-        requirePost(postId);
+        requireVisiblePost(postId, actorId);
         if (parentCommentId != null && !exists("select 1 from community_comments where id=? and post_id=? and deleted_at is null", parentCommentId, postId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Parent comment does not belong to this post");
         }
@@ -169,11 +180,17 @@ public class CommunityRepository {
     @Transactional
     public void deleteComment(UUID commentId, String actorId) {
         ownedCommentPost(commentId, actorId);
-        jdbc.update("update community_comments set deleted_at=now(), updated_at=now() where id=?", commentId);
+        jdbc.update("with recursive descendants as (" +
+            "select id from community_comments where id=? " +
+            "union all select c.id from community_comments c join descendants d on c.parent_comment_id=d.id" +
+            ") update community_comments set deleted_at=now(), updated_at=now() " +
+            "where id in (select id from descendants)", commentId);
     }
 
+    @Transactional
     public CommunityComment reactToComment(UUID commentId, String actorId, String reaction) {
         UUID postId = commentPost(commentId);
+        requireVisiblePost(postId, actorId);
         String current = jdbc.query("select reaction_type from community_comment_likes where comment_id=? and actor_id=?",
             (rs, row) -> rs.getString(1), commentId, actorId).stream().findFirst().orElse(null);
         if (reaction.equals(current)) {
@@ -186,20 +203,42 @@ public class CommunityRepository {
         return commentById(postId, commentId, actorId);
     }
 
+    @Transactional
     public CommunityComment removeCommentReaction(UUID commentId, String actorId) {
         UUID postId = commentPost(commentId);
+        requireVisiblePost(postId, actorId);
         jdbc.update("delete from community_comment_likes where comment_id=? and actor_id=?", commentId, actorId);
         return commentById(postId, commentId, actorId);
     }
 
     @Transactional
     public void removeReaction(UUID postId, String actorId) {
-        requirePost(postId);
+        requireVisiblePost(postId, actorId);
         jdbc.update("delete from community_post_reactions where post_id=? and actor_id=?", postId, actorId);
     }
 
     @Transactional
+    public CommunityPost setReaction(UUID postId, String actorId, String reaction) {
+        requireVisiblePost(postId, actorId);
+        jdbc.update("insert into community_post_reactions (post_id, actor_id, reaction_type) values (?, ?, ?) " +
+            "on conflict (post_id, actor_id) do update set reaction_type=excluded.reaction_type, created_at=now()",
+            postId, actorId, reaction);
+        return post(postId, actorId);
+    }
+
+    @Transactional
+    public CommunityComment setCommentReaction(UUID commentId, String actorId, String reaction) {
+        UUID postId = commentPost(commentId);
+        requireVisiblePost(postId, actorId);
+        jdbc.update("insert into community_comment_likes (comment_id, actor_id, reaction_type) values (?, ?, ?) " +
+            "on conflict (comment_id, actor_id) do update set reaction_type=excluded.reaction_type, created_at=now()",
+            commentId, actorId, reaction);
+        return commentById(postId, commentId, actorId);
+    }
+
+    @Transactional
     public CommunityPost toggleCommentLike(UUID postId, UUID commentId, String actorId, boolean liked) {
+        requireVisiblePost(postId, actorId);
         requireComment(postId, commentId);
         if (liked) jdbc.update("insert into community_comment_likes (comment_id, actor_id, reaction_type) values (?, ?, 'LIKE') on conflict (comment_id, actor_id) do update set reaction_type='LIKE'", commentId, actorId);
         else jdbc.update("delete from community_comment_likes where comment_id=? and actor_id=?", commentId, actorId);
@@ -208,6 +247,7 @@ public class CommunityRepository {
 
     @Transactional
     public CommunityPost reactToCommentLegacy(UUID postId, UUID commentId, String actorId, String reaction) {
+        requireVisiblePost(postId, actorId);
         requireComment(postId, commentId);
         String current = jdbc.query("select reaction_type from community_comment_likes where comment_id=? and actor_id=?",
             (rs, row) -> rs.getString(1), commentId, actorId).stream().findFirst().orElse(null);
@@ -293,10 +333,11 @@ public class CommunityRepository {
             .findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
     }
     private void requirePost(UUID postId) { if (!exists("select 1 from community_posts where id=? and deleted_at is null", postId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community post not found"); }
-    private void requireVisiblePost(UUID postId, String actorId) { if (!exists("select 1 from community_posts p where p.id=? and p.deleted_at is null " +
-            "and not exists (select 1 from community_blocks b where b.actor_id=? and b.blocked_profile_id=p.author_id) " +
-            "and not exists (select 1 from community_hidden_posts h where h.actor_id=? and h.post_id=p.id) " +
-            "and (p.privacy='PUBLIC' or p.author_id=? or (p.privacy='FOLLOWERS' and exists (select 1 from community_follows f where f.actor_id=? and f.followed_profile_id=p.author_id)))", postId, actorId, actorId, actorId, actorId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community post not found"); }
+    private void requireVisiblePost(UUID postId, String actorId) { if (!exists("select 1 from community_posts p where p.id=? and p.deleted_at is null " + READABLE_BY_ACTOR +
+            "and not exists (select 1 from community_hidden_posts h where h.actor_id=? and h.post_id=p.id)", postId, actorId, actorId, actorId, actorId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community post not found"); }
+    /** Like {@link #requireVisiblePost} but still allows posts the actor hid, so they can be unhidden or saved. */
+    private void requireReadablePost(UUID postId, String actorId) { if (!exists("select 1 from community_posts p where p.id=? and p.deleted_at is null " + READABLE_BY_ACTOR, postId, actorId, actorId, actorId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community post not found"); }
+    public CommunityPost visiblePost(UUID postId, String actorId) { requireReadablePost(postId, actorId); return post(postId, actorId); }
     private void requireComment(UUID postId, UUID commentId) { if (!exists("select 1 from community_comments where id=? and post_id=? and deleted_at is null", commentId, postId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"); }
     private void requireProfile(String profileId) { if (!profileExists(profileId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Community profile not found"); }
     private boolean exists(String sql, Object... arguments) { return !jdbc.query(sql, (rs, row) -> 1, arguments).isEmpty(); }
@@ -307,5 +348,5 @@ public class CommunityRepository {
     private CommentRow mapCommentRow(ResultSet rs, int row) throws SQLException { return new CommentRow(rs.getObject("id", UUID.class), rs.getObject("parent_comment_id", UUID.class), rs.getString("content"), rs.getTimestamp("created_at").toInstant(), new CommunityProfile(rs.getString("author_id"), rs.getString("kind"), rs.getString("display_name"), rs.getString("handle"), rs.getString("headline"), rs.getString("avatar_url"))); }
     private record BasePost(UUID id, String content, String privacy, boolean pinned, Instant createdAt, Instant updatedAt, CommunityProfile author) {}
     private record CommentRow(UUID id, UUID parentId, String content, Instant createdAt, CommunityProfile author) {}
-    private static final class MutableComment { private final UUID id, parentId; private final String content; private final Instant createdAt; private final CommunityProfile author; private final Map<String, Long> reactionCounts; private final String myReaction; private final List<MutableComment> replies = new ArrayList<>(); MutableComment(CommentRow row, Map<String, Long> reactionCounts, String myReaction) { id=row.id(); parentId=row.parentId(); content=row.content(); createdAt=row.createdAt(); author=row.author(); this.reactionCounts=reactionCounts; this.myReaction=myReaction; } CommunityComment toRecord() { long total = reactionCounts.values().stream().mapToLong(Long::longValue).sum(); return new CommunityComment(id, parentId, content, createdAt, author, total, "LIKE".equals(myReaction), myReaction, reactionCounts, replies.stream().map(MutableComment::toRecord).toList()); } }
+    private static final class MutableComment { private final UUID id, parentId; private final String content; private final Instant createdAt; private final CommunityProfile author; private final Map<String, Long> reactionCounts; private final String myReaction; private final List<MutableComment> replies = new ArrayList<>(); MutableComment(CommentRow row, Map<String, Long> reactionCounts, String myReaction) { id=row.id(); parentId=row.parentId(); content=row.content(); createdAt=row.createdAt(); author=row.author(); this.reactionCounts=reactionCounts; this.myReaction=myReaction; } CommunityComment toRecord() { long total = reactionCounts.values().stream().mapToLong(Long::longValue).sum(); return new CommunityComment(id, parentId, content, createdAt, author, total, total, "LIKE".equals(myReaction), myReaction, reactionCounts, replies.stream().map(MutableComment::toRecord).toList()); } }
 }

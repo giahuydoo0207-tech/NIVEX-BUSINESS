@@ -12,6 +12,7 @@ public record CommunityComment(
     Instant createdAt,
     CommunityProfile author,
     long likeCount,
+    long reactionCount,
     boolean isLiked,
     String myReaction,
     Map<String, Long> reactionCounts,

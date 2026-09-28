@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useJobs } from "@/components/business/useJobs";
 import { useApplications } from "@/components/business/useApplications";
+import { liveBackend } from "@/lib/workspace-api";
 import { jobStatusLabels, jobStatusTone } from "@/lib/jobs";
 import { formatMinorAmount } from "@/lib/money";
 import { formatDate } from "@/lib/portal-data";
@@ -32,7 +33,7 @@ function budgetLabel(job: JobPost) {
 }
 
 export function JobsView() {
-  const { jobs, storageError } = useJobs();
+  const { jobs, storageError, error, changeStatus } = useJobs();
   const { getJobApplicationCount } = useApplications();
   const [status, setStatus] = useState<"ALL" | JobPostStatus>("ALL");
   const [query, setQuery] = useState("");
@@ -152,6 +153,12 @@ export function JobsView() {
           </label>
         </div>
 
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
+
         <div className="job-post-list">
           {rows.map((job) => (
             <article className="job-post-row" key={job.id}>
@@ -189,6 +196,15 @@ export function JobsView() {
                   <dd>{formatDate(job.applicationDeadline)}</dd>
                 </div>
               </dl>
+              {liveBackend && (job.status === "DRAFT" || job.status === "PAUSED") && (
+                <button
+                  type="button"
+                  className="business-secondary-button"
+                  onClick={() => void changeStatus(job.id, "PUBLISHED")}
+                >
+                  Đăng tuyển
+                </button>
+              )}
               <Link
                 href={`/business/jobs/${job.id}`}
                 className="icon-button job-row-action"

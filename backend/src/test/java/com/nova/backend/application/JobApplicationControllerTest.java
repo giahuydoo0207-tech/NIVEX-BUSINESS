@@ -49,6 +49,20 @@ class JobApplicationControllerTest {
                 .header("X-Nova-Demo-Key", "test-application-key").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"status\":\"viewed\"}"))
             .andExpect(status().isConflict());
+
+        mvc.perform(post("/api/v1/mobile/applications")
+                .header("Authorization", "Bearer " + TOKEN).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"jobId\":\"" + jobId + "\",\"coverNote\":\"Gửi lại lần hai.\"}"))
+            .andExpect(status().isConflict());
+
+        mvc.perform(post("/api/v1/mobile/applications/{applicationId}/withdraw", applicationId)
+                .header("Authorization", "Bearer " + TOKEN))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("withdrawn"))
+            .andExpect(jsonPath("$.organizationName").isNotEmpty());
+        String submitted = jdbc.queryForObject("select body from notifications where type='APPLICATION_SUBMITTED' and data->>'applicationId'=?", String.class, applicationId);
+        String withdrawn = jdbc.queryForObject("select body from notifications where type='APPLICATION_WITHDRAWN' and data->>'applicationId'=?", String.class, applicationId);
+        org.junit.jupiter.api.Assertions.assertTrue(submitted.startsWith("Minh Anh đã ứng tuyển"), submitted);
+        org.junit.jupiter.api.Assertions.assertTrue(withdrawn.startsWith("Minh Anh đã rút hồ sơ"), withdrawn);
     }
 
     @Test

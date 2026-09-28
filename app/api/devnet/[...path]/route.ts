@@ -3,7 +3,12 @@ import { NextRequest } from "next/server";
 const UUID = "[0-9a-fA-F-]{36}";
 const communityPost = `community/posts(?:/${UUID}(?:/(?:pin|privacy|reaction|reactions|saved|hidden|comments(?:/${UUID}/(?:liked|reaction))?))?)?`;
 const communityProfile = "community/profiles/[^/]+/(?:following|blocked)";
-const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages|messages/${UUID}/(accept|decline|block|messages)|notifications|notifications/${UUID}/read|business/profile(/(avatar|cover))?|${communityPost}|${communityProfile}|community/(?:reports|media)|media/(?:business-profile|community)/${UUID})$`);
+// Mobile members upload avatars through the mobile API; Business Web only reads them.
+const memberAvatar = "profile/[A-Za-z0-9_-]{1,120}/avatar";
+const businessJobs = `business/jobs(?:/${UUID}(?:/status)?)?`;
+const applications = `applications(?:/${UUID}/status)?`;
+const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages|messages/${UUID}/(accept|decline|block|messages|read)|notifications|notifications/${UUID}/read|business/profile(/(avatar|cover))?|${businessJobs}|${applications}|${communityPost}|${communityProfile}|community/(?:reports|media)|${memberAvatar}|media/(?:business-profile|community)/${UUID})$`);
+const binary = (path: string) => path.startsWith("media/") || new RegExp(`^${memberAvatar}$`).test(path);
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   // This demo is opt-in and proxied server-side so the backend key is never
@@ -21,7 +26,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   try {
     const upstream = path.startsWith("media/")
       ? `${process.env.NOVA_API_URL}/${path}`
-      : `${process.env.NOVA_API_URL}/api/v1/${path}`;
+      : `${process.env.NOVA_API_URL}/api/v1/${path}${request.nextUrl.search}`;
     const response = await fetch(upstream, {
       method: request.method, body, cache: "no-store", signal: AbortSignal.timeout(60000),
       headers: {
@@ -31,7 +36,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
       },
     });
     const contentType = response.headers.get("Content-Type") || "application/json";
-    const payload = path.startsWith("media/") ? await response.arrayBuffer() : await response.text();
+    const payload = binary(path) ? await response.arrayBuffer() : await response.text();
     return new Response(payload, {
       status: response.status, headers: { "Content-Type": contentType, "Cache-Control": "no-store" },
     });

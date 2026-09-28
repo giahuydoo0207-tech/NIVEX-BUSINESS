@@ -23,19 +23,20 @@ import {
 import { demoApplications } from "@/lib/application-demo-data";
 import { statusCopy } from "@/lib/application-status";
 import type { ApplicationMessage, CandidateApplication } from "@/types/application";
+import { proxiedMediaUrl } from "@/lib/workspace-api";
 
 const liveMessages = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
 
-type ApiThread = { id: string; contractorId: string; candidateName: string; headline: string; requestStatus: "PENDING" | "ACCEPTED"; createdAt: string; messages: Array<{ id: string; senderType: "BUSINESS" | "TALENT"; body: string; sentAt: string; deliveredAt?: string | null; seenAt?: string | null }> };
+type ApiThread = { id: string; contractorId: string; candidateName: string; headline: string; requestStatus: "PENDING" | "ACCEPTED"; createdAt: string; organizationName?: string; candidateAvatarUrl?: string | null; unreadForBusiness?: number; messages: Array<{ id: string; senderType: "BUSINESS" | "TALENT"; body: string; sentAt: string; deliveredAt?: string | null; seenAt?: string | null }> };
 
 function mapThread(thread: ApiThread): ConversationItem {
   return {
     id: thread.id, jobId: "general-inquiry", jobTitle: "Liên hệ bên ngoài", applicantUserId: thread.contractorId,
     candidateName: thread.candidateName, initials: thread.candidateName.split(" ").map((part) => part[0]).slice(-2).join("").toUpperCase(),
-    headline: thread.headline, email: "", location: "", matchScore: 0, skills: [], coverNote: "", portfolioLabel: "", portfolioPreview: [], availability: "Sẵn sàng trao đổi", status: "withdrawn",
+    headline: thread.headline, avatarUrl: proxiedMediaUrl(thread.candidateAvatarUrl), email: "", location: "", matchScore: 0, skills: [], coverNote: "", portfolioLabel: "", portfolioPreview: [], availability: "Sẵn sàng trao đổi", status: "withdrawn",
     submittedAt: thread.createdAt, createdAt: thread.createdAt, updatedAt: thread.createdAt, hasActiveApplication: false,
     requestState: thread.requestStatus.toLowerCase() as ConversationItem["requestState"],
-    messages: thread.messages.map((message) => ({ id: message.id, role: message.senderType, senderName: message.senderType === "BUSINESS" ? "Nova Labs" : thread.candidateName, body: message.body, sentAt: new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit" }).format(new Date(message.sentAt)), deliveryStatus: message.seenAt ? "SEEN" : message.deliveredAt ? "DELIVERED" : "SENT" })),
+    messages: thread.messages.map((message) => ({ id: message.id, role: message.senderType, senderName: message.senderType === "BUSINESS" ? thread.organizationName ?? "Doanh nghiệp" : thread.candidateName, body: message.body, sentAt: new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit" }).format(new Date(message.sentAt)), deliveryStatus: message.seenAt ? "SEEN" : message.deliveredAt ? "DELIVERED" : "SENT" })),
   };
 }
 
@@ -114,6 +115,8 @@ const DEMO_STRANGER_REQUEST: ConversationItem = {
 
 export function MessagesView({ initialCandidateId }: { initialCandidateId?: string }) {
   const [conversations, setConversations] = useState<ConversationItem[]>(() => {
+    // Live workspaces only show threads stored in the shared backend.
+    if (liveMessages) return [];
     const base: ConversationItem[] = demoApplications.map((app) => {
       const isActive = app.status !== "withdrawn" && app.status !== "rejected";
       return {
@@ -127,6 +130,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
 
   const [activeTab, setActiveTab] = useState<"all" | "requests">("all");
   const [selectedId, setSelectedId] = useState(
+    liveMessages ? initialCandidateId ?? "" :
     initialCandidateId && demoApplications.some((item) => item.id === initialCandidateId)
       ? initialCandidateId
       : demoApplications[0]?.id ?? "",
@@ -191,6 +195,19 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
   }, [currentList, query]);
 
   const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
+
+  const selectedHasUnread = Boolean(
+    selected && selected.requestState === "accepted" &&
+      selected.messages.some((message) => message.role === "TALENT" && message.deliveryStatus !== "SEEN"),
+  );
+
+  useEffect(() => {
+    // Only an opened conversation marks the candidate's messages as seen.
+    if (!liveMessages || !selectedHasUnread || !selected) return;
+    void fetch(`/api/devnet/messages/${selected.id}/read`, { method: "POST" })
+      .then((response) => (response.ok ? refreshLiveThreads() : undefined))
+      .catch(() => undefined);
+  }, [selected?.id, selectedHasUnread]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });

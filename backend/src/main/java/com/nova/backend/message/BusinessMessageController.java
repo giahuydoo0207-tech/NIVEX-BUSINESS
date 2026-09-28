@@ -6,6 +6,7 @@ import jakarta.validation.Valid; import jakarta.validation.constraints.NotBlank;
  @PostMapping("/{id}/accept") public MessageThread accept(@PathVariable UUID id){return repo.decide(id,ORG,"ACCEPTED");}
  @PostMapping("/{id}/decline") public MessageThread decline(@PathVariable UUID id){return repo.decide(id,ORG,"DECLINED");}
  @PostMapping("/{id}/block") public MessageThread block(@PathVariable UUID id){return repo.decide(id,ORG,"BLOCKED");}
+ @PostMapping("/{id}/read") public MessageThread read(@PathVariable UUID id){return repo.readByBusiness(id,ORG);}
  @PostMapping("/{id}/messages") public ThreadMessage send(@PathVariable UUID id,@Valid @RequestBody Send body){return repo.sendBusiness(id,ORG,body.body());}
  public record Send(@NotBlank @Size(max=4000)String body){}
 }

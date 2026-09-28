@@ -45,8 +45,54 @@ class JobControllerTest {
     }
 
     @Test
+    void creatingAJobRequiresTheBusinessKey() throws Exception {
+        mvc.perform(post("/api/v1/jobs")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"x\"}"))
+            .andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/jobs")).andExpect(status().isOk());
+    }
+
+    @Test
+    void publishedBusinessJobAppearsOnTheMobileBoardWithTheOrganizationName() throws Exception {
+        String jobId = mvc.perform(post("/api/v1/business/jobs")
+                .header("X-Nova-Demo-Key", DEMO_KEY)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"title":"Solana Mobile Engineer","category":"Engineering","summary":"Ship wallet flows.",
+                     "budgetMinMinor":100000000,"budgetMaxMinor":200000000,"locationScope":"Remote",
+                     "applicationDeadline":"2099-01-01","skills":["Flutter","Solana"],"engagement":"contract",
+                     "paymentType":"milestone","duration":"6 tuần"}
+                    """))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.status").value("DRAFT"))
+            .andExpect(jsonPath("$.skills[1]").value("Solana"))
+            .andReturn().getResponse().getContentAsString().replaceFirst("^\\{\\\"id\\\":\\\"([^\\\"]+)\\\".*", "$1");
+
+        mvc.perform(get("/api/v1/jobs"))
+            .andExpect(jsonPath("$[?(@.id=='" + jobId + "')]").isEmpty());
+
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/v1/business/jobs/{id}/status", jobId)
+                .header("X-Nova-Demo-Key", DEMO_KEY)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"published\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("PUBLISHED"))
+            .andExpect(jsonPath("$.publishedAt").isNotEmpty());
+
+        mvc.perform(get("/api/v1/jobs"))
+            .andExpect(jsonPath("$[?(@.id=='" + jobId + "')].organizationName").value(org.hamcrest.Matchers.hasItem(org.hamcrest.Matchers.notNullValue())))
+            .andExpect(jsonPath("$[?(@.id=='" + jobId + "')].engagement").value(org.hamcrest.Matchers.hasItem("CONTRACT")));
+
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/v1/business/jobs/{id}/status", jobId)
+                .header("X-Nova-Demo-Key", DEMO_KEY)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"draft\"}"))
+            .andExpect(status().isConflict());
+    }
+
+    @Test
     void createsDraftJobAgainstPostgres() throws Exception {
         mvc.perform(post("/api/v1/jobs")
+                .header("X-Nova-Demo-Key", DEMO_KEY)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {

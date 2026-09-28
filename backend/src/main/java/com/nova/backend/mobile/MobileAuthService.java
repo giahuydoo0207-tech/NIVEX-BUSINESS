@@ -127,6 +127,22 @@ public class MobileAuthService {
         return new MobileAccountView(account.id(), account.email(), account.phone(), account.displayName(), account.headline());
     }
 
+    /**
+     * Revokes the presented access token and refresh token. Both are optional so a client whose
+     * access token already expired can still revoke the long-lived refresh token.
+     */
+    @Transactional
+    public void logout(String authorization, String refreshToken) {
+        if (authorization != null && authorization.matches("Bearer [A-Za-z0-9_-]{43,128}")) {
+            String hash = MobileSessionAuthenticator.hashToken(authorization.substring(7));
+            jdbc.update("update mobile_sessions set revoked_at=now() where token_hash=? and revoked_at is null", hash);
+        }
+        if (validToken(refreshToken)) {
+            jdbc.update("update mobile_refresh_tokens set revoked_at=now() where token_hash=? and revoked_at is null",
+                MobileSessionAuthenticator.hashToken(refreshToken));
+        }
+    }
+
     private Account createAccount(String email, String phone, String displayName, String password) {
         String name = displayName(displayName);
         String contractorId = "contractor-" + UUID.randomUUID();

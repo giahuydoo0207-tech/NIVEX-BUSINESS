@@ -5,6 +5,7 @@ import com.nova.backend.domain.JobRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/** Public job board. Reads are open to Nova Mobile; writes require the server-side demo key. */
 @RestController
 @Validated
 @RequestMapping("/api/v1/jobs")
@@ -39,12 +41,17 @@ public class JobController {
 
     public record CreateJobRequest(
         UUID organizationId,
-        @NotBlank String title,
-        @NotBlank String category,
-        @NotBlank String summary,
+        @NotBlank @Size(max = 200) String title,
+        @NotBlank @Size(max = 120) String category,
+        @NotBlank @Size(max = 5000) String summary,
         @PositiveOrZero long budgetMinMinor,
         @PositiveOrZero long budgetMaxMinor,
-        @NotBlank String locationScope,
-        @NotBlank String applicationDeadline
+        @NotBlank @Size(max = 120) String locationScope,
+        @NotBlank String applicationDeadline,
+        List<String> skills,
+        String engagement,
+        String paymentType,
+        @Size(max = 80) String duration,
+        Boolean publish
     ) {}
 }

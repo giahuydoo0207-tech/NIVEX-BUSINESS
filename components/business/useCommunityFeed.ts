@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { CommunityPost, PostComment, PostCommentReply, PostPrivacy, PostReactionType, PublicProfileData } from "@/types/community";
 import { INITIAL_DEMO_POSTS } from "@/lib/community-constants";
+import { proxiedMediaUrl } from "@/lib/workspace-api";
 import {
   addCommentToPost,
   addReplyToPost,
@@ -36,7 +37,7 @@ function timeLabel(iso: string) {
 }
 
 function mapProfile(profile: ApiProfile): PublicProfileData {
-  return { kind: profile.kind.toLowerCase() === "business" ? "business" : "freelancer", displayName: profile.displayName, handle: profile.handle, headline: profile.headline, location: "", bio: "", tags: [], stats: [], avatarUrl: profile.avatarUrl ?? undefined };
+  return { kind: profile.kind.toLowerCase() === "business" ? "business" : "freelancer", displayName: profile.displayName, handle: profile.handle, headline: profile.headline, location: "", bio: "", tags: [], stats: [], avatarUrl: proxiedMediaUrl(profile.avatarUrl) };
 }
 
 function mapReactionType(value?: string | null): PostReactionType | null {
@@ -47,7 +48,7 @@ function mapReactionType(value?: string | null): PostReactionType | null {
 function mapComment(comment: ApiComment, replyingToName?: string): PostComment {
   return {
     id: comment.id, authorName: comment.author.displayName, headline: comment.author.headline, content: comment.content,
-    timeLabel: timeLabel(comment.createdAt), createdAt: comment.createdAt, avatarUrl: comment.author.avatarUrl ?? undefined,
+    timeLabel: timeLabel(comment.createdAt), createdAt: comment.createdAt, avatarUrl: proxiedMediaUrl(comment.author.avatarUrl),
     isMine: comment.author.id === "nova-labs", likeCount: comment.likeCount, isLiked: comment.isLiked,
     myReaction: mapReactionType(comment.myReaction),
     reactionCounts: Object.fromEntries(Object.entries(comment.reactionCounts ?? {}).map(([key, value]) => [key.toLowerCase(), value])) as Partial<Record<PostReactionType, number>>,
@@ -75,9 +76,12 @@ async function communityRequest<T>(path: string, options?: RequestInit): Promise
 }
 
 function loadStoredPosts(): CommunityPost[] {
-  if (typeof window === "undefined") return INITIAL_DEMO_POSTS;
+  // The live feed only shows posts from the shared backend (cached below).
+  const fallback = liveCommunity ? [] : INITIAL_DEMO_POSTS;
+  if (typeof window === "undefined") return fallback;
   try {
     const raw = localStorage.getItem(COMMUNITY_POSTS_STORAGE_KEY);
+    if (!raw && liveCommunity) return [];
     if (!raw) {
       localStorage.setItem(
         COMMUNITY_POSTS_STORAGE_KEY,
@@ -87,15 +91,15 @@ function loadStoredPosts(): CommunityPost[] {
     }
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) {
-      return INITIAL_DEMO_POSTS;
+      return fallback;
     }
     const sanitized = parsed
       .map(normalizeCommunityPost)
       .filter((p): p is CommunityPost => p !== null);
-    return sanitized.length > 0 ? sanitized : INITIAL_DEMO_POSTS;
+    return sanitized.length > 0 ? sanitized : fallback;
   } catch (err) {
     console.error("Failed to read community posts from localStorage:", err);
-    return INITIAL_DEMO_POSTS;
+    return fallback;
   }
 }
 
@@ -131,7 +135,7 @@ function loadBlockedAuthors(): string[] {
 }
 
 export function useCommunityFeed() {
-  const [posts, setPosts] = useState<CommunityPost[]>(INITIAL_DEMO_POSTS);
+  const [posts, setPosts] = useState<CommunityPost[]>(liveCommunity ? [] : INITIAL_DEMO_POSTS);
   const [followedHandles, setFollowedHandles] = useState<string[]>([]);
   const [blockedHandles, setBlockedHandles] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);

@@ -13,6 +13,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { demoOrganization } from "@/lib/business-demo-data";
+import { liveBackend, workspaceRequest } from "@/lib/workspace-api";
+import { notifyJobsUpdated } from "@/components/business/useJobs";
 import { formatMinorAmount, parseUsdcToMinor } from "@/lib/money";
 import { ChipInput } from "@/components/ui/ChipInput";
 import { ImageUpload } from "@/components/ui/ImageUpload";
@@ -89,6 +91,33 @@ export function JobPostForm() {
     if (!form.applicationDeadline) return setError("Chọn hạn ứng tuyển.");
 
     setSaving(status);
+    if (liveBackend) {
+      try {
+        await workspaceRequest("business/jobs", {
+          method: "POST",
+          body: JSON.stringify({
+            title: form.title.trim(),
+            category: form.category,
+            summary: form.summary.trim(),
+            skills: form.skills,
+            engagement: form.engagement,
+            paymentType: form.paymentType,
+            duration: form.duration.trim(),
+            budgetMinMinor: Number(minimum.minor),
+            budgetMaxMinor: Number(maximum.minor),
+            locationScope: form.locationScope,
+            applicationDeadline: form.applicationDeadline,
+            publish: status === "PUBLISHED",
+          }),
+        });
+        notifyJobsUpdated();
+        router.push("/business/jobs");
+      } catch (reason) {
+        setSaving(null);
+        setError(reason instanceof Error ? `Không lưu được bài đăng: ${reason.message}` : "Không lưu được bài đăng.");
+      }
+      return;
+    }
     const now = new Date().toISOString();
     const id = `job-${crypto.randomUUID().slice(0, 8).toLowerCase()}`;
     const job: JobPost = {

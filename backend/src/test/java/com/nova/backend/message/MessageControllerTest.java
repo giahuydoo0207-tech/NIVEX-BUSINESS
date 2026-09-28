@@ -43,7 +43,28 @@ class MessageControllerTest {
 
         mvc.perform(get("/api/v1/mobile/messages").header("Authorization", "Bearer " + TOKEN))
             .andExpect(status().isOk()).andExpect(jsonPath("$[0].requestStatus").value("ACCEPTED"))
-            .andExpect(jsonPath("$[0].messages[1].seenAt").isNotEmpty());
+            .andExpect(jsonPath("$[0].organizationName").isNotEmpty())
+            .andExpect(jsonPath("$[0].messages[1].deliveredAt").isNotEmpty())
+            .andExpect(jsonPath("$[0].messages[1].seenAt").doesNotExist())
+            .andExpect(jsonPath("$[0].unreadForTalent").value(1));
+
+        mvc.perform(post("/api/v1/mobile/messages/{threadId}/read", threadId).header("Authorization", "Bearer " + TOKEN))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.messages[1].seenAt").isNotEmpty())
+            .andExpect(jsonPath("$.unreadForTalent").value(0));
+    }
+
+    @Test
+    void pendingFollowUpDoesNotDuplicateBusinessNotification() throws Exception {
+        session("contractor-minh-anh", TOKEN);
+        String threadId = request(TOKEN, "First request.");
+        request(TOKEN, "Follow-up while pending.");
+        Integer count = jdbc.queryForObject(
+            "select count(*) from notifications where type='MESSAGE_REQUEST' and data->>'threadId'=?", Integer.class, threadId);
+        org.junit.jupiter.api.Assertions.assertEquals(1, count);
+        String body = jdbc.queryForObject(
+            "select body from notifications where type='MESSAGE_REQUEST' and data->>'threadId'=?", String.class, threadId);
+        org.junit.jupiter.api.Assertions.assertTrue(body.startsWith("Minh Anh"), body);
     }
 
     @Test

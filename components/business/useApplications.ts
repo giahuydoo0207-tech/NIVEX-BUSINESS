@@ -6,6 +6,7 @@ import {
   normalizeApplicationStatus,
   updateApplicationStatus,
 } from "@/lib/application-status";
+import { liveBackend, mapApiApplication, workspaceRequest, type ApiApplication } from "@/lib/workspace-api";
 import type { ApplicationStatus, CandidateApplication } from "@/types/application";
 
 const STORAGE_KEY = "nivex.demo.applications";
@@ -51,9 +52,39 @@ function sanitizeAndMigrateApplications(
 }
 
 export function useApplications() {
-  const [applications, setApplications] = useState<CandidateApplication[]>(demoApplications);
+  // Live workspaces start empty so fixtures never appear as real candidates.
+  const [applications, setApplications] = useState<CandidateApplication[]>(liveBackend ? [] : demoApplications);
+  const [error, setError] = useState("");
+
+  const loadLive = useCallback(async () => {
+    try {
+      const remote = await workspaceRequest<ApiApplication[]>("applications?limit=100");
+      setApplications(remote.map(mapApiApplication));
+      setError("");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Không tải được hồ sơ ứng tuyển.");
+    }
+  }, []);
 
   useEffect(() => {
+    if (!liveBackend) return;
+    void loadLive();
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void loadLive();
+    };
+    // Candidates apply and withdraw from Nova Mobile while this page is open.
+    const interval = window.setInterval(refreshWhenVisible, 15000);
+    window.addEventListener(SYNC_EVENT, loadLive);
+    window.addEventListener("focus", refreshWhenVisible);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener(SYNC_EVENT, loadLive);
+      window.removeEventListener("focus", refreshWhenVisible);
+    };
+  }, [loadLive]);
+
+  useEffect(() => {
+    if (liveBackend) return;
     function loadFromStorage() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -107,6 +138,21 @@ export function useApplications() {
 
   const updateStatus = useCallback(
     (applicationId: string, nextStatus: ApplicationStatus) => {
+      if (liveBackend) {
+        void workspaceRequest<ApiApplication>(`applications/${applicationId}/status`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: nextStatus }),
+        }).then((updated) => {
+          const mapped = mapApiApplication(updated);
+          setApplications((current) => current.map((app) => (app.id === mapped.id ? mapped : app)));
+          setError("");
+          window.dispatchEvent(new Event(SYNC_EVENT));
+        }).catch((reason) => {
+          setError(reason instanceof Error ? reason.message : "Không cập nhật được trạng thái hồ sơ.");
+          void loadLive();
+        });
+        return;
+      }
       setApplications((current) => {
         const target = current.find((app) => app.id === applicationId);
         if (!target) return current;
@@ -132,7 +178,7 @@ export function useApplications() {
         return nextList;
       });
     },
-    [],
+    [loadLive],
   );
 
   const getJobApplicationCount = useCallback(
@@ -151,6 +197,8 @@ export function useApplications() {
 
   return {
     applications,
+    error,
+    refresh: loadLive,
     updateStatus,
     getJobApplicationCount,
     getApplication,

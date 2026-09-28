@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useApplications } from "@/components/business/useApplications";
 import { useJobs } from "@/components/business/useJobs";
+import { liveBackend } from "@/lib/workspace-api";
 import { NEXT_ACTIONS, statusCopy } from "@/lib/application-status";
 import type { ApplicationStatus } from "@/types/application";
 
@@ -86,9 +87,11 @@ export function ApplicationsView({
 
   useEffect(() => {
     if (applications.length > 0 && !applications.some((app) => app.id === selectedId)) {
-      setSelectedId(applications[0].id);
+      // Live data arrives after the first render; keep the candidate from the URL.
+      const preferred = applications.find((app) => app.id === initialCandidateId);
+      setSelectedId(preferred?.id ?? applications[0].id);
     }
-  }, [applications, selectedId]);
+  }, [applications, selectedId, initialCandidateId]);
 
   const visibleApplications = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("vi");
@@ -103,6 +106,8 @@ export function ApplicationsView({
     });
   }, [jobApplications, filter, query]);
 
+  const markedViewed = useRef(new Set<string>());
+
   const selected = useMemo(() => {
     return (
       jobApplications.find((app) => app.id === selectedId) ??
@@ -110,6 +115,14 @@ export function ApplicationsView({
       null
     );
   }, [jobApplications, selectedId, visibleApplications]);
+
+  useEffect(() => {
+    // Opening a new application is what moves it to "viewed" for the candidate.
+    if (!liveBackend || !selected || selected.status !== "submitted") return;
+    if (markedViewed.current.has(selected.id)) return;
+    markedViewed.current.add(selected.id);
+    updateStatus(selected.id, "viewed");
+  }, [selected, updateStatus]);
 
   const [actionMenuOpen, setActionMenuOpen] = useState(false);
   const actionMenuRef = useRef<HTMLDivElement>(null);

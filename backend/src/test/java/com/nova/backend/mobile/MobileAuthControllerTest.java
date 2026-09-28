@@ -70,6 +70,33 @@ class MobileAuthControllerTest {
     }
 
     @Test
+    void logoutRevokesAccessAndRefreshTokens() throws Exception {
+        String suffix = Long.toUnsignedString(System.nanoTime());
+        MvcResult registered = mvc.perform(post("/api/v1/auth/register/email")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"email":"logout-%s@example.test","phoneE164":"+84903%s","displayName":"Logout Member","password":"nova-demo-password"}
+                    """.formatted(suffix, suffix.substring(Math.max(0, suffix.length() - 7)))))
+            .andExpect(status().isCreated())
+            .andReturn();
+        String accessToken = value(registered, "accessToken");
+        String refreshToken = value(registered, "refreshToken");
+
+        mvc.perform(post("/api/v1/auth/logout")
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"refreshToken\":\"%s\"}".formatted(refreshToken)))
+            .andExpect(status().isNoContent());
+
+        mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + accessToken))
+            .andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/v1/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"refreshToken\":\"%s\"}".formatted(refreshToken)))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void verifiesPhoneWithDebugOtpAndConsumesChallenge() throws Exception {
         String suffix = Long.toUnsignedString(System.nanoTime());
         String phone = "+84902" + suffix.substring(Math.max(0, suffix.length() - 7));
