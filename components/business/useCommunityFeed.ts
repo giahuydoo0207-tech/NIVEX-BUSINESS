@@ -41,7 +41,7 @@ function mapProfile(profile: ApiProfile): PublicProfileData {
 
 function mapReactionType(value?: string | null): PostReactionType | null {
   const reaction = value?.toLowerCase() as PostReactionType | undefined;
-  return ["like", "love", "trust", "build", "insightful", "deal", "launch"].includes(reaction ?? "") ? reaction! : null;
+  return ["like", "love", "haha", "trust", "build", "insightful", "deal", "launch"].includes(reaction ?? "") ? reaction! : null;
 }
 
 function mapComment(comment: ApiComment, replyingToName?: string): PostComment {

@@ -25,3 +25,8 @@ nova:
   usdc-mint: ${SOLANA_USDC_MINT:}
   demo:
     api-key: ${NOVA_DEMO_API_KEY:}
+  auth:
+    access-ttl-seconds: ${NOVA_AUTH_ACCESS_TTL_SECONDS:900}
+    refresh-ttl-seconds: ${NOVA_AUTH_REFRESH_TTL_SECONDS:2592000}
+    otp-ttl-seconds: ${NOVA_AUTH_OTP_TTL_SECONDS:300}
+    debug-otp: ${NOVA_AUTH_DEBUG_OTP:false}

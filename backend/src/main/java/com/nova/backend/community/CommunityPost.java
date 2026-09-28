@@ -15,6 +15,7 @@ public record CommunityPost(
     Instant createdAt,
     Instant updatedAt,
     long reactionCount,
+    long commentCount,
     String myReaction,
     Map<String, Long> reactionCounts,
     boolean isSaved,

@@ -28,7 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class CommunityController {
     private static final String BUSINESS_ACTOR = "nova-labs";
     private static final List<String> PRIVACY = List.of("PUBLIC", "FOLLOWERS", "ONLY_ME");
-    private static final List<String> REACTIONS = List.of("LIKE", "LOVE", "TRUST", "BUILD", "INSIGHTFUL", "DEAL", "LAUNCH");
+    private static final List<String> REACTIONS = List.of("LIKE", "LOVE", "HAHA", "TRUST", "BUILD", "INSIGHTFUL", "DEAL", "LAUNCH");
     private final CommunityRepository repository;
 
     public CommunityController(CommunityRepository repository) { this.repository = repository; }
@@ -100,7 +100,7 @@ public class CommunityController {
 
     @PutMapping("/posts/{postId}/comments/{commentId}/reaction")
     public CommunityPost commentReaction(@PathVariable UUID postId, @PathVariable UUID commentId, @Valid @RequestBody ReactionRequest request) {
-        return repository.reactToComment(postId, commentId, BUSINESS_ACTOR, reaction(request.reaction()));
+        return repository.reactToCommentLegacy(postId, commentId, BUSINESS_ACTOR, reaction(request.reaction()));
     }
 
     @PutMapping("/profiles/{profileId}/following")
