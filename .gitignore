@@ -9,5 +9,7 @@ npm-debug.log*
 tsconfig.tsbuildinfo
 tsconfig.tsbuildinfo
 .env*
+!.env.example
+!**/.env.example
 backend/target/
 .docker/

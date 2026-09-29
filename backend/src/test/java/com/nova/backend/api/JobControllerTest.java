@@ -90,6 +90,18 @@ class JobControllerTest {
     }
 
     @Test
+    void rejectsPublishingAJobWhoseDeadlineHasPassed() throws Exception {
+        mvc.perform(post("/api/v1/business/jobs")
+                .header("X-Nova-Demo-Key", DEMO_KEY)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"title":"Expired","category":"Engineering","summary":"x","budgetMinMinor":1,"budgetMaxMinor":2,
+                     "locationScope":"Remote","applicationDeadline":"2000-01-01","publish":true}
+                    """))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void createsDraftJobAgainstPostgres() throws Exception {
         mvc.perform(post("/api/v1/jobs")
                 .header("X-Nova-Demo-Key", DEMO_KEY)

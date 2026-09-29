@@ -30,6 +30,7 @@ import {
   setStoredThemeId,
   type BusinessThemeId,
 } from "@/types/theme";
+import { liveBackend } from "@/lib/workspace-api";
 import { WorkspaceMenu } from "./WorkspaceMenu";
 
 export interface NavItem {
@@ -313,7 +314,7 @@ export function BusinessShell({
               <i />
               Solana Devnet
             </span>
-            <p>Khám phá quy trình với dữ liệu minh họa.</p>
+            <p>{liveBackend ? "Kết nối trực tiếp với Nova backend." : "Khám phá quy trình với dữ liệu minh họa."}</p>
             <Link href="/">
               Tìm hiểu Nova
               <ArrowUpRight size={15} />
@@ -362,7 +363,7 @@ export function BusinessShell({
             </strong>
           </div>
           <div className="topbar-actions">
-            <span className="demo-label">Dữ liệu minh họa</span>
+            {!liveBackend && <span className="demo-label">Dữ liệu minh họa</span>}
             <button
               className="wallet-connect"
               onClick={() => setDialog("wallet")}

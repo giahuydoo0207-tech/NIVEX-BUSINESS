@@ -34,7 +34,6 @@ import { CommentModal } from "./community/CommentModal";
 import { jobStatusLabels, jobStatusTone } from "@/lib/jobs";
 import { formatMinorAmount } from "@/lib/money";
 import { formatDate } from "@/lib/portal-data";
-import { demoApplications } from "@/lib/application-demo-data";
 import type { JobPost } from "@/types/job";
 import type { CommunityPost } from "@/types/community";
 
@@ -234,7 +233,7 @@ export function BusinessProfileView() {
   } = useCommunityFeed();
 
   const { jobs } = useJobs();
-  const { getJobApplicationCount } = useApplications();
+  const { applications, getJobApplicationCount } = useApplications();
 
   const showNotice = (msg: string) => {
     setNotice(msg);
@@ -257,8 +256,8 @@ export function BusinessProfileView() {
 
   // Hired applications
   const hiredApplicants = useMemo(
-    () => demoApplications.filter((a) => a.status === "accepted"),
-    [],
+    () => applications.filter((a) => a.status === "accepted"),
+    [applications],
   );
 
   // Aggregated activity timeline

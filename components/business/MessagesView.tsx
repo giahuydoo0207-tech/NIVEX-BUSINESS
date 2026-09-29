@@ -469,7 +469,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                       : `Đang hoạt động · ${selected.headline}`}
                   </small>
                 </div>
-                <span className="demo-label">Dữ liệu minh họa</span>
+                {!liveMessages && <span className="demo-label">Dữ liệu minh họa</span>}
                 <button
                   type="button"
                   className="icon-button context-toggle-button"

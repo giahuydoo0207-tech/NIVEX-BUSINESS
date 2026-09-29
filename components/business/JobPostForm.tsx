@@ -61,6 +61,11 @@ const paymentLabels: Record<JobPaymentType, string> = {
   HOURLY: "Theo giờ",
 };
 
+function todayIso() {
+  const now = new Date();
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
 export function JobPostForm() {
   const router = useRouter();
   const [form, setForm] = useState(initialForm);
@@ -89,6 +94,9 @@ export function JobPostForm() {
     }
     if (!form.duration.trim()) return setError("Nhập thời lượng dự kiến.");
     if (!form.applicationDeadline) return setError("Chọn hạn ứng tuyển.");
+    if (status === "PUBLISHED" && form.applicationDeadline < todayIso()) {
+      return setError("Hạn ứng tuyển không được ở quá khứ.");
+    }
 
     setSaving(status);
     if (liveBackend) {
@@ -345,6 +353,7 @@ export function JobPostForm() {
             <span>Hạn ứng tuyển</span>
             <input
               type="date"
+              min={todayIso()}
               value={form.applicationDeadline}
               onChange={(event) =>
                 update("applicationDeadline", event.target.value)

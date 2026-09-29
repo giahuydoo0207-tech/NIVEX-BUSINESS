@@ -65,6 +65,9 @@ public class JobRepository {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicationDeadline must be YYYY-MM-DD");
         }
         boolean publish = Boolean.TRUE.equals(request.publish());
+        if (publish && applicationDeadline.isBefore(LocalDate.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicationDeadline must not be in the past");
+        }
         UUID id = UUID.randomUUID();
         jdbc.update(
             "insert into jobs (id, organization_id, title, category, summary, skills, engagement, payment_type, duration, " +
@@ -89,6 +92,9 @@ public class JobRepository {
         }
         if (!STATUS_TRANSITIONS.getOrDefault(current.status(), List.of()).contains(nextStatus)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Invalid job status transition");
+        }
+        if ("PUBLISHED".equals(nextStatus) && current.applicationDeadline().isBefore(LocalDate.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicationDeadline must not be in the past");
         }
         jdbc.update("update jobs set status=?, published_at=case when ?='PUBLISHED' then coalesce(published_at, now()) else published_at end where id=?",
             nextStatus, nextStatus, id);

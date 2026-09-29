@@ -23,10 +23,11 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   }
   const body = request.method === "GET" ? undefined : await request.arrayBuffer();
   if (body && body.byteLength > 8 * 1024 * 1024) return new Response(null, { status: 413 });
+  const base = process.env.NOVA_API_URL.replace(/\/+$/, "");
   try {
     const upstream = path.startsWith("media/")
-      ? `${process.env.NOVA_API_URL}/${path}`
-      : `${process.env.NOVA_API_URL}/api/v1/${path}${request.nextUrl.search}`;
+      ? `${base}/${path}`
+      : `${base}/api/v1/${path}${request.nextUrl.search}`;
     const response = await fetch(upstream, {
       method: request.method, body, cache: "no-store", signal: AbortSignal.timeout(60000),
       headers: {

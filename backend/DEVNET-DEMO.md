@@ -36,7 +36,11 @@ npm run dev -- --hostname 127.0.0.1 --port 3001
 
 Open http://127.0.0.1:3001/business/invoices/new. Create an invoice, prepare its
 payment, connect a DIFFERENT payer wallet, simulate, review, then personally
-approve in Phantom. The payer needs test SOL and Circle USDC on Devnet. Never use
+approve in Phantom. The payer needs test SOL and Devnet USDC of mint
+`BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k` (pinned in `DevnetRpc.MINT` and
+`lib/solana-payment.ts`; `SOLANA_USDC_MINT` does not change it). Circle's Devnet
+USDC (`4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`) is a different token and
+will be rejected by verification. Never use
 mainnet funds or supply a seed/private key. The demo recipient is server-configured,
 not the mock contractor's wallet. Native mobile wallet integration is not included.
 

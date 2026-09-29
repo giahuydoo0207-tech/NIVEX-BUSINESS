@@ -15,5 +15,7 @@ RUN useradd --system --uid 10001 nova
 COPY --from=build /workspace/backend/target/nova-backend-*.jar app.jar
 USER nova
 
+ENV SERVER_ADDRESS=0.0.0.0 \
+    JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75"
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
