@@ -23,6 +23,7 @@ import { InvoiceTable } from "@/components/business/InvoiceTable";
 import { formatUsdc } from "@/lib/money";
 import { formatDate, sumMinor } from "@/lib/portal-data";
 import { demoContractors } from "@/lib/business-demo-data";
+import { useApplications } from "./useApplications";
 import { isPaidInvoice, isPendingInvoice } from "@/lib/invoice-api";
 const devnet = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
 function periodEnd() { return devnet ? new Date().toISOString().slice(0, 10) : "2026-09-10"; }
@@ -31,14 +32,13 @@ function PaymentRoutePanel({
   invoiceCount,
   pendingCount,
   paidCount,
+  recipientLabel,
 }: {
   invoiceCount: number;
   pendingCount: number;
   paidCount: number;
+  recipientLabel: string;
 }) {
-  const readyRecipients = demoContractors.filter(
-    (item) => item.payoutReadiness === "READY",
-  ).length;
   const steps = [
     {
       key: "01",
@@ -64,8 +64,8 @@ function PaymentRoutePanel({
     {
       key: "04",
       label: "Người nhận",
-      value: `${readyRecipients} sẵn sàng`,
-      note: "Thông tin đã đối chiếu",
+      value: recipientLabel,
+      note: devnet ? "Ứng viên trong không gian" : "Thông tin đã đối chiếu",
       icon: UserCheck,
     },
   ];
@@ -111,6 +111,15 @@ function PaymentRoutePanel({
 
 export function Dashboard() {
   const { invoices, storageError, loading, error, refresh } = useInvoices();
+  const { applications } = useApplications();
+  // Live: people are real candidates; payout readiness is not tracked by the backend yet.
+  const liveCandidates = new Set(
+    applications.filter((item) => item.status !== "withdrawn").map((item) => item.applicantUserId ?? item.id),
+  ).size;
+  const peopleCount = devnet ? liveCandidates : demoContractors.length;
+  const readyCount = devnet
+    ? null
+    : demoContractors.filter((item) => item.payoutReadiness === "READY").length;
   const [period, setPeriod] = useState("90");
   const [from, setFrom] = useState(() => new Date(Date.parse(periodEnd()) - 89 * 86400000).toISOString().slice(0, 10));
   const [to, setTo] = useState(periodEnd);
@@ -362,19 +371,18 @@ export function Dashboard() {
             <Info size={13} />
           </p>
           <strong>
-            {demoContractors.length}
-            <small>người nhận</small>
+            {peopleCount}
+            <small>{devnet ? "ứng viên" : "người nhận"}</small>
           </strong>
           <span className="metric-caption">
-            <span className="success-text">
-              {
-                demoContractors.filter(
-                  (item) => item.payoutReadiness === "READY",
-                ).length
-              }{" "}
-              sẵn sàng
-            </span>
-            trong không gian
+            {readyCount === null ? (
+              "Đã ứng tuyển công việc của bạn"
+            ) : (
+              <>
+                <span className="success-text">{readyCount} sẵn sàng</span>
+                trong không gian
+              </>
+            )}
           </span>
         </article>
       </section>
@@ -493,6 +501,7 @@ export function Dashboard() {
           invoiceCount={filtered.length}
           pendingCount={pending.length}
           paidCount={paid.length}
+          recipientLabel={readyCount === null ? `${peopleCount} ứng viên` : `${readyCount} sẵn sàng`}
         />
       </div>
       <div className="workspace-notice">

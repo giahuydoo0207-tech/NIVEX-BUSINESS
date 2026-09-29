@@ -22,22 +22,68 @@ import {
 } from "lucide-react";
 import { demoApplications } from "@/lib/application-demo-data";
 import { statusCopy } from "@/lib/application-status";
-import type { ApplicationMessage, CandidateApplication } from "@/types/application";
-import { proxiedMediaUrl } from "@/lib/workspace-api";
+import type { ApplicationMessage, ApplicationStatus, CandidateApplication } from "@/types/application";
+import { mapApiApplication, proxiedMediaUrl, type ApiApplication } from "@/lib/workspace-api";
+import { MESSAGES_UPDATED_EVENT } from "./useLiveCounts";
 
 const liveMessages = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
 
 type ApiThread = { id: string; contractorId: string; candidateName: string; headline: string; requestStatus: "PENDING" | "ACCEPTED"; createdAt: string; organizationName?: string; candidateAvatarUrl?: string | null; unreadForBusiness?: number; messages: Array<{ id: string; senderType: "BUSINESS" | "TALENT"; body: string; sentAt: string; deliveredAt?: string | null; seenAt?: string | null }> };
 
-function mapThread(thread: ApiThread): ConversationItem {
+/**
+ * Threads are per organization–candidate pair and carry no job, so the
+ * candidate's own application (if any) supplies job, status and contact data.
+ * Without an application there is no status to show.
+ */
+function mapThread(thread: ApiThread, application?: CandidateApplication): ConversationItem {
+  const hasApplication = Boolean(application);
   return {
-    id: thread.id, jobId: "general-inquiry", jobTitle: "Liên hệ bên ngoài", applicantUserId: thread.contractorId,
-    candidateName: thread.candidateName, initials: thread.candidateName.split(" ").map((part) => part[0]).slice(-2).join("").toUpperCase(),
-    headline: thread.headline, avatarUrl: proxiedMediaUrl(thread.candidateAvatarUrl), email: "", location: "", matchScore: 0, skills: [], coverNote: "", portfolioLabel: "", portfolioPreview: [], availability: "Sẵn sàng trao đổi", status: "withdrawn",
-    submittedAt: thread.createdAt, createdAt: thread.createdAt, updatedAt: thread.createdAt, hasActiveApplication: false,
+    id: thread.id,
+    jobId: application?.jobId ?? "",
+    jobTitle: application?.jobTitle ?? "Trò chuyện trực tiếp",
+    applicantUserId: thread.contractorId,
+    candidateName: thread.candidateName,
+    initials: thread.candidateName.split(/\s+/).filter(Boolean).map((part) => part[0]).slice(-2).join("").toUpperCase(),
+    headline: thread.headline ?? application?.headline ?? "",
+    avatarUrl: proxiedMediaUrl(thread.candidateAvatarUrl) ?? application?.avatarUrl,
+    email: application?.email ?? "",
+    location: application?.location ?? "",
+    matchScore: 0,
+    skills: application?.skills ?? [],
+    coverNote: application?.coverNote ?? "",
+    portfolioLabel: "",
+    portfolioPreview: [],
+    availability: "",
+    status: application?.status ?? "submitted",
+    applicationId: application?.id,
+    applicationStatus: application?.status ?? null,
+    unreadCount: thread.unreadForBusiness ?? 0,
+    submittedAt: thread.createdAt, createdAt: thread.createdAt, updatedAt: thread.createdAt,
+    hasActiveApplication: hasApplication && application?.status !== "withdrawn" && application?.status !== "rejected",
     requestState: thread.requestStatus.toLowerCase() as ConversationItem["requestState"],
     messages: thread.messages.map((message) => ({ id: message.id, role: message.senderType, senderName: message.senderType === "BUSINESS" ? thread.organizationName ?? "Doanh nghiệp" : thread.candidateName, body: message.body, sentAt: new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit" }).format(new Date(message.sentAt)), deliveryStatus: message.seenAt ? "SEEN" : message.deliveredAt ? "DELIVERED" : "SENT" })),
   };
+}
+
+/** The candidate's most relevant application: an active one first, then the newest. */
+function applicationFor(contractorId: string, applications: CandidateApplication[]) {
+  const mine = applications.filter((item) => item.applicantUserId === contractorId);
+  return mine.find((item) => item.status !== "withdrawn" && item.status !== "rejected") ?? mine[0];
+}
+
+function Avatar({ item, className }: { item: ConversationItem; className: string }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <span className={className}>
+      {item.avatarUrl && !failed ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={item.avatarUrl} alt="" onError={() => setFailed(true)} />
+      ) : (
+        item.initials
+      )}
+      {className === "application-avatar" && <i />}
+    </span>
+  );
 }
 
 function nowLabel() {
@@ -64,6 +110,10 @@ function DeliveryMark({ message }: { message: ApplicationMessage }) {
 export interface ConversationItem extends CandidateApplication {
   hasActiveApplication: boolean;
   requestState: "none" | "pending" | "accepted" | "declined";
+  /** Live mode: the linked application, or none for a direct conversation. */
+  applicationId?: string;
+  applicationStatus?: ApplicationStatus | null;
+  unreadCount?: number;
 }
 
 const DEMO_STRANGER_REQUEST: ConversationItem = {
@@ -146,14 +196,24 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
 
   async function refreshLiveThreads() {
     if (!liveMessages) return;
-    const [pending, accepted] = await Promise.all(["PENDING", "ACCEPTED"].map(async (status) => {
-      const response = await fetch(`/api/devnet/messages?status=${status}`, { cache: "no-store" });
+    const get = async <T,>(path: string) => {
+      const response = await fetch(`/api/devnet/${path}`, { cache: "no-store" });
       if (!response.ok) throw new Error(`API ${response.status}`);
-      return response.json() as Promise<ApiThread[]>;
-    }));
-    const next = [...pending, ...accepted].map(mapThread);
+      return response.json() as Promise<T>;
+    };
+    const [pending, accepted, applications] = await Promise.all([
+      get<ApiThread[]>("messages?status=PENDING"),
+      get<ApiThread[]>("messages?status=ACCEPTED"),
+      get<ApiApplication[]>("applications?limit=100").then((rows) => rows.map(mapApiApplication)),
+    ]);
+    const next = [...pending, ...accepted].map((thread) =>
+      mapThread(thread, applicationFor(thread.contractorId, applications)),
+    );
     setConversations(next);
-    setSelectedId((current) => next.some((item) => item.id === current) ? current : next[0]?.id ?? "");
+    // ?candidate= may carry an application id when opened from Ứng viên.
+    setSelectedId((current) =>
+      next.find((item) => item.id === current || item.applicationId === current)?.id ?? next[0]?.id ?? "",
+    );
   }
 
   useEffect(() => {
@@ -205,7 +265,11 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
     // Only an opened conversation marks the candidate's messages as seen.
     if (!liveMessages || !selectedHasUnread || !selected) return;
     void fetch(`/api/devnet/messages/${selected.id}/read`, { method: "POST" })
-      .then((response) => (response.ok ? refreshLiveThreads() : undefined))
+      .then((response) => {
+        if (!response.ok) return;
+        window.dispatchEvent(new Event(MESSAGES_UPDATED_EVENT));
+        return refreshLiveThreads();
+      })
       .catch(() => undefined);
   }, [selected?.id, selectedHasUnread]);
 
@@ -214,6 +278,46 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
   }, [selected?.messages.length, typingId]);
 
   useEffect(() => () => timersRef.current.forEach(window.clearTimeout), []);
+
+  const selectedThreadId = selected?.id;
+  const selectedAccepted = selected?.requestState === "accepted";
+  useEffect(() => {
+    // No realtime channel: poll the candidate's short-lived typing state
+    // only while an accepted thread is open and the tab is visible.
+    if (!liveMessages || !selectedThreadId || !selectedAccepted) return;
+    let cancelled = false;
+    let wasTyping = false;
+    const poll = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const response = await fetch(`/api/devnet/messages/${selectedThreadId}/typing`, { cache: "no-store" });
+        if (!response.ok || cancelled) return;
+        const { typing } = (await response.json()) as { typing: boolean };
+        setTypingId((current) => (typing ? selectedThreadId : current === selectedThreadId ? null : current));
+        // The indicator usually ends because a message was sent.
+        if (wasTyping && !typing) void refreshLiveThreads().catch(() => undefined);
+        wasTyping = typing;
+      } catch {
+        /* The next poll retries. */
+      }
+    };
+    void poll();
+    const interval = window.setInterval(poll, 2500);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      setTypingId(null);
+    };
+  }, [selectedThreadId, selectedAccepted]);
+
+  const lastTypingSentRef = useRef(0);
+  function reportTyping() {
+    if (!liveMessages || !selected || selected.requestState !== "accepted") return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 3000) return;
+    lastTypingSentRef.current = now;
+    void fetch(`/api/devnet/messages/${selected.id}/typing`, { method: "POST" }).catch(() => undefined);
+  }
 
   async function handleAcceptRequest(applicationId: string) {
     if (liveMessages) {
@@ -390,10 +494,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                     }}
                     key={application.id}
                   >
-                    <span className="application-avatar">
-                      {application.initials}
-                      <i />
-                    </span>
+                    <Avatar item={application} className="application-avatar" />
                     <span className="conversation-preview">
                       <span>
                         <strong>{application.candidateName}</strong>
@@ -432,7 +533,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                         </div>
                       )}
                     </span>
-                    {!isPending && index < 2 && (
+                    {!isPending && (liveMessages ? (application.unreadCount ?? 0) > 0 : index < 2) && (
                       <i className="conversation-unread" aria-label="Tin nhắn chưa đọc" />
                     )}
                   </button>
@@ -457,16 +558,15 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                 >
                   <ArrowLeft size={18} />
                 </button>
-                <span className="application-avatar">
-                  {selected.initials}
-                  <i />
-                </span>
+                <Avatar item={selected} className="application-avatar" />
                 <div>
                   <strong>{selected.candidateName}</strong>
                   <small>
                     {isSelectedPending
                       ? "Yêu cầu tin nhắn mới"
-                      : `Đang hoạt động · ${selected.headline}`}
+                      : liveMessages
+                        ? selected.headline || selected.jobTitle
+                        : `Đang hoạt động · ${selected.headline}`}
                   </small>
                 </div>
                 {!liveMessages && <span className="demo-label">Dữ liệu minh họa</span>}
@@ -541,7 +641,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                       key={message.id}
                     >
                       {message.role === "TALENT" && (
-                        <span className="application-avatar compact">{selected.initials}</span>
+                        <Avatar item={selected} className="application-avatar compact" />
                       )}
                       <article
                         className={`message-bubble ${isSelectedPending && message.role === "TALENT" ? "message-bubble-hidden-state" : ""}`}
@@ -580,7 +680,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                 })}
                 {typingId === selected.id && (
                   <div className="message-row incoming typing-row">
-                    <span className="application-avatar compact">{selected.initials}</span>
+                    <Avatar item={selected} className="application-avatar compact" />
                     <div
                       className="typing-indicator"
                       aria-label={`${selected.candidateName} đang nhập`}
@@ -623,7 +723,10 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                   </button>
                   <textarea
                     value={draft}
-                    onChange={(event) => setDraft(event.target.value)}
+                    onChange={(event) => {
+                      setDraft(event.target.value);
+                      if (event.target.value.trim()) reportTyping();
+                    }}
                     onKeyDown={handleComposerKeyDown}
                     rows={1}
                     placeholder={
@@ -670,47 +773,73 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
               >
                 <X size={17} />
               </button>
-              <span className="application-avatar context-avatar">{selected.initials}</span>
+              <Avatar item={selected} className="application-avatar context-avatar" />
               <h2>{selected.candidateName}</h2>
               <p>{selected.headline}</p>
-              <span className={`application-status ${statusCopy[selected.status].tone}`}>
-                {statusCopy[selected.status].label}
-              </span>
+              {(() => {
+                // Live threads only show a status that comes from a real application.
+                const status = liveMessages ? selected.applicationStatus : selected.status;
+                return status ? (
+                  <span className={`application-status ${statusCopy[status].tone}`}>
+                    {statusCopy[status].label}
+                  </span>
+                ) : null;
+              })()}
               <dl>
                 <div>
                   <dt>Vị trí</dt>
                   <dd>{selected.jobTitle}</dd>
                 </div>
-                <div>
-                  <dt>Phù hợp</dt>
-                  <dd>{selected.matchScore}%</dd>
-                </div>
-                <div>
-                  <dt>Bắt đầu</dt>
-                  <dd>{selected.availability}</dd>
-                </div>
+                {selected.location && (
+                  <div>
+                    <dt>Khu vực</dt>
+                    <dd>{selected.location}</dd>
+                  </div>
+                )}
+                {!liveMessages && (
+                  <>
+                    <div>
+                      <dt>Phù hợp</dt>
+                      <dd>{selected.matchScore}%</dd>
+                    </div>
+                    <div>
+                      <dt>Bắt đầu</dt>
+                      <dd>{selected.availability}</dd>
+                    </div>
+                  </>
+                )}
               </dl>
               <div className="message-context-skills">
                 {selected.skills.map((skill) => (
                   <span key={skill}>{skill}</span>
                 ))}
               </div>
-              <Link
-                href={`/business/applications?candidate=${selected.id}`}
-                className="business-secondary-button"
-              >
-                <UserRoundCheck size={16} />
-                Xem hồ sơ
-              </Link>
-              <a href={`mailto:${selected.email}`} className="business-secondary-button">
-                <ExternalLink size={16} />
-                Gửi email
-              </a>
+              {(!liveMessages || selected.applicationId) && (
+                <Link
+                  href={`/business/applications?candidate=${selected.applicationId ?? selected.id}`}
+                  className="business-secondary-button"
+                >
+                  <UserRoundCheck size={16} />
+                  Xem hồ sơ
+                </Link>
+              )}
+              {selected.email && (
+                <a href={`mailto:${selected.email}`} className="business-secondary-button">
+                  <ExternalLink size={16} />
+                  Gửi email
+                </a>
+              )}
               <div className="context-trust-note">
                 <FileText size={16} />
                 <span>
-                  <strong>Hội thoại theo hồ sơ</strong>
-                  <small>Nội dung sẽ được gắn với đơn ứng tuyển khi kết nối backend.</small>
+                  <strong>{selected.applicationId ? "Hội thoại theo hồ sơ" : "Trò chuyện trực tiếp"}</strong>
+                  <small>
+                    {liveMessages
+                      ? selected.applicationId
+                        ? `Liên kết với hồ sơ ứng tuyển “${selected.jobTitle}”.`
+                        : "Ứng viên chưa ứng tuyển công việc nào của bạn."
+                      : "Nội dung sẽ được gắn với đơn ứng tuyển khi kết nối backend."}
+                  </small>
                 </span>
               </div>
             </aside>

@@ -76,6 +76,10 @@ public class MessageRepository {
         if(!owner(id,contractorId))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Thread belongs to another contractor"); accepted(id); ThreadMessage sent=message(id,"TALENT",body);
         notifications.business(organization(id),"MESSAGE_RECEIVED","Tin nhắn mới từ "+talentName(contractorId),body.trim(),"{\"threadId\":\""+id+"\"}"); return sent;
     }
+    public void requireBusinessThread(UUID id, UUID organizationId) { owns(id, organizationId); }
+    public void requireTalentThread(UUID id, String contractorId) {
+        if (!owner(id, contractorId)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Thread belongs to another contractor");
+    }
     private ThreadMessage message(UUID id,String sender,String body){UUID messageId=UUID.randomUUID();jdbc.update("insert into thread_messages(id,thread_id,sender_type,body) values(?,?,?,?)",messageId,id,sender,body.trim());jdbc.update("update message_threads set updated_at=now() where id=?",id);return jdbc.query("select id,sender_type,body,sent_at,delivered_at,seen_at from thread_messages where id=?",this::mapMessage,messageId).getFirst();}
     private MessageThread thread(UUID id){return jdbc.query(threadSelect()+" where t.id=?",this::mapThread,id).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Thread not found"));}
     private void accepted(UUID id){if(!"ACCEPTED".equals(status(id)))throw new ResponseStatusException(HttpStatus.CONFLICT,"Message request has not been accepted");}

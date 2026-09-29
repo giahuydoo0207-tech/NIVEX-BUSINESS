@@ -32,6 +32,7 @@ import {
 } from "@/types/theme";
 import { liveBackend } from "@/lib/workspace-api";
 import { WorkspaceMenu } from "./WorkspaceMenu";
+import { useLiveCounts } from "./useLiveCounts";
 
 export interface NavItem {
   key: string;
@@ -158,6 +159,7 @@ export function BusinessShell({
     "wallet" | "help" | "notifications" | null
   >(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const liveCounts = useLiveCounts();
 
   const loadNotifications = async () => {
     if (process.env.NEXT_PUBLIC_PAYMENT_MODE !== "devnet") return;
@@ -263,7 +265,14 @@ export function BusinessShell({
                 <span className="nav-label">{group.groupLabel}</span>
               )}
               <div className="nav-group-items">
-                {group.items.map(({ key, href, label, icon: Icon, badge }) => {
+                {group.items.map(({ key, href, label, icon: Icon, badge: staticBadge }) => {
+                  const liveCount =
+                    key === "messages" ? liveCounts?.unreadMessages
+                    : key === "applications" ? liveCounts?.applications
+                    : undefined;
+                  const badge = !liveBackend || (key !== "messages" && key !== "applications")
+                    ? staticBadge
+                    : liveCount ? liveCount : undefined;
                   const isNavActive = active === key;
                   const navClassName =
                     isNavActive && activeAction === undefined ? "active" : undefined;
@@ -332,7 +341,7 @@ export function BusinessShell({
             <span className="avatar">GH</span>
             <span>
               <strong>Gia Huy</strong>
-              <small>Quản trị viên · Demo</small>
+              <small>{liveBackend ? "Quản trị viên" : "Quản trị viên · Demo"}</small>
             </span>
           </div>
         </div>

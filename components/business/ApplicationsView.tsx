@@ -557,25 +557,34 @@ export function ApplicationsView({
                   </div>
                   <div className="hero-readiness-badge">
                     <span className="readiness-dot" />
-                    <span>{selected.statusBadge || "Sẵn sàng"}</span>
+                    <span>
+                      {selected.statusBadge ||
+                        (liveBackend ? statusCopy[selected.status].label : "Sẵn sàng")}
+                    </span>
                   </div>
                 </div>
 
                 <div className="hero-headline">{selected.headline}</div>
 
                 <div className="hero-meta-chips">
-                  <span className="hero-meta-item">
-                    <MapPin size={13} />
-                    <span>{selected.location}</span>
-                  </span>
-                  <span className="hero-meta-item">
-                    <Clock size={13} />
-                    <span>{selected.timezone || "UTC+7"}</span>
-                  </span>
-                  <span className="hero-meta-item">
-                    <Languages size={13} />
-                    <span>{selected.languages || "Tiếng Việt · English"}</span>
-                  </span>
+                  {selected.location && (
+                    <span className="hero-meta-item">
+                      <MapPin size={13} />
+                      <span>{selected.location}</span>
+                    </span>
+                  )}
+                  {(selected.timezone || !liveBackend) && (
+                    <span className="hero-meta-item">
+                      <Clock size={13} />
+                      <span>{selected.timezone || "UTC+7"}</span>
+                    </span>
+                  )}
+                  {(selected.languages || !liveBackend) && (
+                    <span className="hero-meta-item">
+                      <Languages size={13} />
+                      <span>{selected.languages || "Tiếng Việt · English"}</span>
+                    </span>
+                  )}
                 </div>
 
                 <div className="hero-card-divider" />
@@ -584,7 +593,7 @@ export function ApplicationsView({
                   <div className="spec-item">
                     <span className="spec-label">Hình thức</span>
                     <strong className="spec-val">
-                      {selected.workType || "Remote · Theo dự án"}
+                      {selected.workType || (liveBackend ? "—" : "Remote · Theo dự án")}
                     </strong>
                   </div>
                   <div className="spec-item">
@@ -592,7 +601,7 @@ export function ApplicationsView({
                     <strong className="spec-val">
                       {selected.capacity ||
                         selected.availability ||
-                        "20 giờ/tuần"}
+                        (liveBackend ? "—" : "20 giờ/tuần")}
                     </strong>
                   </div>
                 </div>
@@ -600,6 +609,7 @@ export function ApplicationsView({
                 <div className="hero-card-divider" />
 
                 {/* MỨC ĐỘ HOÀN THIỆN HỒ SƠ (GỘP TRONG IDENTITY CARD) */}
+                {(!liveBackend || Boolean(selected.profileCompletion)) && (
                 <div className="hero-completion-section">
                   <div className="completion-header">
                     <span className="completion-title">
@@ -632,6 +642,7 @@ export function ApplicationsView({
                       "Bổ sung chứng chỉ để doanh nghiệp có thêm cơ sở đánh giá."}
                   </p>
                 </div>
+                )}
               </div>
 
               {/* 2. CẤP BẬC UY TÍN (DÒNG MẢNH KHÔNG VIỀN) */}
@@ -701,8 +712,11 @@ export function ApplicationsView({
                   <h3>Portfolio nổi bật</h3>
                 </div>
                 <div className="portfolio-cards-stack">
+                  {liveBackend && !selected.detailedPortfolio?.length && (
+                    <p className="completion-tip">Ứng viên chưa thêm portfolio.</p>
+                  )}
                   {(
-                    selected.detailedPortfolio || [
+                    selected.detailedPortfolio || (liveBackend ? [] : [
                       {
                         id: "p1",
                         title:
@@ -735,7 +749,7 @@ export function ApplicationsView({
                           "https://business.novapay.dev",
                         techTags: ["Next.js", "TypeScript", "UI/UX"],
                       },
-                    ]
+                    ])
                   ).map((project) => (
                     <div key={project.id} className="mobile-project-card">
                       <div className="project-card-header">
@@ -800,8 +814,11 @@ export function ApplicationsView({
                   <h3>Kinh nghiệm</h3>
                 </div>
                 <div className="section-card-surface experience-surface">
+                  {liveBackend && !selected.experiences?.length && (
+                    <p className="completion-tip">Ứng viên chưa thêm kinh nghiệm.</p>
+                  )}
                   {(
-                    selected.experiences || [
+                    selected.experiences || (liveBackend ? [] : [
                       {
                         id: "exp-default",
                         role: "Flutter Developer",
@@ -810,7 +827,7 @@ export function ApplicationsView({
                         description:
                           "Xây dựng auth flow, wallet, payment request và kiểm thử responsive trên thiết bị Android thật.",
                       },
-                    ]
+                    ])
                   ).map((exp, index, arr) => (
                     <div key={exp.id || exp.role} className="experience-item">
                       <div className="experience-timeline">
@@ -837,6 +854,9 @@ export function ApplicationsView({
                   <GraduationCap size={16} />
                   <h3>Học vấn & chứng chỉ</h3>
                 </div>
+                {liveBackend && !selected.education ? (
+                  <p className="completion-tip">Ứng viên chưa thêm học vấn.</p>
+                ) : (
                 <div className="section-card-surface education-surface">
                   <div className="education-icon-box">
                     <Landmark size={20} />
@@ -857,6 +877,7 @@ export function ApplicationsView({
                     </span>
                   </div>
                 </div>
+                )}
               </div>
 
               {/* 9. QUYỀN RIÊNG TƯ */}

@@ -60,7 +60,15 @@ public class JobApplicationRepository {
         if (!allowed(current.status(), nextStatus)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Invalid application status transition");
         jdbc.update("update job_applications set status=?, updated_at=now() where id=?", nextStatus, id);
         jdbc.update("insert into application_status_events (id, application_id, previous_status, next_status, actor_type, note) values (?, ?, ?, ?, 'BUSINESS', ?)", UUID.randomUUID(), id, current.status(), nextStatus, blankToNull(note));
-        notifications.talent(current.contractorId(), "APPLICATION_STATUS", "Hồ sơ đã được cập nhật", current.jobTitle() + ": " + label(nextStatus), "{\"applicationId\":\"" + id + "\",\"status\":\"" + nextStatus + "\"}");
+        String title = switch (nextStatus) {
+            case "accepted" -> "Bạn đã được nhận";
+            case "rejected" -> "Hồ sơ chưa được chọn";
+            default -> "Hồ sơ đã được cập nhật";
+        };
+        String data = "{\"applicationId\":\"" + id + "\",\"jobId\":\"" + current.jobId() + "\",\"status\":\"" + nextStatus
+            + "\",\"organizationName\":" + jsonString(current.organizationName()) + ",\"jobTitle\":" + jsonString(current.jobTitle()) + "}";
+        notifications.talent(current.contractorId(), "APPLICATION_STATUS", title,
+            current.organizationName() + " · " + current.jobTitle() + ": " + label(nextStatus), data);
         return find(id).orElseThrow();
     }
 
@@ -88,6 +96,18 @@ public class JobApplicationRepository {
     }
     private boolean organizationOwns(UUID id, UUID organizationId) { return Boolean.TRUE.equals(jdbc.queryForObject("select exists(select 1 from job_applications where id=? and organization_id=?)", Boolean.class, id, organizationId)); }
     private boolean allowed(String from, String to) { return switch (from) { case "submitted" -> List.of("viewed","shortlisted","accepted","rejected").contains(to); case "viewed" -> List.of("shortlisted","accepted","rejected").contains(to); case "shortlisted" -> List.of("interview","accepted","rejected").contains(to); case "interview" -> List.of("accepted","rejected").contains(to); default -> false; }; }
+    private static String jsonString(String value) {
+        if (value == null) return "null";
+        StringBuilder out = new StringBuilder("\"");
+        for (char c : value.toCharArray()) {
+            switch (c) {
+                case '"' -> out.append("\\\"");
+                case '\\' -> out.append("\\\\");
+                default -> { if (c < 0x20) out.append(String.format("\\u%04x", (int) c)); else out.append(c); }
+            }
+        }
+        return out.append('"').toString();
+    }
     private String blankToNull(String value) { return value == null || value.isBlank() ? null : value.trim(); }
     private String select() { return "select a.id, a.job_id, j.title, a.contractor_id, t.display_name, t.headline, t.email, t.location, t.skills::text, a.cover_note, a.status, a.submitted_at, a.updated_at, a.withdrawn_at, " +
         "a.organization_id, coalesce(b.display_name, o.trading_name), cp.avatar_url from job_applications a join jobs j on j.id=a.job_id join talent_profiles t on t.contractor_id=a.contractor_id " +
