@@ -60,8 +60,34 @@ public class MobileProfileController {
         return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "public, max-age=3600").contentType(MediaType.parseMediaType(rows.getFirst().type())).body(rows.getFirst().bytes());
     }
 
+    @PutMapping(value = "/me/cover", consumes = {MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE, "image/webp", MediaType.APPLICATION_OCTET_STREAM_VALUE})
+    public ProfileView cover(@RequestHeader(value = "Authorization", required = false) String authorization, @RequestBody byte[] bytes) {
+        if (bytes == null || bytes.length == 0 || bytes.length > 5_000_000) throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid cover");
+        String type = sniffImageType(bytes);
+        if (type == null) throw new org.springframework.web.server.ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Cover must be a PNG, JPEG or WebP image");
+        String id = sessions.authenticate(authorization).contractorId();
+        // Versioned like avatars so image caches never keep a replaced cover.
+        String url = "/api/v1/profile/" + id + "/cover?v=" + System.currentTimeMillis();
+        jdbc.update("update community_profiles set cover_content_type=?, cover_content=?, cover_url=?, updated_at=now() where id=?", type, bytes, url, id);
+        return profile(id);
+    }
+
+    @DeleteMapping("/me/cover")
+    public ProfileView deleteCover(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        String id = sessions.authenticate(authorization).contractorId();
+        jdbc.update("update community_profiles set cover_content_type=null, cover_content=null, cover_url=null, updated_at=now() where id=?", id);
+        return profile(id);
+    }
+
+    @GetMapping("/{userId}/cover")
+    public ResponseEntity<byte[]> coverImage(@PathVariable String userId) {
+        var rows = jdbc.query("select cover_content_type, cover_content from community_profiles where id=? and cover_content is not null", (rs, row) -> new Avatar(rs.getString(1), rs.getBytes(2)), userId);
+        if (rows.isEmpty()) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "public, max-age=3600").contentType(MediaType.parseMediaType(rows.getFirst().type())).body(rows.getFirst().bytes());
+    }
+
     private ProfileView profile(String id) {
-        return jdbc.query("select id, display_name, headline, bio, avatar_url, (select count(*) from community_posts p where p.author_id=cp.id and p.deleted_at is null) from community_profiles cp where id=?", (rs, row) -> new ProfileView(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4), avatarUrl(rs.getString(5)), rs.getLong(6)), id)
+        return jdbc.query("select id, display_name, headline, bio, avatar_url, (select count(*) from community_posts p where p.author_id=cp.id and p.deleted_at is null), cover_url from community_profiles cp where id=?", (rs, row) -> new ProfileView(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4), avatarUrl(rs.getString(5)), rs.getLong(6), avatarUrl(rs.getString(7))), id)
             .stream().findFirst().orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
     }
 
@@ -93,7 +119,7 @@ public class MobileProfileController {
         return url.startsWith("https://") || url.startsWith("/api/v1/profile/" + id + "/avatar") ? url : null;
     }
     public record UpdateRequest(String displayName, String headline, String bio, String avatarUrl) {}
-    public record ProfileView(String id, String displayName, String headline, String bio, String avatarUrl, long postCount) {}
+    public record ProfileView(String id, String displayName, String headline, String bio, String avatarUrl, long postCount, String coverUrl) {}
     public record WallView(ProfileView profile, List<CommunityPost> posts) {}
     private record Avatar(String type, byte[] bytes) {}
 }

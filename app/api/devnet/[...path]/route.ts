@@ -4,7 +4,7 @@ const UUID = "[0-9a-fA-F-]{36}";
 const communityPost = `community/posts(?:/${UUID}(?:/(?:pin|privacy|reaction|reactions|saved|hidden|comments(?:/${UUID}/(?:liked|reaction))?))?)?`;
 const communityProfile = "community/profiles/[^/]+/(?:following|blocked)";
 // Mobile members upload avatars through the mobile API; Business Web only reads them.
-const memberAvatar = "profile/[A-Za-z0-9_-]{1,120}/avatar";
+const memberAvatar = "profile/[A-Za-z0-9_-]{1,120}/(?:avatar|cover)";
 const businessJobs = `business/jobs(?:/${UUID}(?:/status)?)?`;
 const applications = `applications(?:/${UUID}/status)?`;
 const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages|messages/${UUID}/(accept|decline|block|messages|read|typing)|notifications|notifications/${UUID}/read|business/profile(/(avatar|cover))?|business/recipients|${businessJobs}|${applications}|${communityPost}|${communityProfile}|community/(?:reports|media)|${memberAvatar}|media/(?:business-profile|community)/${UUID})$`);
