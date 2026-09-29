@@ -17,9 +17,14 @@ import {
 } from "@/lib/community-utils";
 
 const liveCommunity = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
-// Live mode keeps its own key: it only ever holds backend responses, so it can
-// never mix with posts cached by an earlier demo session in the same browser.
-const COMMUNITY_POSTS_STORAGE_KEY = liveCommunity ? "nivex.live.community_posts" : "nivex.demo.community_posts";
+// Live mode keeps its own key: it holds the backend response plus the local
+// state of the built-in sample posts, never posts from an earlier demo session.
+const COMMUNITY_POSTS_STORAGE_KEY = liveCommunity ? "nivex.live.community_feed.v2" : "nivex.demo.community_posts";
+// The built-in sample posts stay in the live feed next to the shared backend
+// posts; actions on them only change this browser.
+const DEMO_POST_IDS = new Set(INITIAL_DEMO_POSTS.map((post) => post.id));
+const DEMO_AUTHOR_HANDLES = new Set(INITIAL_DEMO_POSTS.flatMap((post) => post.author ? [post.author.handle] : []));
+const isDemoPost = (postId: string) => DEMO_POST_IDS.has(postId);
 const COMMUNITY_UPDATE_EVENT = "nova:community-updated";
 const FOLLOWED_AUTHORS_STORAGE_KEY = "nivex.demo.community_followed_authors";
 const FOLLOWED_UPDATE_EVENT = "nova:community-followed-updated";
@@ -78,12 +83,11 @@ async function communityRequest<T>(path: string, options?: RequestInit): Promise
 }
 
 function loadStoredPosts(): CommunityPost[] {
-  // The live feed only shows posts from the shared backend (cached below).
-  const fallback = liveCommunity ? [] : INITIAL_DEMO_POSTS;
+  const fallback = INITIAL_DEMO_POSTS;
   if (typeof window === "undefined") return fallback;
   try {
     const raw = localStorage.getItem(COMMUNITY_POSTS_STORAGE_KEY);
-    if (!raw && liveCommunity) return [];
+    if (!raw && liveCommunity) return fallback;
     if (!raw) {
       localStorage.setItem(
         COMMUNITY_POSTS_STORAGE_KEY,
@@ -103,6 +107,22 @@ function loadStoredPosts(): CommunityPost[] {
     console.error("Failed to read community posts from localStorage:", err);
     return fallback;
   }
+}
+
+/** The sample posts as last changed in this browser (all of them at first). */
+function loadDemoPosts(): CommunityPost[] {
+  if (typeof window === "undefined") return INITIAL_DEMO_POSTS;
+  try {
+    if (!localStorage.getItem(COMMUNITY_POSTS_STORAGE_KEY)) return INITIAL_DEMO_POSTS;
+  } catch {
+    return INITIAL_DEMO_POSTS;
+  }
+  return loadStoredPosts().filter((post) => isDemoPost(post.id));
+}
+
+function byPinnedThenNewest(a: CommunityPost, b: CommunityPost) {
+  if (Boolean(a.isPinned) !== Boolean(b.isPinned)) return a.isPinned ? -1 : 1;
+  return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
 }
 
 function loadFollowedAuthors(): string[] {
@@ -137,7 +157,7 @@ function loadBlockedAuthors(): string[] {
 }
 
 export function useCommunityFeed() {
-  const [posts, setPosts] = useState<CommunityPost[]>(liveCommunity ? [] : INITIAL_DEMO_POSTS);
+  const [posts, setPosts] = useState<CommunityPost[]>(INITIAL_DEMO_POSTS);
   const [followedHandles, setFollowedHandles] = useState<string[]>([]);
   const [blockedHandles, setBlockedHandles] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -159,11 +179,14 @@ export function useCommunityFeed() {
   const refreshLivePosts = useCallback(async () => {
     if (!liveCommunity) return;
     const remote = await communityRequest<ApiPost[]>("/posts");
-    saveAndBroadcast(remote.map(mapPost));
+    saveAndBroadcast([...remote.map(mapPost), ...loadDemoPosts()].sort(byPinnedThenNewest));
   }, [saveAndBroadcast]);
 
-  const synchronize = useCallback((operation: () => Promise<unknown>) => {
+  /** Sends a change to the backend; sample posts and authors stay local. */
+  const synchronize = useCallback((operation: () => Promise<unknown>, target?: { postId?: string; handle?: string }) => {
     if (!liveCommunity) return;
+    if (target?.postId && isDemoPost(target.postId)) return;
+    if (target?.handle && DEMO_AUTHOR_HANDLES.has(target.handle)) return;
     void operation().then(() => refreshLivePosts()).catch((error) => {
       console.error("Community API request failed:", error);
     });
@@ -195,10 +218,9 @@ export function useCommunityFeed() {
     }
   }, []);
 
-  // Initial load. Live mode starts empty and shows only the backend response;
-  // the live cache is used just to share that response between hook instances.
+  // Initial load. Live mode then merges the backend response with the samples.
   useEffect(() => {
-    if (!liveCommunity) setPosts(loadStoredPosts());
+    setPosts(loadStoredPosts());
     setFollowedHandles(loadFollowedAuthors());
     setBlockedHandles(loadBlockedAuthors());
     setIsLoaded(true);
@@ -297,7 +319,7 @@ export function useCommunityFeed() {
       saveAndBroadcast(nextPosts);
       synchronize(() => communityRequest(`/posts/${postId}/reaction`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reaction }),
-      }));
+      }), { postId });
     },
     [posts, saveAndBroadcast, synchronize]
   );
@@ -326,7 +348,7 @@ export function useCommunityFeed() {
       saveAndBroadcast(nextPosts);
       synchronize(() => communityRequest(`/posts/${postId}/comments`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content }),
-      }));
+      }), { postId });
     },
     [posts, saveAndBroadcast, synchronize]
   );
@@ -355,7 +377,7 @@ export function useCommunityFeed() {
       saveAndBroadcast(nextPosts);
       synchronize(() => communityRequest(`/posts/${postId}/comments`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content, parentCommentId }),
-      }));
+      }), { postId });
     },
     [posts, saveAndBroadcast, synchronize]
   );
@@ -371,7 +393,7 @@ export function useCommunityFeed() {
       saveAndBroadcast(nextPosts);
       synchronize(() => communityRequest(`/posts/${postId}/comments/${targetId}/reaction`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reaction }),
-      }));
+      }), { postId });
     },
     [posts, saveAndBroadcast, synchronize]
   );
@@ -388,7 +410,7 @@ export function useCommunityFeed() {
       saveAndBroadcast(nextPosts);
       if (current) synchronize(() => communityRequest(`/posts/${postId}/pin`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: !current.isPinned }),
-      }));
+      }), { postId });
     },
     [posts, saveAndBroadcast, synchronize]
   );
@@ -405,7 +427,7 @@ export function useCommunityFeed() {
       saveAndBroadcast(nextPosts);
       if (current) synchronize(() => communityRequest(`/posts/${postId}/saved`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: !current.isSaved }),
-      }));
+      }), { postId });
     },
     [posts, saveAndBroadcast, synchronize]
   );
@@ -421,7 +443,7 @@ export function useCommunityFeed() {
       saveAndBroadcast(nextPosts);
       synchronize(() => communityRequest(`/posts/${postId}/hidden`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: true }),
-      }));
+      }), { postId });
     },
     [posts, saveAndBroadcast, synchronize]
   );
@@ -437,7 +459,7 @@ export function useCommunityFeed() {
       saveAndBroadcast(nextPosts);
       synchronize(() => communityRequest(`/posts/${postId}/hidden`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: false }),
-      }));
+      }), { postId });
     },
     [posts, saveAndBroadcast, synchronize]
   );
@@ -451,7 +473,7 @@ export function useCommunityFeed() {
       saveFollowedAndBroadcast(nextHandles);
       synchronize(() => communityRequest(`/profiles/${handle}/following`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: !isFollowed }),
-      }));
+      }), { handle });
     },
     [followedHandles, saveFollowedAndBroadcast, synchronize]
   );
@@ -460,7 +482,7 @@ export function useCommunityFeed() {
     (postId: string) => {
       const nextPosts = posts.filter((p) => p.id !== postId);
       saveAndBroadcast(nextPosts);
-      synchronize(() => communityRequest(`/posts/${postId}`, { method: "DELETE" }));
+      synchronize(() => communityRequest(`/posts/${postId}`, { method: "DELETE" }), { postId });
     },
     [posts, saveAndBroadcast, synchronize]
   );
@@ -480,7 +502,7 @@ export function useCommunityFeed() {
       }
       synchronize(() => communityRequest(`/profiles/${authorHandle}/blocked`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: true }),
-      }));
+      }), { handle: authorHandle });
     },
     [blockedHandles, followedHandles, saveBlockedAndBroadcast, saveFollowedAndBroadcast, synchronize]
   );
@@ -491,7 +513,7 @@ export function useCommunityFeed() {
       saveBlockedAndBroadcast(nextBlocked);
       synchronize(() => communityRequest(`/profiles/${authorHandle}/blocked`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: false }),
-      }));
+      }), { handle: authorHandle });
     },
     [blockedHandles, saveBlockedAndBroadcast, synchronize]
   );
@@ -530,7 +552,7 @@ export function useCommunityFeed() {
       if (current) synchronize(() => communityRequest(`/posts/${postId}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content, topics: topics ?? current.topics ?? [], privacy: current.privacy ?? "public" }),
-      }));
+      }), { postId });
     },
     [posts, saveAndBroadcast, synchronize]
   );
@@ -549,7 +571,7 @@ export function useCommunityFeed() {
       saveAndBroadcast(nextPosts);
       synchronize(() => communityRequest(`/posts/${postId}/privacy`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ privacy }),
-      }));
+      }), { postId });
     },
     [posts, saveAndBroadcast, synchronize]
   );
