@@ -1,0 +1,111 @@
+{
+  "profiles": [
+    { "id": "nova-demo-thu-ha", "name": "Phạm Thu Hà", "handle": "nova-demo.thuha", "headline": "Flutter Developer · Ứng dụng tài chính cá nhân", "bio": "Xây app di động gọn nhẹ, chạy tốt cả khi mạng yếu." },
+    { "id": "nova-demo-quang-vinh", "name": "Lê Quang Vinh", "handle": "nova-demo.quangvinh", "headline": "Product Designer · UI/UX cho sản phẩm số", "bio": "Thiết kế luồng trước, giao diện sau." },
+    { "id": "nova-demo-ngoc-mai", "name": "Trần Ngọc Mai", "handle": "nova-demo.ngocmai", "headline": "Brand Designer · Nhận diện thương hiệu cho startup", "bio": "Logo, bộ chữ và hệ thống nhận diện cho thương hiệu mới." },
+    { "id": "nova-demo-duc-khoa", "name": "Hoàng Đức Khoa", "handle": "nova-demo.duckhoa", "headline": "Backend Engineer · Java, Spring Boot, PostgreSQL", "bio": "Làm remote từ Huế, thích API rõ ràng và dữ liệu nhất quán." },
+    { "id": "nova-demo-bao-chau", "name": "Võ Bảo Châu", "handle": "nova-demo.baochau", "headline": "Talent Partner · Kết nối freelancer với doanh nghiệp", "bio": "Giúp studio nhỏ tìm đúng người cho từng dự án." },
+    { "id": "nova-demo-hai-nam", "name": "Đặng Hải Nam", "handle": "nova-demo.hainam", "headline": "Web3 Developer · Thanh toán trên Solana", "bio": "Thử nghiệm thanh toán USDC trên Solana Devnet." },
+    { "id": "nova-demo-kim-ngan", "name": "Bùi Kim Ngân", "handle": "nova-demo.kimngan", "headline": "QA Engineer · Kiểm thử ứng dụng di động", "bio": "" },
+    { "id": "nova-demo-tien-dat", "name": "Ngô Tiến Đạt", "handle": "nova-demo.tiendat", "headline": "Data Analyst · Báo cáo và dashboard", "bio": "" },
+    { "id": "nova-demo-phuong-linh", "name": "Mai Phương Linh", "handle": "nova-demo.phuonglinh", "headline": "Content Writer · Nội dung công nghệ", "bio": "" },
+    { "id": "nova-demo-hoang-phuc", "name": "Lưu Hoàng Phúc", "handle": "nova-demo.hoangphuc", "headline": "Frontend Developer · React, Next.js", "bio": "" }
+  ],
+  "posts": [
+    {
+      "id": "5eed0000-0000-4000-8000-000000000001", "author": "nova-demo-thu-ha", "hoursAgo": 3,
+      "image": { "file": "p1-flutter-app.jpg", "mediaId": "5eed0d00-0000-4000-8000-000000000001", "rowId": "5eed0e00-0000-4000-8000-000000000001" },
+      "content": "Mình vừa xong bản MVP một app nhỏ bằng Flutter: chia tiền khi cả nhóm đi công tác hoặc thuê chỗ làm việc chung.\n\nĐiểm mình đầu tư nhiều nhất là chạy offline: nhập khoản chi ngay cả khi mất sóng, có mạng thì tự đồng bộ. Dữ liệu cục bộ dùng Drift, quản lý state bằng Riverpod.\n\nTuần sau mình mở bản thử nghiệm cho khoảng 10 nhóm. Ai hay phải ngồi cộng trừ hóa đơn sau mỗi chuyến đi thì để lại bình luận nhé.",
+      "reactions": [["nova-demo-kim-ngan", "LOVE"], ["nova-demo-quang-vinh", "LIKE"], ["nova-demo-duc-khoa", "BUILD"], ["nova-demo-bao-chau", "LAUNCH"], ["nova-demo-hoang-phuc", "LIKE"], ["nova-demo-tien-dat", "LIKE"], ["nova-demo-hai-nam", "BUILD"]],
+      "comments": [
+        { "id": "5eed0c00-0000-4000-8000-000000000101", "author": "nova-demo-kim-ngan", "minutesAfter": 18, "content": "Offline-first cho app chia tiền là chuẩn bài, đi chỗ sóng yếu là chuyện thường. Cho mình đăng ký thử nghiệm với nhé!", "reactions": [["nova-demo-thu-ha", "LOVE"]] },
+        { "id": "5eed0c00-0000-4000-8000-000000000102", "parent": "5eed0c00-0000-4000-8000-000000000101", "author": "nova-demo-thu-ha", "minutesAfter": 31, "content": "Cảm ơn Ngân! Mình sẽ gửi link bản thử nghiệm trong tuần này." },
+        { "id": "5eed0c00-0000-4000-8000-000000000103", "author": "nova-demo-quang-vinh", "minutesAfter": 44, "content": "Màn tổng chi nhìn gọn. Nút thêm khoản chi đặt dưới cùng nên bấm một tay rất thuận." }
+      ]
+    },
+    {
+      "id": "5eed0000-0000-4000-8000-000000000002", "author": "nova-demo-quang-vinh", "hoursAgo": 6,
+      "image": { "file": "p2-wireframes.jpg", "mediaId": "5eed0d00-0000-4000-8000-000000000002", "rowId": "5eed0e00-0000-4000-8000-000000000002" },
+      "content": "Một thói quen nhỏ khi thiết kế giao diện: mình luôn phác wireframe trên giấy trước khi mở Figma.\n\nGiấy buộc mình nghĩ về luồng và thứ tự thông tin, chưa sa vào màu sắc hay bo góc. Sau ba, bốn phương án nháp, bản nào còn trụ lại mới được dựng thành màn hình hoàn chỉnh.\n\nMọi người thường bắt đầu một màn hình mới từ đâu?",
+      "reactions": [["nova-demo-ngoc-mai", "INSIGHTFUL"], ["nova-demo-thu-ha", "LIKE"], ["nova-demo-hoang-phuc", "LIKE"], ["nova-demo-phuong-linh", "LOVE"], ["nova-demo-kim-ngan", "LIKE"]],
+      "comments": [
+        { "id": "5eed0c00-0000-4000-8000-000000000201", "author": "nova-demo-ngoc-mai", "minutesAfter": 25, "content": "Đồng ý, phác trên giấy giúp mình dám bỏ ý tưởng dở nhanh hơn." },
+        { "id": "5eed0c00-0000-4000-8000-000000000202", "author": "nova-demo-hoang-phuc", "minutesAfter": 52, "content": "Mình thì dựng khối xám thẳng trong Figma, nhưng luôn giới hạn 20 phút cho bản nháp đầu.", "reactions": [["nova-demo-quang-vinh", "LIKE"]] }
+      ]
+    },
+    {
+      "id": "5eed0000-0000-4000-8000-000000000003", "author": "nova-demo-duc-khoa", "hoursAgo": 12,
+      "image": { "file": "p3-home-office.jpg", "mediaId": "5eed0d00-0000-4000-8000-000000000003", "rowId": "5eed0e00-0000-4000-8000-000000000003" },
+      "content": "Hai năm làm remote, đây là vài điều mình ước biết sớm hơn:\n\n1. Viết nhiều hơn nói. Một đoạn mô tả rõ trong ticket tiết kiệm được cả cuộc gọi 30 phút.\n2. Báo tiến độ trước khi bị hỏi. Chỉ cần một dòng cuối ngày: đã xong gì, đang vướng gì.\n3. Tách không gian làm việc. Một góc bàn cố định giúp đầu óc vào nhịp nhanh hơn.\n4. Thống nhất khung giờ phản hồi. Không cần online cả ngày, nhưng khách hàng cần biết khi nào chắc chắn gặp được bạn.\n5. Nghỉ thật. Làm ở nhà rất dễ biến thành làm cả tối.\n\nĐiều khó nhất với mình không phải kỹ thuật mà là giữ nhịp đều đặn. Mọi người có mẹo gì để tập trung khi làm một mình không?",
+      "reactions": [["nova-demo-phuong-linh", "INSIGHTFUL"], ["nova-demo-tien-dat", "LIKE"], ["nova-demo-thu-ha", "TRUST"], ["nova-demo-kim-ngan", "LIKE"], ["nova-demo-bao-chau", "INSIGHTFUL"], ["nova-demo-quang-vinh", "LIKE"], ["nova-demo-hai-nam", "LIKE"], ["nova-demo-hoang-phuc", "HAHA"], ["nova-demo-ngoc-mai", "LOVE"]],
+      "comments": [
+        { "id": "5eed0c00-0000-4000-8000-000000000301", "author": "nova-demo-phuong-linh", "minutesAfter": 40, "content": "Điểm 2 đúng quá. Báo tiến độ trước khi bị hỏi làm khách hàng yên tâm hơn nhiều.", "reactions": [["nova-demo-duc-khoa", "LIKE"], ["nova-demo-thu-ha", "LIKE"]] },
+        { "id": "5eed0c00-0000-4000-8000-000000000302", "parent": "5eed0c00-0000-4000-8000-000000000301", "author": "nova-demo-duc-khoa", "minutesAfter": 58, "content": "Chuẩn, và nó còn giúp chính mình nhìn lại một ngày đã làm được gì." },
+        { "id": "5eed0c00-0000-4000-8000-000000000303", "author": "nova-demo-tien-dat", "minutesAfter": 95, "content": "Mình làm theo nhịp 50 phút tập trung, 10 phút nghỉ. Làm một mình mà vẫn giữ được đều tay." }
+      ]
+    },
+    {
+      "id": "5eed0000-0000-4000-8000-000000000004", "author": "nova-demo-bao-chau", "hoursAgo": 26,
+      "image": { "file": "p4-meeting-room.jpg", "mediaId": "5eed0d00-0000-4000-8000-000000000004", "rowId": "5eed0e00-0000-4000-8000-000000000004" },
+      "content": "Studio mình đang tìm 2 freelancer cho một dự án app đặt lịch trong 6 tuần: một Flutter developer và một UI designer.\n\nLàm việc theo cột mốc, mỗi cột mốc có tiêu chí nghiệm thu rõ ràng và thanh toán sau khi duyệt. Ưu tiên bạn có dự án thật để tham khảo, không cần CV dài.\n\nBạn nào quan tâm cứ nhắn tin cho mình qua Nova.",
+      "reactions": [["nova-demo-thu-ha", "LAUNCH"], ["nova-demo-quang-vinh", "LIKE"], ["nova-demo-hoang-phuc", "TRUST"]],
+      "comments": []
+    },
+    {
+      "id": "5eed0000-0000-4000-8000-000000000005", "author": "nova-demo-ngoc-mai", "hoursAgo": 46,
+      "content": "Câu hỏi cho các bạn freelancer: khi báo giá, các bạn tính theo giờ hay trọn gói theo dự án? Và làm sao để khách hiểu phần chỉnh sửa thêm không nằm trong báo giá ban đầu?",
+      "reactions": [["nova-demo-duc-khoa", "LIKE"], ["nova-demo-kim-ngan", "INSIGHTFUL"]],
+      "comments": [
+        { "id": "5eed0c00-0000-4000-8000-000000000501", "author": "nova-demo-duc-khoa", "minutesAfter": 22, "content": "Mình báo giá trọn gói theo cột mốc, và ghi rõ số vòng chỉnh sửa trong mỗi cột mốc." },
+        { "id": "5eed0c00-0000-4000-8000-000000000502", "author": "nova-demo-kim-ngan", "minutesAfter": 47, "content": "Theo giờ cho việc bảo trì, trọn gói cho dự án mới. Quan trọng nhất là viết phạm vi công việc thật cụ thể.", "reactions": [["nova-demo-ngoc-mai", "LIKE"]] },
+        { "id": "5eed0c00-0000-4000-8000-000000000503", "parent": "5eed0c00-0000-4000-8000-000000000501", "author": "nova-demo-ngoc-mai", "minutesAfter": 70, "content": "Cảm ơn hai bạn, ý ghi số vòng chỉnh sửa rất đáng thử." }
+      ]
+    },
+    {
+      "id": "5eed0000-0000-4000-8000-000000000006", "author": "nova-demo-duc-khoa", "hoursAgo": 31,
+      "image": { "file": "p6-coding.jpg", "mediaId": "5eed0d00-0000-4000-8000-000000000006", "rowId": "5eed0e00-0000-4000-8000-000000000006" },
+      "content": "Một kỹ thuật backend nhỏ nhưng cứu mình nhiều lần: idempotency key cho các API tạo dữ liệu quan trọng.\n\nClient gửi kèm một khóa duy nhất cho mỗi thao tác, ví dụ tạo hóa đơn. Nếu mạng chập chờn và client gửi lại, server nhận ra khóa cũ và trả về kết quả đã tạo, thay vì tạo thêm bản ghi thứ hai.\n\nHai lưu ý:\n- Lưu khóa cùng nội dung yêu cầu. Cùng khóa mà nội dung khác thì nên trả lỗi 409.\n- Đặt ràng buộc unique ở database, đừng chỉ kiểm tra trong code.\n\nVới luồng thanh toán, việc này gần như là bắt buộc.",
+      "reactions": [["nova-demo-hai-nam", "INSIGHTFUL"], ["nova-demo-hoang-phuc", "BUILD"], ["nova-demo-tien-dat", "LIKE"], ["nova-demo-thu-ha", "INSIGHTFUL"], ["nova-demo-kim-ngan", "LIKE"], ["nova-demo-bao-chau", "LIKE"]],
+      "comments": [
+        { "id": "5eed0c00-0000-4000-8000-000000000601", "author": "nova-demo-hai-nam", "minutesAfter": 35, "content": "Bên thanh toán on-chain mình còn dùng chữ ký giao dịch làm khóa unique, để một giao dịch không bị ghi nhận hai lần.", "reactions": [["nova-demo-duc-khoa", "BUILD"]] },
+        { "id": "5eed0c00-0000-4000-8000-000000000602", "author": "nova-demo-hoang-phuc", "minutesAfter": 61, "content": "Phía frontend nhớ giữ nguyên khóa khi người dùng bấm thử lại, đừng sinh khóa mới mỗi lần." }
+      ]
+    },
+    {
+      "id": "5eed0000-0000-4000-8000-000000000007", "author": "nova-demo-ngoc-mai", "hoursAgo": 20,
+      "image": { "file": "p7-typography.jpg", "mediaId": "5eed0d00-0000-4000-8000-000000000007", "rowId": "5eed0e00-0000-4000-8000-000000000007" },
+      "content": "Làm nhận diện cho startup, mình thường bắt đầu bằng chữ trước màu.\n\nMột bộ chữ tốt đã nói lên phần lớn tính cách thương hiệu: vững chãi, thân thiện hay cao cấp. Màu sắc và biểu tượng đến sau, và cần đứng được cả khi in đen trắng.\n\nGợi ý cho bạn mới làm: giới hạn tối đa hai font, và thử logo ở kích thước 24px trước khi trình bày cho khách.",
+      "reactions": [["nova-demo-quang-vinh", "LOVE"], ["nova-demo-phuong-linh", "LIKE"], ["nova-demo-bao-chau", "INSIGHTFUL"], ["nova-demo-thu-ha", "LIKE"]],
+      "comments": []
+    },
+    {
+      "id": "5eed0000-0000-4000-8000-000000000008", "author": "nova-demo-thu-ha", "hoursAgo": 52,
+      "image": { "file": "p8-sprint-board.jpg", "mediaId": "5eed0d00-0000-4000-8000-000000000008", "rowId": "5eed0e00-0000-4000-8000-000000000008" },
+      "content": "Cập nhật sprint 3 của app chia tiền nhóm: đã xong tạo nhóm, nhập nhanh khoản chi, tính số dư từng người và giao diện tối. Đang làm phần đồng bộ khi mất mạng, phần khó nhất từ đầu dự án. Mục tiêu cuối tuần sau là 80%.",
+      "reactions": [["nova-demo-kim-ngan", "BUILD"], ["nova-demo-duc-khoa", "LIKE"], ["nova-demo-quang-vinh", "LIKE"]],
+      "comments": []
+    },
+    {
+      "id": "5eed0000-0000-4000-8000-000000000009", "author": "nova-demo-bao-chau", "hoursAgo": 40,
+      "image": { "file": "p9-profile-checklist.jpg", "mediaId": "5eed0d00-0000-4000-8000-000000000009", "rowId": "5eed0e00-0000-4000-8000-000000000009" },
+      "content": "Mình đọc khá nhiều hồ sơ freelancer mỗi tuần. Vài điều giúp một hồ sơ nổi bật ngay từ 30 giây đầu:\n\n• Tiêu đề nói rõ bạn làm gì, cho ai. \"Flutter Developer cho app đặt lịch và thanh toán\" dễ nhớ hơn \"Lập trình viên đam mê công nghệ\".\n• Ba dự án tiêu biểu là đủ, miễn mỗi dự án ghi rõ vai trò của bạn và kết quả cụ thể.\n• Kỹ năng nên khớp với tin tuyển bạn đang ứng tuyển, không cần kể hết mọi thứ từng dùng.\n• Lời nhắn ứng tuyển viết riêng cho từng việc, ba đến bốn câu là đủ.\n\nVà một điều hay bị quên: trả lời tin nhắn trong vòng một ngày. Nhiều khi đó là yếu tố quyết định giữa hai ứng viên ngang nhau.",
+      "reactions": [["nova-demo-thu-ha", "INSIGHTFUL"], ["nova-demo-phuong-linh", "LOVE"], ["nova-demo-kim-ngan", "LIKE"], ["nova-demo-tien-dat", "INSIGHTFUL"], ["nova-demo-hoang-phuc", "LIKE"], ["nova-demo-quang-vinh", "TRUST"], ["nova-demo-duc-khoa", "LIKE"], ["nova-demo-hai-nam", "LIKE"]],
+      "comments": [
+        { "id": "5eed0c00-0000-4000-8000-000000000901", "author": "nova-demo-thu-ha", "minutesAfter": 28, "content": "Phần tiêu đề hồ sơ rất đúng. Mình đổi tiêu đề cho cụ thể hơn thì được liên hệ nhiều hơn hẳn.", "reactions": [["nova-demo-bao-chau", "LOVE"]] },
+        { "id": "5eed0c00-0000-4000-8000-000000000902", "parent": "5eed0c00-0000-4000-8000-000000000901", "author": "nova-demo-bao-chau", "minutesAfter": 49, "content": "Mừng cho Hà! Tiêu đề cụ thể giúp doanh nghiệp lọc hồ sơ nhanh hơn nhiều." },
+        { "id": "5eed0c00-0000-4000-8000-000000000903", "author": "nova-demo-phuong-linh", "minutesAfter": 83, "content": "Lưu lại để sửa hồ sơ cuối tuần này." }
+      ]
+    },
+    {
+      "id": "5eed0000-0000-4000-8000-000000000010", "author": "nova-demo-hai-nam", "hoursAgo": 9,
+      "image": { "file": "p10-usdc-flow.jpg", "mediaId": "5eed0d00-0000-4000-8000-000000000010", "rowId": "5eed0e00-0000-4000-8000-000000000010" },
+      "content": "Nhiều bạn hỏi thanh toán USDC trên Solana Devnet trong Nova hoạt động thế nào. Mình tóm tắt đơn giản:\n\n1. Doanh nghiệp tạo hóa đơn cho freelancer đã được nhận.\n2. Hệ thống tạo yêu cầu thanh toán gồm số tiền, ví nhận và một mã tham chiếu riêng.\n3. Người trả ký giao dịch bằng ví của mình. Nova không giữ khóa riêng của ai.\n4. Backend kiểm tra giao dịch trên chain: đúng token USDC, đúng ví nhận, đúng số tiền và đúng mã tham chiếu.\n5. Trạng thái confirmed mới chỉ là \"đã phát hiện\". Chỉ khi finalized, hóa đơn mới chuyển sang đã thanh toán.\n\nLưu ý: Devnet là mạng thử nghiệm, USDC ở đây không có giá trị thật. Mục đích là kiểm chứng trọn luồng trước khi nghĩ đến mainnet.",
+      "reactions": [["nova-demo-tien-dat", "INSIGHTFUL"], ["nova-demo-duc-khoa", "TRUST"], ["nova-demo-kim-ngan", "LIKE"], ["nova-demo-bao-chau", "LIKE"], ["nova-demo-thu-ha", "LAUNCH"], ["nova-demo-hoang-phuc", "INSIGHTFUL"]],
+      "comments": [
+        { "id": "5eed0c00-0000-4000-8000-000000001001", "author": "nova-demo-tien-dat", "minutesAfter": 33, "content": "Giải thích dễ hiểu. Nếu người trả gửi nhầm token khác thì sao anh?" },
+        { "id": "5eed0c00-0000-4000-8000-000000001002", "parent": "5eed0c00-0000-4000-8000-000000001001", "author": "nova-demo-hai-nam", "minutesAfter": 51, "content": "Backend kiểm tra đúng mint USDC, nên giao dịch sai token sẽ không được ghi nhận và hóa đơn vẫn ở trạng thái chờ.", "reactions": [["nova-demo-tien-dat", "LIKE"], ["nova-demo-kim-ngan", "LIKE"]] },
+        { "id": "5eed0c00-0000-4000-8000-000000001003", "author": "nova-demo-kim-ngan", "minutesAfter": 76, "content": "Rất thích việc tách rõ confirmed và finalized, kiểm thử cũng dễ hơn." }
+      ]
+    }
+  ]
+}

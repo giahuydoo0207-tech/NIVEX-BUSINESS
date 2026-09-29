@@ -35,10 +35,13 @@ public class MobileCommunityCompatibilityController {
     private static final List<String> PRIVACY = List.of("PUBLIC", "FOLLOWERS", "ONLY_ME");
     private final CommunityRepository repository;
     private final MobileSessionAuthenticator sessions;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbc;
 
-    public MobileCommunityCompatibilityController(CommunityRepository repository, MobileSessionAuthenticator sessions) {
+    public MobileCommunityCompatibilityController(CommunityRepository repository, MobileSessionAuthenticator sessions,
+                                                  org.springframework.jdbc.core.JdbcTemplate jdbc) {
         this.repository = repository;
         this.sessions = sessions;
+        this.jdbc = jdbc;
     }
 
     @GetMapping("/feed")
@@ -60,7 +63,8 @@ public class MobileCommunityCompatibilityController {
     @ResponseStatus(HttpStatus.CREATED)
     public CommunityPost create(@RequestHeader("Authorization") String authorization,
                                 @Valid @RequestBody CreatePost request) {
-        return repository.create(actor(authorization), request.content(), List.of(), List.of(), privacy(request.privacy()));
+        String actor = actor(authorization);
+        return repository.create(actor, request.content(), ownImages(actor, request.images()), topics(request.topics()), privacy(request.privacy()));
     }
 
     @GetMapping("/{postId}")
@@ -155,6 +159,33 @@ public class MobileCommunityCompatibilityController {
     }
 
     private String actor(String authorization) { return sessions.authenticate(authorization).contractorId(); }
+
+    /** Only media the member uploaded through /mobile/media may be attached, never other users' files or external URLs. */
+    private List<String> ownImages(String actor, List<String> images) {
+        if (images == null || images.isEmpty()) return List.of();
+        if (images.size() > 10) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Use at most 10 images");
+        List<UUID> ids = images.stream().map(url -> {
+            if (url == null || !url.matches("/media/community/[0-9a-fA-F-]{36}")) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Upload images through /api/v1/mobile/media first");
+            }
+            return UUID.fromString(url.substring("/media/community/".length()));
+        }).distinct().toList();
+        Object[] args = new Object[ids.size() + 1];
+        args[0] = actor;
+        for (int i = 0; i < ids.size(); i++) args[i + 1] = ids.get(i);
+        Integer owned = jdbc.queryForObject("select count(*) from community_media where owner_id=? and id in ("
+            + String.join(",", java.util.Collections.nCopies(ids.size(), "?")) + ")", Integer.class, args);
+        if (owned == null || owned != ids.size()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Images must be your own uploads");
+        return ids.stream().map(id -> "/media/community/" + id).toList();
+    }
+
+    private List<String> topics(List<String> topics) {
+        if (topics == null) return List.of();
+        if (topics.size() > 5 || topics.stream().anyMatch(topic -> topic == null || topic.isBlank() || topic.trim().length() > 80)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Use between 0 and 5 valid topics");
+        }
+        return topics.stream().map(String::trim).distinct().toList();
+    }
     private String privacy(String value) {
         String normalized = value == null ? "PUBLIC" : value.trim().toUpperCase(Locale.ROOT);
         if (!PRIVACY.contains(normalized)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid privacy");
@@ -163,7 +194,7 @@ public class MobileCommunityCompatibilityController {
 
     public record Feed(List<CommunityPost> items, String nextCursor) {}
     public record CommentList(List<CommunityComment> items) {}
-    public record CreatePost(@NotBlank @Size(max = 2000) String content, String privacy) {}
+    public record CreatePost(@NotBlank @Size(max = 2000) String content, String privacy, List<String> images, List<String> topics) {}
     public record EditPost(@Size(min = 1, max = 2000) String content, String privacy) {}
     public record Toggle(boolean enabled) {}
     public record CreateComment(@NotBlank @Size(max = 1000) String content, UUID parentId) {}

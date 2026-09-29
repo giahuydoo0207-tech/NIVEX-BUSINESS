@@ -16,13 +16,15 @@ import {
   togglePostSave as toggleSaveUtil,
 } from "@/lib/community-utils";
 
-const COMMUNITY_POSTS_STORAGE_KEY = "nivex.demo.community_posts";
+const liveCommunity = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
+// Live mode keeps its own key: it only ever holds backend responses, so it can
+// never mix with posts cached by an earlier demo session in the same browser.
+const COMMUNITY_POSTS_STORAGE_KEY = liveCommunity ? "nivex.live.community_posts" : "nivex.demo.community_posts";
 const COMMUNITY_UPDATE_EVENT = "nova:community-updated";
 const FOLLOWED_AUTHORS_STORAGE_KEY = "nivex.demo.community_followed_authors";
 const FOLLOWED_UPDATE_EVENT = "nova:community-followed-updated";
 const BLOCKED_AUTHORS_STORAGE_KEY = "nivex.demo.community_blocked_authors";
 const BLOCKED_UPDATE_EVENT = "nova:community-blocked-updated";
-const liveCommunity = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
 
 type ApiProfile = { id: string; kind: string; displayName: string; handle: string; headline: string; avatarUrl?: string | null };
 type ApiComment = { id: string; content: string; createdAt: string; author: ApiProfile; likeCount: number; isLiked: boolean; myReaction?: string | null; reactionCounts?: Record<string, number>; replies: ApiComment[] };
@@ -78,9 +80,7 @@ async function communityRequest<T>(path: string, options?: RequestInit): Promise
 function loadStoredPosts(): CommunityPost[] {
   // The live feed only shows posts from the shared backend (cached below).
   const fallback = liveCommunity ? [] : INITIAL_DEMO_POSTS;
-  // Live: the browser cache may still hold demo posts from an earlier demo
-  // session, so only the backend response is shown.
-  if (typeof window === "undefined" || liveCommunity) return fallback;
+  if (typeof window === "undefined") return fallback;
   try {
     const raw = localStorage.getItem(COMMUNITY_POSTS_STORAGE_KEY);
     if (!raw && liveCommunity) return [];
@@ -195,9 +195,10 @@ export function useCommunityFeed() {
     }
   }, []);
 
-  // Initial load
+  // Initial load. Live mode starts empty and shows only the backend response;
+  // the live cache is used just to share that response between hook instances.
   useEffect(() => {
-    setPosts(loadStoredPosts());
+    if (!liveCommunity) setPosts(loadStoredPosts());
     setFollowedHandles(loadFollowedAuthors());
     setBlockedHandles(loadBlockedAuthors());
     setIsLoaded(true);
@@ -206,6 +207,12 @@ export function useCommunityFeed() {
   useEffect(() => {
     if (!liveCommunity) return;
     void refreshLivePosts().catch(() => undefined);
+    // Posts from Nova Mobile appear when the tab is focused again.
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void refreshLivePosts().catch(() => undefined);
+    };
+    window.addEventListener("focus", refreshWhenVisible);
+    return () => window.removeEventListener("focus", refreshWhenVisible);
   }, [refreshLivePosts]);
 
   // Listeners for storage changes
@@ -234,8 +241,26 @@ export function useCommunityFeed() {
   }, []);
 
   // Actions
+  /**
+   * Live: resolves only after the backend saved the post and the feed was
+   * reloaded, and rejects on failure so nothing unsaved is ever shown.
+   */
   const publishPost = useCallback(
-    (content: string, images: string[], topics: string[] = []) => {
+    async (content: string, images: string[], topics: string[] = []): Promise<void> => {
+      if (liveCommunity) {
+        await communityRequest("/posts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: content.trim() || "Ảnh mới",
+            images: images.map((image) => image.replace("/api/devnet", "")),
+            topics,
+            privacy: "public",
+          }),
+        });
+        await refreshLivePosts();
+        return;
+      }
       const newPost: CommunityPost = {
         id: `post-mine-${Date.now()}`,
         content: content.trim(),
@@ -249,22 +274,17 @@ export function useCommunityFeed() {
         comments: [],
       };
 
-      const nextPosts = [newPost, ...posts];
-      saveAndBroadcast(nextPosts);
-      synchronize(() => communityRequest("/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: newPost.content || "Ảnh mới",
-          images: images.map((image) => image.replace("/api/devnet", "")),
-          topics,
-          privacy: "public",
-        }),
-      }));
-      return newPost;
+      saveAndBroadcast([newPost, ...posts]);
     },
-    [posts, saveAndBroadcast, synchronize]
+    [posts, saveAndBroadcast, refreshLivePosts]
   );
+
+  /** Deletes an uploaded draft image that will not be published. */
+  const discardUploadedImage = useCallback((image: string) => {
+    const match = /\/media\/community\/([0-9a-fA-F-]{36})$/.exec(image);
+    if (!liveCommunity || !match) return;
+    void fetch(`/api/devnet/community/media/${match[1]}`, { method: "DELETE" }).catch(() => undefined);
+  }, []);
 
   const reactToPost = useCallback(
     (postId: string, reaction: PostReactionType) => {
@@ -540,6 +560,7 @@ export function useCommunityFeed() {
     blockedHandles,
     isLoaded,
     publishPost,
+    discardUploadedImage,
     reactToPost,
     addComment,
     addReply,

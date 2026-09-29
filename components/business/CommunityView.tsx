@@ -42,6 +42,7 @@ export function CommunityView({ preview }: CommunityViewProps = {}) {
     blockedHandles,
     isLoaded,
     publishPost,
+    discardUploadedImage,
     reactToPost,
     addComment,
     addReply,
@@ -123,6 +124,8 @@ export function CommunityView({ preview }: CommunityViewProps = {}) {
   };
 
   const handleRemoveImage = (index: number) => {
+    const removed = selectedImages[index];
+    if (removed) discardUploadedImage(removed);
     setSelectedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -132,20 +135,29 @@ export function CommunityView({ preview }: CommunityViewProps = {}) {
     );
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     const trimmed = composerText.trim();
     if (!trimmed && selectedImages.length === 0) return;
+    if (isPublishing) return;
 
     setIsPublishing(true);
-    setTimeout(() => {
-      publishPost(trimmed, selectedImages, selectedTopics);
+    try {
+      await publishPost(trimmed, selectedImages, selectedTopics);
       setComposerText("");
       setSelectedImages([]);
       setSelectedTopics([]);
       setShowTopicPicker(false);
-      setIsPublishing(false);
       showNotice("Đã chia sẻ bài viết lên bảng tin cộng đồng!");
-    }, 250);
+    } catch (error) {
+      // The draft (text, uploaded images, topics) is kept so the user can retry.
+      showNotice(
+        error instanceof Error
+          ? `Chưa đăng được bài: ${error.message}`
+          : "Chưa đăng được bài. Vui lòng thử lại.",
+      );
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   // Keep commentingPost up to date if current post gets mutated in state
