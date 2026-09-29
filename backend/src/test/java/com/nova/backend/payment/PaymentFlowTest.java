@@ -32,10 +32,11 @@ class PaymentFlowTest {
     @MockitoBean DevnetRpc rpc;
 
     String create(String key, String amount) throws Exception {
+        com.nova.backend.TestRecipients.acceptedApplication(jdbc, "accepted");
         var result = mvc.perform(post("/api/v1/invoices").header("Idempotency-Key",key)
             .header("X-Nova-Demo-Key", DEMO_KEY)
             .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(java.util.Map.of(
-                "contractorId","demo", "description","Payment test", "amountMinor",amount,
+                "contractorId",com.nova.backend.TestRecipients.CONTRACTOR, "description","Payment test", "amountMinor",amount,
                 "dueDate",java.time.LocalDate.now().plusDays(7).toString()))))
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         return json.readTree(result).path("id").asText();
@@ -114,8 +115,50 @@ class PaymentFlowTest {
         mvc.perform(post("/api/v1/invoices").header("Idempotency-Key",key)
             .header("X-Nova-Demo-Key", DEMO_KEY)
             .contentType(MediaType.APPLICATION_JSON)
-            .content(json.writeValueAsString(java.util.Map.of("contractorId","demo","description","Payment test",
+            .content(json.writeValueAsString(java.util.Map.of("contractorId",com.nova.backend.TestRecipients.CONTRACTOR,"description","Payment test",
                 "amountMinor","2000000","dueDate",java.time.LocalDate.now().plusDays(7).toString()))))
             .andExpect(status().isConflict());
+    }
+
+    private void createFor(String contractorId, int expected) throws Exception {
+        mvc.perform(post("/api/v1/invoices").header("Idempotency-Key",UUID.randomUUID().toString())
+            .header("X-Nova-Demo-Key", DEMO_KEY)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json.writeValueAsString(java.util.Map.of("contractorId",contractorId,"description","Payment test",
+                "amountMinor","1000000","dueDate",java.time.LocalDate.now().plusDays(7).toString()))))
+            .andExpect(status().is(expected));
+    }
+
+    @Test void onlyAnAcceptedCandidateOfTheOrganizationCanBeInvoiced() throws Exception {
+        createFor("contractor-tran-quoc-bao", 422);
+        createFor(com.nova.backend.TestRecipients.CONTRACTOR, 422);
+        for (String status : List.of("submitted", "rejected", "withdrawn")) {
+            com.nova.backend.TestRecipients.acceptedApplication(jdbc, status);
+            createFor(com.nova.backend.TestRecipients.CONTRACTOR, 422);
+        }
+        UUID accepted = com.nova.backend.TestRecipients.acceptedApplication(jdbc, "accepted");
+
+        mvc.perform(get("/api/v1/business/recipients").header("X-Nova-Demo-Key", DEMO_KEY))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].contractorId").value(com.nova.backend.TestRecipients.CONTRACTOR))
+            .andExpect(jsonPath("$[0].applicationId").value(accepted.toString()))
+            .andExpect(jsonPath("$[0].applicationStatus").value("accepted"))
+            .andExpect(jsonPath("$[0].displayName").isNotEmpty())
+            .andExpect(jsonPath("$[0].payoutReadiness").value("NOT_CONFIGURED"));
+        mvc.perform(get("/api/v1/business/recipients")).andExpect(status().isUnauthorized());
+
+        String body = mvc.perform(post("/api/v1/invoices").header("Idempotency-Key",UUID.randomUUID().toString())
+                .header("X-Nova-Demo-Key", DEMO_KEY).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(java.util.Map.of("contractorId",com.nova.backend.TestRecipients.CONTRACTOR,
+                    "description","Milestone 1","amountMinor","1000000","dueDate",java.time.LocalDate.now().plusDays(7).toString()))))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.contractorId").value(com.nova.backend.TestRecipients.CONTRACTOR))
+            .andExpect(jsonPath("$.applicationId").value(accepted.toString()))
+            .andExpect(jsonPath("$.organizationId").value(com.nova.backend.TestRecipients.ORG.toString()))
+            .andExpect(jsonPath("$.recipientName").isNotEmpty())
+            .andExpect(jsonPath("$.jobTitle").value("Invoice test job"))
+            .andReturn().getResponse().getContentAsString();
+        org.junit.jupiter.api.Assertions.assertFalse(body.contains("demo"), body);
     }
 }

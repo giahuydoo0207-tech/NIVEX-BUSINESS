@@ -27,7 +27,14 @@ import { formatUsdc } from "@/lib/money";
 import { formatDate, statusLabels, statusTone } from "@/lib/portal-data";
 import type { Invoice } from "@/types/invoice";
 import { isPaidInvoice, isPendingInvoice } from "@/lib/invoice-api";
+import { proxiedMediaUrl } from "@/lib/workspace-api";
 const devnet = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
+
+/** Live invoices carry the backend recipient; demo invoices use the fixture list. */
+function recipientName(invoice: Invoice) {
+  if (devnet) return invoice.recipientName ?? "Người nhận không còn trong hệ thống";
+  return demoContractors.find((person) => person.id === invoice.contractorId)?.displayName || "Người nhận demo";
+}
 export function InvoiceTable({
   invoices,
   compact = false,
@@ -71,18 +78,21 @@ export function InvoiceTable({
       },
       {
         id: "recipient",
-        accessorFn: (item) =>
-          demoContractors.find((person) => person.id === item.contractorId)
-            ?.displayName || "Người nhận",
+        accessorFn: (item) => recipientName(item),
         header: "Người nhận",
-        cell: ({ getValue }) => (
+        cell: ({ getValue, row }) => (
           <span className="table-person">
             <span className="avatar small">
-              {String(getValue())
-                .split(" ")
-                .slice(-2)
-                .map((word) => word[0])
-                .join("")}
+              {row.original.recipientAvatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={proxiedMediaUrl(row.original.recipientAvatarUrl)} alt="" />
+              ) : (
+                String(getValue())
+                  .split(" ")
+                  .slice(-2)
+                  .map((word) => word[0])
+                  .join("")
+              )}
             </span>
             {String(getValue())}
           </span>
@@ -162,8 +172,7 @@ export function InvoiceTable({
         .getFilteredRowModel()
         .rows.map(({ original: item }) => [
           item.invoiceNumber,
-          demoContractors.find((person) => person.id === item.contractorId)
-            ?.displayName || "",
+          recipientName(item),
           formatUsdc(item.sourceAmountMinor),
           formatDate(item.createdAt),
           statusLabels[item.status],
@@ -354,14 +363,14 @@ export function InvoiceTable({
             <dl className="checkout-details">
               <div>
                 <dt>Người nhận</dt>
-                <dd>
-                  {
-                    demoContractors.find(
-                      (person) => person.id === selected.contractorId,
-                    )?.displayName || "Người nhận demo"
-                  }
-                </dd>
+                <dd>{recipientName(selected)}</dd>
               </div>
+              {selected.jobTitle && (
+                <div>
+                  <dt>Công việc</dt>
+                  <dd>{selected.jobTitle}</dd>
+                </div>
+              )}
               <div>
                 <dt>Hạn thanh toán</dt>
                 <dd>{formatDate(selected.dueDate)}</dd>

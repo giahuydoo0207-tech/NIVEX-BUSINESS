@@ -78,7 +78,9 @@ async function communityRequest<T>(path: string, options?: RequestInit): Promise
 function loadStoredPosts(): CommunityPost[] {
   // The live feed only shows posts from the shared backend (cached below).
   const fallback = liveCommunity ? [] : INITIAL_DEMO_POSTS;
-  if (typeof window === "undefined") return fallback;
+  // Live: the browser cache may still hold demo posts from an earlier demo
+  // session, so only the backend response is shown.
+  if (typeof window === "undefined" || liveCommunity) return fallback;
   try {
     const raw = localStorage.getItem(COMMUNITY_POSTS_STORAGE_KEY);
     if (!raw && liveCommunity) return [];
@@ -104,7 +106,7 @@ function loadStoredPosts(): CommunityPost[] {
 }
 
 function loadFollowedAuthors(): string[] {
-  const defaultFollowed = ["baolong.pm"];
+  const defaultFollowed = liveCommunity ? [] : ["baolong.pm"];
   if (typeof window === "undefined") return defaultFollowed;
   try {
     const raw = localStorage.getItem(FOLLOWED_AUTHORS_STORAGE_KEY);

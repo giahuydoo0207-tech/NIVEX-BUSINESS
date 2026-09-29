@@ -26,6 +26,9 @@ class JobControllerTest {
     @Autowired
     private MockMvc mvc;
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
+
     @Test
     void healthEndpointReportsV1() throws Exception {
         mvc.perform(get("/api/v1/health"))
@@ -128,14 +131,15 @@ class JobControllerTest {
     void createsAndIssuesAnInvoiceWithoutDuplicatingTheCommand() throws Exception {
         String createKey = "invoice-api-test-" + UUID.randomUUID();
         String issueKey = "invoice-issue-test-" + UUID.randomUUID();
+        com.nova.backend.TestRecipients.acceptedApplication(jdbc, "accepted");
         String body = """
             {
-              "contractorId": "contractor-tran-quoc-bao",
+              "contractorId": "%s",
               "description": "Backend API integration milestone",
               "amountMinor": "125000000",
-              "dueDate": "2026-10-15"
+              "dueDate": "%s"
             }
-            """;
+            """.formatted(com.nova.backend.TestRecipients.CONTRACTOR, java.time.LocalDate.now().plusDays(14));
 
         String invoiceId = mvc.perform(post("/api/v1/invoices")
                 .header("Idempotency-Key", createKey)

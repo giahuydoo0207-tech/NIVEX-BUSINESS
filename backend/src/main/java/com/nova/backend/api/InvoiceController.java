@@ -91,6 +91,7 @@ public class InvoiceController {
     public record CreateInvoiceRequest(
         UUID organizationId,
         @NotBlank @jakarta.validation.constraints.Size(max = 120) String contractorId,
+        UUID applicationId,
         @NotBlank @jakarta.validation.constraints.Size(max = 4000) String description,
         @NotBlank @Pattern(regexp = "^[1-9][0-9]{0,19}$") String amountMinor,
         @NotBlank String dueDate

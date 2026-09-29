@@ -44,13 +44,14 @@ class MessageControllerTest {
         mvc.perform(get("/api/v1/mobile/messages").header("Authorization", "Bearer " + TOKEN))
             .andExpect(status().isOk()).andExpect(jsonPath("$[0].requestStatus").value("ACCEPTED"))
             .andExpect(jsonPath("$[0].organizationName").isNotEmpty())
-            .andExpect(jsonPath("$[0].messages[1].deliveredAt").isNotEmpty())
-            .andExpect(jsonPath("$[0].messages[1].seenAt").doesNotExist())
+            // Messages in one test transaction share sent_at, so select by sender, not index.
+            .andExpect(jsonPath("$[0].messages[?(@.senderType=='BUSINESS')].deliveredAt").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.notNullValue())))
+            .andExpect(jsonPath("$[0].messages[?(@.senderType=='BUSINESS')].seenAt").value(org.hamcrest.Matchers.contains(org.hamcrest.Matchers.nullValue())))
             .andExpect(jsonPath("$[0].unreadForTalent").value(1));
 
         mvc.perform(post("/api/v1/mobile/messages/{threadId}/read", threadId).header("Authorization", "Bearer " + TOKEN))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.messages[1].seenAt").isNotEmpty())
+            .andExpect(jsonPath("$.messages[?(@.senderType=='BUSINESS')].seenAt").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.notNullValue())))
             .andExpect(jsonPath("$.unreadForTalent").value(0));
     }
 

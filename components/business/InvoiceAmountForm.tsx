@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -16,6 +16,32 @@ import { formatUsdc, parseUsdcToMinor } from "@/lib/money";
 import type { Invoice } from "@/types/invoice";
 import { devnetApi } from "@/lib/devnet-api";
 import { isFutureInvoiceDueDate, minimumInvoiceDueDate } from "@/lib/invoice-due-date";
+import { liveBackend, proxiedMediaUrl, workspaceRequest } from "@/lib/workspace-api";
+
+type ApiRecipient = {
+  contractorId: string;
+  applicationId: string;
+  displayName: string;
+  headline: string | null;
+  avatarUrl: string | null;
+  jobTitle: string;
+  payoutReadiness: string;
+  walletAddress: string | null;
+};
+
+type RecipientOption = {
+  id: string;
+  applicationId?: string;
+  displayName: string;
+  subtitle: string;
+  avatarUrl?: string;
+};
+
+const demoRecipients: RecipientOption[] = demoContractors.map((item) => ({
+  id: item.id,
+  displayName: item.displayName,
+  subtitle: item.role,
+}));
 
 export function InvoiceAmountForm({
   initialContractorId,
@@ -24,9 +50,13 @@ export function InvoiceAmountForm({
 }) {
   const router = useRouter();
   const [amount, setAmount] = useState("");
+  // Live: only accepted candidates from the backend; never the demo list.
+  const [recipients, setRecipients] = useState<RecipientOption[] | null>(liveBackend ? null : demoRecipients);
+  const [recipientsError, setRecipientsError] = useState("");
   const [contractorId, setContractorId] = useState(
-    demoContractors.find((item) => item.id === initialContractorId)?.id ??
-      demoContractors[0].id,
+    liveBackend
+      ? ""
+      : demoContractors.find((item) => item.id === initialContractorId)?.id ?? demoContractors[0].id,
   );
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -34,14 +64,40 @@ export function InvoiceAmountForm({
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
   const retry = useRef<{ body: string; key: string } | null>(null);
-  const devnet = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
+  const devnet = liveBackend;
+
+  useEffect(() => {
+    if (!liveBackend) return;
+    let cancelled = false;
+    workspaceRequest<ApiRecipient[]>("business/recipients")
+      .then((rows) => {
+        if (cancelled) return;
+        const options = rows.map((row) => ({
+          id: row.contractorId,
+          applicationId: row.applicationId,
+          displayName: row.displayName,
+          subtitle: row.jobTitle,
+          avatarUrl: proxiedMediaUrl(row.avatarUrl),
+        }));
+        setRecipients(options);
+        setContractorId(
+          options.find((item) => item.id === initialContractorId)?.id ?? options[0]?.id ?? "",
+        );
+      })
+      .catch((reason) => {
+        if (!cancelled) setRecipientsError(reason instanceof Error ? reason.message : "Không tải được danh sách người nhận.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [initialContractorId]);
 
   const parsedAmount = parseUsdcToMinor(amount);
-  const selectedContractor =
-    demoContractors.find((item) => item.id === contractorId) ?? demoContractors[0];
+  const selectedContractor = recipients?.find((item) => item.id === contractorId) ?? null;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!selectedContractor) return setError("Chọn người nhận hóa đơn.");
     if (!parsedAmount.ok) return setError(parsedAmount.message);
     if (!description.trim())
       return setError("Nhập nội dung công việc hoặc dịch vụ.");
@@ -52,7 +108,13 @@ export function InvoiceAmountForm({
     if (devnet) {
       if (pending.current) return;
       pending.current = true; setBusy(true); setError("");
-      const body = { contractorId, description: description.trim(), amountMinor: parsedAmount.minor, dueDate };
+      const body = {
+        contractorId,
+        applicationId: selectedContractor.applicationId,
+        description: description.trim(),
+        amountMinor: parsedAmount.minor,
+        dueDate,
+      };
       const serialized = JSON.stringify(body);
       if (retry.current?.body !== serialized) retry.current = { body: serialized, key: crypto.randomUUID() };
       try {
@@ -112,18 +174,29 @@ export function InvoiceAmountForm({
 
         <div className="form-grid">
           <label className="field full">
-            <span>{devnet ? "Hồ sơ demo (thanh toán đến ví demo đã cấu hình)" : "Người nhận"}</span>
-            <select
-              aria-label="Người nhận"
-              value={contractorId}
-              onChange={(event) => setContractorId(event.target.value)}
-            >
-              {demoContractors.map((contractor) => (
-                <option value={contractor.id} key={contractor.id}>
-                  {contractor.displayName} · {contractor.role}
-                </option>
-              ))}
-            </select>
+            <span>{devnet ? "Ứng viên đã được nhận" : "Người nhận"}</span>
+            {recipientsError ? (
+              <p className="form-error" role="alert">{recipientsError}</p>
+            ) : recipients === null ? (
+              <small>Đang tải người nhận…</small>
+            ) : recipients.length === 0 ? (
+              <p className="completion-tip">
+                Chưa có ứng viên được nhận để tạo hóa đơn.{" "}
+                <Link href="/business/applications">Xem ứng viên</Link>
+              </p>
+            ) : (
+              <select
+                aria-label="Người nhận"
+                value={contractorId}
+                onChange={(event) => setContractorId(event.target.value)}
+              >
+                {recipients.map((recipient) => (
+                  <option value={recipient.id} key={recipient.id}>
+                    {recipient.displayName} · {recipient.subtitle}
+                  </option>
+                ))}
+              </select>
+            )}
           </label>
           <label className="field full">
             <span>Nội dung công việc</span>
@@ -194,8 +267,12 @@ export function InvoiceAmountForm({
         <div className="job-preview-status">
           <i /> BẢN XEM TRƯỚC HÓA ĐƠN
         </div>
-        <h2>{selectedContractor.displayName}</h2>
-        <p>{selectedContractor.role} · Solana Devnet</p>
+        {selectedContractor?.avatarUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="invoice-recipient-avatar" src={selectedContractor.avatarUrl} alt="" />
+        )}
+        <h2>{selectedContractor?.displayName ?? "Chưa chọn người nhận"}</h2>
+        <p>{selectedContractor ? `${selectedContractor.subtitle} · Solana Devnet` : "Solana Devnet"}</p>
         <strong className="job-preview-budget">
           {amount && parsedAmount.ok
             ? formatUsdc(parsedAmount.minor)
@@ -204,7 +281,7 @@ export function InvoiceAmountForm({
         <dl>
           <div>
             <dt>Người nhận</dt>
-            <dd>{selectedContractor.displayName}</dd>
+            <dd>{selectedContractor?.displayName ?? "—"}</dd>
           </div>
           <div>
             <dt>Hạn thanh toán</dt>
@@ -230,7 +307,7 @@ export function InvoiceAmountForm({
             {error}
           </p>
         )}
-        <button className="business-primary-button wide" type="submit" disabled={busy}>
+        <button className="business-primary-button wide" type="submit" disabled={busy || !selectedContractor}>
           <span>Tạo yêu cầu thanh toán</span>
           <ArrowRight size={18} />
         </button>

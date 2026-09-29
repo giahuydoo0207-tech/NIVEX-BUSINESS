@@ -17,6 +17,19 @@ test("backend invoices retain exact amounts, status and checkout identity", () =
   assert.deepEqual(parseApiInvoices([]), []);
 });
 
+test("live invoices carry the backend recipient, application and job", () => {
+  const [invoice] = parseApiInvoices([{
+    ...row, applicationId: "app-1", recipientName: "Gia Huy Đỗ",
+    recipientAvatarUrl: "/api/v1/profile/c-1/avatar?v=1", jobTitle: "Flutter",
+  }]);
+  assert.equal(invoice.applicationId, "app-1");
+  assert.equal(invoice.recipientName, "Gia Huy Đỗ");
+  assert.equal(invoice.recipientAvatarUrl, "/api/v1/profile/c-1/avatar?v=1");
+  assert.equal(invoice.jobTitle, "Flutter");
+  // Legacy rows without a backend contractor stay unnamed rather than borrowing demo names.
+  assert.equal(parseApiInvoices([{ ...row, recipientName: null }])[0].recipientName, undefined);
+});
+
 test("draft without a payment request has no checkout link", () => {
   assert.equal(parseApiInvoices([{ ...row, status: "DRAFT", paymentRequestId: null }])[0].paymentRequestId, "");
 });

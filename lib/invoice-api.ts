@@ -25,6 +25,10 @@ export function parseApiInvoices(value: unknown): Invoice[] {
       sourceAmountMinor: item.amountMinor, sourceCurrency: "USDC",
       status: item.status, dueDate: item.dueDate, createdAt: item.createdAt,
       paymentRequestId: item.paymentRequestId ?? "",
+      applicationId: typeof item.applicationId === "string" ? item.applicationId : undefined,
+      recipientName: typeof item.recipientName === "string" ? item.recipientName : undefined,
+      recipientAvatarUrl: typeof item.recipientAvatarUrl === "string" ? item.recipientAvatarUrl : undefined,
+      jobTitle: typeof item.jobTitle === "string" ? item.jobTitle : undefined,
     };
   });
 }

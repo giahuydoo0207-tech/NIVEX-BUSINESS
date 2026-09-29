@@ -31,4 +31,9 @@ export interface Invoice extends InvoiceDraft {
   paymentRequestId: string;
   status: InvoiceStatus;
   createdAt: string;
+  /** Live backend only: the invoiced application and recipient profile. */
+  applicationId?: string;
+  recipientName?: string;
+  recipientAvatarUrl?: string;
+  jobTitle?: string;
 }

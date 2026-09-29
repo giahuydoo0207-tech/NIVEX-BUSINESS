@@ -25,16 +25,36 @@ public class InvoiceRepository {
 
     public List<Invoice> findByOrganization(UUID organizationId) {
         return jdbc.query(
-            invoiceSelect() + " where organization_id = ? order by created_at desc",
+            invoiceSelect() + " where i.organization_id = ? order by i.created_at desc",
             this::mapInvoice,
             organizationId
         );
     }
 
     public Optional<Invoice> findById(UUID id) {
-        return jdbc.query(invoiceSelect() + " where id = ?", this::mapInvoice, id)
+        return jdbc.query(invoiceSelect() + " where i.id = ?", this::mapInvoice, id)
             .stream()
             .findFirst();
+    }
+
+    /**
+     * The accepted application an invoice for this contractor pays for. Only an
+     * accepted candidate of the organization may be invoiced.
+     */
+    private UUID acceptedApplication(UUID organizationId, String contractorId, UUID requested) {
+        List<UUID> accepted = jdbc.query(
+            "select id from job_applications where organization_id=? and contractor_id=? and status='accepted' " +
+                "and (?::uuid is null or id=?::uuid) order by updated_at desc limit 1",
+            (rs, row) -> rs.getObject(1, UUID.class),
+            organizationId, contractorId, requested, requested
+        );
+        if (accepted.isEmpty()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY,
+                "Recipient must be an accepted candidate of this organization"
+            );
+        }
+        return accepted.getFirst();
     }
 
     public CreateResult createOrFind(CreateInvoiceRequest request, String idempotencyKey) {
@@ -47,29 +67,29 @@ public class InvoiceRepository {
             return new CreateResult(existing.get(), false);
         }
 
+        UUID applicationId = acceptedApplication(organizationId, request.contractorId(), request.applicationId());
         UUID id = UUID.randomUUID();
         long sequence = jdbc.queryForObject("select nextval('invoice_number_seq')", Long.class);
         String invoiceNumber = "NOVA-" + LocalDate.now().getYear() + "-" + String.format("%04d", sequence);
         LocalDate dueDate = LocalDate.parse(request.dueDate());
         BigInteger amountMinor = new BigInteger(request.amountMinor());
 
-        List<Invoice> inserted = jdbc.query(
-            "insert into invoices (id, organization_id, contractor_id, invoice_number, description, amount_minor, currency, due_date, status, idempotency_key) " +
-                "values (?, ?, ?, ?, ?, ?, 'USDC', ?, 'DRAFT', ?) " +
-                "on conflict (organization_id, idempotency_key) do nothing " +
-                "returning id, organization_id, contractor_id, invoice_number, description, amount_minor::text as amount_minor, currency, due_date, status, created_at, null::uuid as payment_request_id",
-            this::mapInvoice,
+        int inserted = jdbc.update(
+            "insert into invoices (id, organization_id, contractor_id, application_id, invoice_number, description, amount_minor, currency, due_date, status, idempotency_key) " +
+                "values (?, ?, ?, ?, ?, ?, ?, 'USDC', ?, 'DRAFT', ?) " +
+                "on conflict (organization_id, idempotency_key) do nothing",
             id,
             organizationId,
             request.contractorId(),
+            applicationId,
             invoiceNumber,
             request.description(),
             amountMinor,
             dueDate,
             idempotencyKey
         );
-        if (!inserted.isEmpty()) {
-            return new CreateResult(inserted.getFirst(), true);
+        if (inserted == 1) {
+            return new CreateResult(findById(id).orElseThrow(), true);
         }
         Invoice replay = findByIdempotencyKey(organizationId, idempotencyKey).orElseThrow();
         checkReplay(replay, request);
@@ -86,7 +106,8 @@ public class InvoiceRepository {
 
     @Transactional
     public Optional<IssuedInvoice> issue(UUID invoiceId) {
-        Optional<Invoice> invoice = jdbc.query(invoiceSelect() + " where id = ? for update", this::mapInvoice, invoiceId).stream().findFirst();
+        jdbc.query("select id from invoices where id = ? for update", (rs, row) -> rs.getObject(1), invoiceId);
+        Optional<Invoice> invoice = findById(invoiceId);
         if (invoice.isEmpty()) {
             return Optional.empty();
         }
@@ -114,7 +135,7 @@ public class InvoiceRepository {
 
     private Optional<Invoice> findByIdempotencyKey(UUID organizationId, String idempotencyKey) {
         return jdbc.query(
-            invoiceSelect() + " where organization_id = ? and idempotency_key = ?",
+            invoiceSelect() + " where i.organization_id = ? and i.idempotency_key = ?",
             this::mapInvoice,
             organizationId,
             idempotencyKey
@@ -130,8 +151,12 @@ public class InvoiceRepository {
     }
 
     private String invoiceSelect() {
-        return "select id, organization_id, contractor_id, invoice_number, description, amount_minor::text as amount_minor, currency, due_date, status, created_at, " +
-            "(select p.id from payment_requests p where p.invoice_id=invoices.id) as payment_request_id from invoices";
+        return "select i.id, i.organization_id, i.contractor_id, i.invoice_number, i.description, i.amount_minor::text as amount_minor, i.currency, i.due_date, i.status, i.created_at, " +
+            "(select p.id from payment_requests p where p.invoice_id=i.id) as payment_request_id, i.application_id, " +
+            "t.display_name as recipient_name, cp.avatar_url as recipient_avatar_url, j.title as job_title " +
+            "from invoices i left join talent_profiles t on t.contractor_id=i.contractor_id " +
+            "left join community_profiles cp on cp.id=i.contractor_id " +
+            "left join job_applications a on a.id=i.application_id left join jobs j on j.id=a.job_id";
     }
 
     private Invoice mapInvoice(ResultSet rs, int row) throws SQLException {
@@ -146,7 +171,11 @@ public class InvoiceRepository {
             rs.getDate("due_date").toLocalDate(),
             rs.getString("status"),
             rs.getTimestamp("created_at").toInstant(),
-            rs.getObject("payment_request_id", UUID.class)
+            rs.getObject("payment_request_id", UUID.class),
+            rs.getObject("application_id", UUID.class),
+            rs.getString("recipient_name"),
+            rs.getString("recipient_avatar_url"),
+            rs.getString("job_title")
         );
     }
 
