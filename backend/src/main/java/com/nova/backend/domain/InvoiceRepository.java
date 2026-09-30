@@ -1,6 +1,7 @@
 package com.nova.backend.domain;
 
 import com.nova.backend.api.InvoiceController.CreateInvoiceRequest;
+import com.nova.backend.wallet.PayoutWallets;
 import java.math.BigInteger;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,9 +19,11 @@ public class InvoiceRepository {
         UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private final JdbcTemplate jdbc;
+    private final PayoutWallets payoutWallets;
 
-    public InvoiceRepository(JdbcTemplate jdbc) {
+    public InvoiceRepository(JdbcTemplate jdbc, PayoutWallets payoutWallets) {
         this.jdbc = jdbc;
+        this.payoutWallets = payoutWallets;
     }
 
     public List<Invoice> findByOrganization(UUID organizationId) {
@@ -118,6 +121,8 @@ public class InvoiceRepository {
         if (!"DRAFT".equals(invoice.get().status())) {
             return Optional.empty();
         }
+        // A draft may exist without a payout wallet; a payment request may not.
+        payoutWallets.requireReady(invoice.get().contractorId());
 
         PaymentRequest payment = jdbc.queryForObject(
             "insert into payment_requests (id, invoice_id, network, status) values (?, ?, 'Solana Devnet', 'CREATED') " +

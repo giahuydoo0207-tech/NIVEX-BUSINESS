@@ -71,7 +71,11 @@ class MobileWalletControllerTest {
                 .andExpect(jsonPath("$.earnedLast7DaysUsdc").value("0.40"))
                 // A confirmed-only payment and an unpaid invoice are pending, drafts are not.
                 .andExpect(jsonPath("$.pendingBalanceMinor").value("1250000"))
-                .andExpect(jsonPath("$.isDemoWallet").value(true))
+                // Legacy ledger rows went to the demo wallet; new payments never do.
+                .andExpect(jsonPath("$.paidToPersonalWalletMinor").value("0"))
+                .andExpect(jsonPath("$.isDemoWallet").value(false))
+                .andExpect(jsonPath("$.payoutWalletStatus").value("NOT_CONFIGURED"))
+                .andExpect(jsonPath("$.demoRecipientAddress").value("Eiz8weAjGbquFPPw98EkgLeQyoRkH2i9hUzqLHh64dyr"))
                 .andExpect(jsonPath("$.walletAddress").doesNotExist())
                 .andExpect(jsonPath("$.network").value("devnet"));
         }

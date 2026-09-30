@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { address, blockhash, createNoopSigner } from "@solana/kit";
-import { getTransferCheckedInstructionDataDecoder, TOKEN_PROGRAM_ADDRESS } from "@solana-program/token";
+import { findAssociatedTokenPda, getTransferCheckedInstructionDataDecoder, TOKEN_PROGRAM_ADDRESS } from "@solana-program/token";
 import { paymentMessage, DEVNET_MINT } from "./solana-payment.ts";
 import type { DevnetPayment } from "./devnet-api.ts";
 
@@ -12,7 +12,7 @@ const payment: DevnetPayment = {
   description: "Test only", dueDate: "2099-01-01", chain: "solana:devnet",
   recipient: "Eiz8weAjGbquFPPw98EkgLeQyoRkH2i9hUzqLHh64dyr", mint: DEVNET_MINT,
   amountMinor: "9007199254740993", reference: "nova:46045022-7fa3-48fa-9f54-33cd86d1fc28",
-  status: "AWAITING_PAYMENT", signature: null,
+  status: "AWAITING_PAYMENT", signature: null, recipientKind: "CONTRACTOR_WALLET",
 };
 
 test("payment preserves amounts above Number precision and binds the invoice memo", async () => {
@@ -26,9 +26,19 @@ test("payment preserves amounts above Number precision and binds the invoice mem
   assert.equal(new TextDecoder().decode(message.instructions[2].data!), payment.reference);
 });
 
+test("payment is sent to the contractor wallet's USDC account", async () => {
+  const contractor = "7xVYUrUR2PA6aoW4f9KCJJAUt9gHoeKzod6ErFtGcH3X";
+  const message = await paymentMessage({ ...payment, recipient: contractor }, signer, lifetime);
+  const [destination] = await findAssociatedTokenPda({
+    owner: address(contractor), mint: address(DEVNET_MINT), tokenProgram: TOKEN_PROGRAM_ADDRESS,
+  });
+  assert.equal(message.instructions[1].accounts?.[2].address, destination);
+});
+
 for (const change of [
   { chain: "solana:mainnet" }, { mint: signer.address }, { reference: "another-invoice" },
-  { status: "PAID_ON_CHAIN" }, { recipient: signer.address },
+  { status: "PAID_ON_CHAIN" }, { recipient: signer.address }, { recipient: null },
+  { recipientKind: "LEGACY_DEMO" }, { recipientKind: undefined },
   { amountMinor: "0" }, { amountMinor: "18446744073709551616" },
 ]) {
   test(`rejects invalid payment ${JSON.stringify(change)}`, async () => {

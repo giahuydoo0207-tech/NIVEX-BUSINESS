@@ -71,12 +71,18 @@ public class MobileController {
         @RequestParam(defaultValue="25") int limit) {
         var scope = authenticate(authorization);
         page(offset, limit);
+        // One row per finalized payment; the recipient is the address frozen in the ledger.
         return jdbc.query("select l.signature, l.amount_minor::text, l.recipient, l.mint, l.recorded_at, " +
-            "i.id from payment_ledger_entries l join payment_requests p on p.id=l.payment_request_id " +
+            "i.id, i.invoice_number, l.chain, p.status, coalesce(l.recipient_kind,'LEGACY_DEMO') " +
+            "from payment_ledger_entries l join payment_requests p on p.id=l.payment_request_id " +
             "join invoices i on i.id=p.invoice_id where i.organization_id=? and i.contractor_id=? " +
             "and l.commitment='finalized' order by l.recorded_at desc, l.payment_request_id desc limit ? offset ?",
-            (rs, row) -> new MobileTransaction(rs.getString(1), rs.getString(2), rs.getString(3),
-                rs.getString(4), rs.getTimestamp(5).toInstant().toString(), rs.getObject(6, UUID.class)),
+            (rs, row) -> {
+                String recordedAt = rs.getTimestamp(5).toInstant().toString();
+                return new MobileTransaction(rs.getString(1), rs.getString(2), rs.getString(3),
+                    rs.getString(4), recordedAt, rs.getObject(6, UUID.class), rs.getString(7), "USDC",
+                    rs.getString(8), rs.getString(9), rs.getString(10), recordedAt);
+            },
             scope.organizationId(), scope.contractorId(), limit, offset);
     }
 
@@ -89,6 +95,8 @@ public class MobileController {
     public record Scope(UUID organizationId, String contractorId) {}
     public record MobileInvoice(UUID id, String invoiceNumber, String description, String amountMinor,
         String status, String dueDate, UUID paymentRequestId) {}
+    /** recipientKind is CONTRACTOR_WALLET, or LEGACY_DEMO for payments into the old server demo wallet. */
     public record MobileTransaction(String signature, String amountMinor, String recipient, String mint,
-        String recordedAt, UUID invoiceId) {}
+        String recordedAt, UUID invoiceId, String invoiceNumber, String token, String network, String status,
+        String recipientKind, String createdAt) {}
 }

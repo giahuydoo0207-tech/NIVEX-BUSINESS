@@ -1,5 +1,6 @@
 package com.nova.backend;
 
+import com.nova.backend.payment.DevnetRpc;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -7,16 +8,29 @@ import org.springframework.jdbc.core.JdbcTemplate;
 public final class TestRecipients {
     public static final UUID ORG = UUID.fromString("00000000-0000-0000-0000-000000000001");
     public static final String CONTRACTOR = "contractor-minh-anh";
+    /** The recipient in PaymentVerifierTest's Devnet transaction fixture. */
+    public static final String WALLET = "Eiz8weAjGbquFPPw98EkgLeQyoRkH2i9hUzqLHh64dyr";
 
     private TestRecipients() {}
 
     public static UUID acceptedApplication(JdbcTemplate jdbc, String status) {
+        return application(jdbc, ORG, CONTRACTOR, status);
+    }
+
+    public static UUID application(JdbcTemplate jdbc, UUID organizationId, String contractorId, String status) {
         UUID jobId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
         jdbc.update("insert into jobs(id,organization_id,title,category,summary,budget_min_minor,budget_max_minor,location_scope,application_deadline,status) "
-            + "values(?,?,'Invoice test job','Engineering','Summary',100,200,'Remote',current_date+7,'PUBLISHED')", jobId, ORG);
+            + "values(?,?,'Invoice test job','Engineering','Summary',100,200,'Remote',current_date+7,'PUBLISHED')", jobId, organizationId);
         jdbc.update("insert into job_applications(id,job_id,organization_id,contractor_id,cover_note,profile_snapshot,status) values(?,?,?,?,'note','{}'::jsonb,?)",
-            applicationId, jobId, ORG, CONTRACTOR, status);
+            applicationId, jobId, organizationId, contractorId, status);
         return applicationId;
+    }
+
+    /** Registers the contractor's payout wallet as the mobile API would, replacing any active one. */
+    public static void payoutWallet(JdbcTemplate jdbc, String contractorId, String address) {
+        jdbc.update("update contractor_payout_wallets set deactivated_at=now() where contractor_id=? and deactivated_at is null", contractorId);
+        jdbc.update("insert into contractor_payout_wallets(id,contractor_id,wallet_address,network,token_symbol,token_mint) values(?,?,?,'solana:devnet','USDC',?)",
+            UUID.randomUUID(), contractorId, address, DevnetRpc.MINT);
     }
 }

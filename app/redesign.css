@@ -12261,3 +12261,68 @@ body:has(.business-app) {
     scroll-behavior: auto !important;
   }
 }
+
+/* Invoice recipients: accepted candidates with payout-wallet readiness. */
+.recipient-choice-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.recipient-choice {
+  display: grid;
+  grid-template-columns: auto 40px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.recipient-choice:has(input:checked) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.recipient-choice img,
+.recipient-choice .recipient-initial {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+.recipient-choice strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.recipient-choice small {
+  display: block;
+  color: var(--muted);
+}
+.wallet-address-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+.wallet-address-row code {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+@media (max-width: 560px) {
+  .recipient-choice {
+    grid-template-columns: auto 40px minmax(0, 1fr);
+  }
+  .recipient-choice .status-badge {
+    grid-column: 3;
+    justify-self: start;
+  }
+}

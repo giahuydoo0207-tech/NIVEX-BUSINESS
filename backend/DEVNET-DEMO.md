@@ -37,12 +37,15 @@ npm run dev -- --hostname 127.0.0.1 --port 3001
 Open http://127.0.0.1:3001/business/invoices/new. Create an invoice, prepare its
 payment, connect a DIFFERENT payer wallet, simulate, review, then personally
 approve in Phantom. The payer needs test SOL and Devnet USDC of mint
-`BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k` (pinned in `DevnetRpc.MINT` and
-`lib/solana-payment.ts`; `SOLANA_USDC_MINT` does not change it). Circle's Devnet
-USDC (`4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`) is a different token and
-will be rejected by verification. Never use
-mainnet funds or supply a seed/private key. The demo recipient is server-configured,
-not the mock contractor's wallet. Native mobile wallet integration is not included.
+`BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k` (the backend reads `SOLANA_USDC_MINT`
+and defaults to it when empty; `lib/solana-payment.ts` pins the same mint, so keep
+them equal). Circle's Devnet USDC (`4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`)
+is a different token and will be rejected by verification. Never use
+mainnet funds or supply a seed/private key. The recipient is the invoiced
+contractor's own payout wallet, which they register in the Nova app
+(`PUT /api/v1/mobile/wallet/receive`); without one, issuing the invoice returns
+422 `WALLET_NOT_CONFIGURED`. `SOLANA_DEMO_RECIPIENT` is never a recipient; it only
+labels payments made into the old demo wallet. Native mobile wallet integration is not included.
 
 ## Verification and limitations
 

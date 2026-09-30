@@ -24,7 +24,9 @@ export async function paymentMessage(payment: DevnetPayment, signer: Transaction
       || payment.reference !== `nova:${payment.id}` || payment.status !== "AWAITING_PAYMENT") {
     throw new Error("Yeu cau thanh toan Devnet khong hop le.");
   }
-  if (signer.address === payment.recipient) throw new Error("Vi tra tien phai khac vi nhan demo.");
+  // Only the invoiced contractor's own wallet is a valid recipient, never the old demo wallet.
+  if (payment.recipientKind !== "CONTRACTOR_WALLET") throw new Error("Yêu cầu thanh toán chưa trỏ tới ví của ứng viên. Hãy chuẩn bị lại.");
+  if (signer.address === payment.recipient) throw new Error("Ví trả tiền phải khác ví nhận của ứng viên.");
   const amount = BigInt(payment.amountMinor);
   if (amount <= 0n || amount > 18446744073709551615n) throw new Error("So tien khong hop le.");
   const mint = address(payment.mint);

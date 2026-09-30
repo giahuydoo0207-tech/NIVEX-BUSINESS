@@ -1,27 +1,38 @@
 package com.nova.backend.payment;
 
+import com.nova.backend.wallet.PayoutNetwork;
+import com.nova.backend.wallet.PayoutWallets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Devnet payment requests. The recipient is always the invoiced contractor's
+ * own payout wallet, read when the payment is prepared and frozen on the
+ * payment request and ledger, so a later wallet change never rewrites history.
+ * The server demo wallet is never used as a recipient.
+ */
 @Service
 public class PaymentService {
+    public static final String CONTRACTOR_WALLET = "CONTRACTOR_WALLET";
+    public static final String LEGACY_DEMO = "LEGACY_DEMO";
+
     private final JdbcTemplate jdbc;
     private final DevnetRpc rpc;
-    private final String recipient;
+    private final PayoutWallets wallets;
+    private final PayoutNetwork payoutNetwork;
 
-    public PaymentService(JdbcTemplate jdbc, DevnetRpc rpc,
-        @Value("${nova.solana.recipient:}") String recipient) {
+    public PaymentService(JdbcTemplate jdbc, DevnetRpc rpc, PayoutWallets wallets, PayoutNetwork payoutNetwork) {
         this.jdbc = jdbc;
         this.rpc = rpc;
-        this.recipient = recipient;
+        this.wallets = wallets;
+        this.payoutNetwork = payoutNetwork;
     }
 
     public PaymentView get(UUID id) {
@@ -31,24 +42,30 @@ public class PaymentService {
     @Transactional
     public PaymentView prepare(UUID id) {
         var payment = read(id, true);
-        if (payment.reference() != null) return payment;
-        if (!"ISSUED".equals(payment.invoiceStatus())) throw error(HttpStatus.CONFLICT, "Invoice is not issued");
-        if (recipient.isBlank() || !recipient.matches("[1-9A-HJ-NP-Za-km-z]{32,44}")) {
-            throw error(HttpStatus.SERVICE_UNAVAILABLE, "Demo recipient is not configured");
-        }
+        // Once a transaction exists the recipient is history and never changes.
+        if (payment.signature() != null || List.of("PAYMENT_DETECTED", "PAID_ON_CHAIN").contains(payment.status())) return payment;
+        if (!List.of("ISSUED", "AWAITING_PAYMENT").contains(payment.invoiceStatus())) throw error(HttpStatus.CONFLICT, "Invoice is not payable");
+        if (!payoutNetwork.isDevnet()) throw error(HttpStatus.SERVICE_UNAVAILABLE, "Payouts are only available on Solana Devnet");
         if (payment.dueDate().isBefore(java.time.LocalDate.now(java.time.ZoneOffset.UTC))) {
             throw error(HttpStatus.CONFLICT, "Invoice expired");
         }
+        var wallet = wallets.requireReady(payment.contractorId());
+        if (payment.reference() != null && CONTRACTOR_WALLET.equals(payment.recipientKind())
+                && wallet.walletAddress().equals(payment.recipient()) && payoutNetwork.mint().equals(payment.mint())) {
+            return payment;
+        }
         rpc.requireDevnet();
-        var mint = rpc.call("getAccountInfo", List.of(DevnetRpc.MINT, Map.of("encoding", "jsonParsed", "commitment", "confirmed"))).path("value");
+        var mint = rpc.call("getAccountInfo", List.of(payoutNetwork.mint(), Map.of("encoding", "jsonParsed", "commitment", "confirmed"))).path("value");
         if (!DevnetRpc.TOKEN_PROGRAM.equals(mint.path("owner").asText())
             || !"mint".equals(mint.at("/data/parsed/type").asText())
             || mint.at("/data/parsed/info/decimals").asInt(-1) != 6) {
             throw error(HttpStatus.SERVICE_UNAVAILABLE, "USDC mint validation failed");
         }
         String reference = "nova:" + id;
-        jdbc.update("update payment_requests set recipient_address=?, token_mint=?, amount_minor=?, reference=?, status='AWAITING_PAYMENT', updated_at=now() where id=?",
-            recipient, DevnetRpc.MINT, new java.math.BigDecimal(payment.amountMinor()), reference, id);
+        jdbc.update("update payment_requests set recipient_address=?, contractor_wallet_id=?, recipient_kind=?, token_mint=?, amount_minor=?, " +
+                "reference=?, status='AWAITING_PAYMENT', updated_at=now() where id=?",
+            wallet.walletAddress(), wallet.id(), CONTRACTOR_WALLET, payoutNetwork.mint(),
+            new java.math.BigDecimal(payment.amountMinor()), reference, id);
         jdbc.update("update invoices set status='AWAITING_PAYMENT', updated_at=now() where id=?", payment.invoiceId());
         return read(id, false);
     }
@@ -64,6 +81,11 @@ public class PaymentService {
         if ("PAID_ON_CHAIN".equals(payment.status())) return payment;
         if (!List.of("AWAITING_PAYMENT", "PAYMENT_DETECTED").contains(payment.status())) {
             throw error(HttpStatus.CONFLICT, "Payment is not payable");
+        }
+        // Requests prepared before contractor wallets existed pointed at the demo wallet.
+        // Only one already seen on chain may finish; an unpaid one must be prepared again.
+        if (!CONTRACTOR_WALLET.equals(payment.recipientKind()) && payment.signature() == null) {
+            throw error(HttpStatus.CONFLICT, "Payment request predates contractor wallets; prepare it again");
         }
         rpc.requireDevnet();
         var statuses = rpc.call("getSignatureStatuses", List.of(List.of(signature), Map.of("searchTransactionHistory", true)));
@@ -81,10 +103,10 @@ public class PaymentService {
         var used = jdbc.queryForList("select id from payment_requests where transaction_signature=? and id<>?", signature, id);
         if (!used.isEmpty()) throw error(HttpStatus.CONFLICT, "Transaction already belongs to another invoice");
         String next = "finalized".equals(commitment) ? "PAID_ON_CHAIN" : "PAYMENT_DETECTED";
-        jdbc.update("insert into payment_ledger_entries (payment_request_id, commitment, signature, recipient, mint, amount_minor, reference) " +
-            "values (?, ?, ?, ?, ?, ?, ?) on conflict (payment_request_id, commitment) do nothing",
+        jdbc.update("insert into payment_ledger_entries (payment_request_id, commitment, signature, recipient, mint, amount_minor, reference, recipient_kind) " +
+            "values (?, ?, ?, ?, ?, ?, ?, ?) on conflict (payment_request_id, commitment) do nothing",
             id, commitment, signature, payment.recipient(), payment.mint(),
-            new java.math.BigDecimal(payment.amountMinor()), payment.reference());
+            new java.math.BigDecimal(payment.amountMinor()), payment.reference(), payment.recipientKind());
         jdbc.update("update payment_requests set status=?, transaction_signature=?, confirmed_at=coalesce(confirmed_at,now()), finalized_at=case when ?='PAID_ON_CHAIN' then now() else finalized_at end, updated_at=now() where id=?",
             next, signature, next, id);
         jdbc.update("update invoices set status=?, updated_at=now() where id=?", next, payment.invoiceId());
@@ -92,13 +114,15 @@ public class PaymentService {
     }
 
     private PaymentView read(UUID id, boolean lock) {
-        var rows = jdbc.query("select p.*, i.invoice_number, i.description, i.due_date, i.amount_minor::text as invoice_amount, i.status as invoice_status from payment_requests p join invoices i on i.id=p.invoice_id where p.id=?" + (lock ? " for update of p,i" : ""),
+        var rows = jdbc.query("select p.*, i.invoice_number, i.description, i.due_date, i.amount_minor::text as invoice_amount, i.status as invoice_status, i.contractor_id " +
+                "from payment_requests p join invoices i on i.id=p.invoice_id where p.id=?" + (lock ? " for update of p,i" : ""),
             (rs, row) -> new PaymentView(rs.getObject("id", UUID.class), rs.getObject("invoice_id", UUID.class),
                 rs.getString("invoice_number"), rs.getString("description"), rs.getDate("due_date").toLocalDate(),
-                "solana:devnet", rs.getString("recipient_address"), rs.getString("token_mint"),
+                PayoutNetwork.CHAIN, rs.getString("recipient_address"), rs.getString("token_mint"),
                 rs.getString("amount_minor") == null ? rs.getString("invoice_amount") : rs.getString("amount_minor"),
                 rs.getString("reference"), rs.getString("status"), rs.getString("invoice_status"),
-                rs.getString("transaction_signature"), rs.getTimestamp("created_at").toInstant()), id);
+                rs.getString("transaction_signature"), rs.getTimestamp("created_at").toInstant(),
+                rs.getString("contractor_id"), rs.getString("recipient_kind"), PayoutNetwork.TOKEN_SYMBOL), id);
         if (rows.isEmpty()) throw error(HttpStatus.NOT_FOUND, "Payment request not found");
         return rows.getFirst();
     }
@@ -109,5 +133,6 @@ public class PaymentService {
 
     public record PaymentView(UUID id, UUID invoiceId, String invoiceNumber, String description,
         java.time.LocalDate dueDate, String chain, String recipient, String mint, String amountMinor,
-        String reference, String status, String invoiceStatus, String signature, Instant createdAt) {}
+        String reference, String status, String invoiceStatus, String signature, Instant createdAt,
+        String contractorId, String recipientKind, String tokenSymbol) {}
 }

@@ -17,8 +17,9 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+// The demo recipient differs from the contractor's wallet: payments must never use it.
 @SpringBootTest(properties={
-    "nova.solana.recipient=Eiz8weAjGbquFPPw98EkgLeQyoRkH2i9hUzqLHh64dyr",
+    "nova.solana.recipient=BucXFPoNNN7NL9Kv7ocXvsxw1BxRn5U5r7ky5MFqmdSA",
     "nova.demo.api-key=test-demo-key"
 })
 @AutoConfigureMockMvc
@@ -33,6 +34,7 @@ class PaymentFlowTest {
 
     String create(String key, String amount) throws Exception {
         com.nova.backend.TestRecipients.acceptedApplication(jdbc, "accepted");
+        com.nova.backend.TestRecipients.payoutWallet(jdbc, com.nova.backend.TestRecipients.CONTRACTOR, PaymentVerifierTest.RECIPIENT);
         var result = mvc.perform(post("/api/v1/invoices").header("Idempotency-Key",key)
             .header("X-Nova-Demo-Key", DEMO_KEY)
             .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(java.util.Map.of(

@@ -132,6 +132,8 @@ class JobControllerTest {
         String createKey = "invoice-api-test-" + UUID.randomUUID();
         String issueKey = "invoice-issue-test-" + UUID.randomUUID();
         com.nova.backend.TestRecipients.acceptedApplication(jdbc, "accepted");
+        // Issuing creates a payment request, which needs the contractor's payout wallet.
+        com.nova.backend.TestRecipients.payoutWallet(jdbc, com.nova.backend.TestRecipients.CONTRACTOR, com.nova.backend.TestRecipients.WALLET);
         String body = """
             {
               "contractorId": "%s",

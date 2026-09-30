@@ -11,7 +11,7 @@ APK gọi thẳng backend bằng token đăng nhập. Không có `NOVA_DEMO_API_
 
 ## 0. Trước khi bắt đầu
 
-- **Backup DB thật.** Lần khởi động đầu, Flyway sẽ apply các migration đang pending (V14–V16 theo audit 28/09):
+- **Backup DB thật.** Lần khởi động đầu, Flyway sẽ apply các migration đang pending (V14–V16 theo audit 28/09; V19 thêm ví nhận tiền của ứng viên):
   ```powershell
   & 'D:\Tools\PostgreSQL\16\bin\pg_dump.exe' -h localhost -p 5433 -U nova -d nova -n public -Fc -f D:\Data\nova-backup-$(Get-Date -Format yyyyMMdd-HHmm).dump
   ```
@@ -31,7 +31,7 @@ Backend và PostgreSQL chạy trên PC; tunnel mở HTTPS ra ngoài. Backend gi�
 Set-Location D:\NIVEX-BUSINESS\backend
 $env:JAVA_HOME='D:\Tools\Java\jdk-21.0.12.1+1'
 $env:NOVA_DEMO_API_KEY='<khoa-demo>'
-$env:SOLANA_DEMO_RECIPIENT='<dia-chi-vi-devnet-nhan-tien>'
+$env:SOLANA_DEMO_RECIPIENT='<dia-chi-vi-demo-cu>'  # tùy chọn, chỉ gắn nhãn giao dịch cũ
 $env:NOVA_PAYMENT_FINALIZER_ENABLED='true'
 & 'D:\Tools\Maven\apache-maven-3.9.10\bin\mvn.cmd' -o -q package -DskipTests
 & "$env:JAVA_HOME\bin\java.exe" -jar target\nova-backend-0.1.0.jar
@@ -58,7 +58,10 @@ redeploy và build lại APK. Muốn URL cố định: named tunnel của Cloudf
    CORS_ALLOWED_ORIGINS=https://<vercel-domain>
    SOLANA_NETWORK=devnet
    SOLANA_RPC_URL=https://api.devnet.solana.com
-   SOLANA_DEMO_RECIPIENT=<dia-chi-vi-devnet>
+   # Tùy chọn: chỉ để gắn nhãn giao dịch cũ vào ví demo; không bao giờ là người nhận.
+   SOLANA_DEMO_RECIPIENT=<dia-chi-vi-demo-cu>
+   # Để trống hoặc đúng BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k (xem mục 2).
+   SOLANA_USDC_MINT=
    NOVA_PAYMENT_FINALIZER_ENABLED=true
    ```
    `DATABASE_URL` phải là dạng `jdbc:postgresql://…`, không phải `postgres://…`.
@@ -76,7 +79,14 @@ Invoke-RestMethod https://<backend-public-url>/api/v1/health
 Invoke-RestMethod https://<backend-public-url>/api/v1/jobs
 ```
 
-`paymentsConfigured=False` nghĩa là thiếu/sai `SOLANA_DEMO_RECIPIENT`; prepare payment sẽ trả 503 "Demo recipient is not configured".
+Từ V19, USDC được chuyển thẳng tới ví nhận tiền mà ứng viên tự khai báo trong app (`/api/v1/mobile/wallet/receive`);
+health trả `payoutRecipient=CONTRACTOR_WALLET`. `SOLANA_DEMO_RECIPIENT` không còn là người nhận của thanh toán nào; nó chỉ để
+gắn nhãn các giao dịch cũ đã trả vào ví demo (và để từ chối nếu ứng viên khai báo trùng địa chỉ đó).
+`paymentsConfigured=False` nghĩa là `SOLANA_NETWORK` khác `devnet`.
+
+`usdcMint` trong health đọc từ `SOLANA_USDC_MINT` (để trống = `BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k`). Web vẫn chỉ ký
+giao dịch với mint `BRjpCH…`, nên nếu health báo mint khác thì mọi thanh toán sẽ bị Web từ chối: để trống biến này hoặc đặt đúng `BRjpCH…`.
+Ứng viên chưa có ví: tạo hóa đơn nháp được, nhưng tạo yêu cầu thanh toán trả 422 `WALLET_NOT_CONFIGURED`.
 
 ## 3. Vercel (project `nivex-business`)
 

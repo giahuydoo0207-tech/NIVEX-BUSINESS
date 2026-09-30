@@ -14,20 +14,14 @@ import {
 import { demoContractors, demoOrganization } from "@/lib/business-demo-data";
 import { formatUsdc, parseUsdcToMinor } from "@/lib/money";
 import type { Invoice } from "@/types/invoice";
-import { devnetApi } from "@/lib/devnet-api";
+import { devnetApi, DevnetApiError } from "@/lib/devnet-api";
 import { isFutureInvoiceDueDate, minimumInvoiceDueDate } from "@/lib/invoice-due-date";
 import { liveBackend, proxiedMediaUrl, workspaceRequest } from "@/lib/workspace-api";
-
-type ApiRecipient = {
-  contractorId: string;
-  applicationId: string;
-  displayName: string;
-  headline: string | null;
-  avatarUrl: string | null;
-  jobTitle: string;
-  payoutReadiness: string;
-  walletAddress: string | null;
-};
+import { normalizeApplicationStatus, statusCopy } from "@/lib/application-status";
+import {
+  parseRecipients, paymentBlockReason, readinessLabel, shortAddress, walletErrorMessage,
+  type PayoutReadiness,
+} from "@/lib/payout-wallet";
 
 type RecipientOption = {
   id: string;
@@ -35,6 +29,10 @@ type RecipientOption = {
   displayName: string;
   subtitle: string;
   avatarUrl?: string;
+  /** Live backend only. */
+  applicationStatus?: string;
+  payoutReadiness?: PayoutReadiness;
+  walletAddress?: string | null;
 };
 
 const demoRecipients: RecipientOption[] = demoContractors.map((item) => ({
@@ -69,15 +67,18 @@ export function InvoiceAmountForm({
   useEffect(() => {
     if (!liveBackend) return;
     let cancelled = false;
-    workspaceRequest<ApiRecipient[]>("business/recipients")
-      .then((rows) => {
+    workspaceRequest<unknown>("business/recipients")
+      .then((value) => {
         if (cancelled) return;
-        const options = rows.map((row) => ({
+        const options = parseRecipients(value).map((row) => ({
           id: row.contractorId,
           applicationId: row.applicationId,
           displayName: row.displayName,
           subtitle: row.jobTitle,
           avatarUrl: proxiedMediaUrl(row.avatarUrl),
+          applicationStatus: row.applicationStatus,
+          payoutReadiness: row.payoutReadiness,
+          walletAddress: row.walletAddress,
         }));
         setRecipients(options);
         setContractorId(
@@ -94,6 +95,8 @@ export function InvoiceAmountForm({
 
   const parsedAmount = parseUsdcToMinor(amount);
   const selectedContractor = recipients?.find((item) => item.id === contractorId) ?? null;
+  // Live: a draft may be saved for anyone accepted; a payment request needs a ready wallet.
+  const walletBlock = devnet && selectedContractor ? paymentBlockReason(selectedContractor) : null;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -117,11 +120,21 @@ export function InvoiceAmountForm({
       };
       const serialized = JSON.stringify(body);
       if (retry.current?.body !== serialized) retry.current = { body: serialized, key: crypto.randomUUID() };
+      let draftSaved = false;
       try {
         const created = await devnetApi<{ id: string }>("invoices", body, retry.current.key);
+        draftSaved = true;
+        if (walletBlock) {
+          router.push("/business/invoices");
+          return;
+        }
         const issued = await devnetApi<{ paymentRequest: { id: string } }>(`invoices/${created.id}/issue`, {}, `issue-${created.id}`);
         router.push(`/pay/${issued.paymentRequest.id}`);
-      } catch (e) { setError(e instanceof Error ? e.message : "Không tạo được hóa đơn."); }
+      } catch (e) {
+        const message = e instanceof DevnetApiError ? walletErrorMessage(e.code, e.message)
+          : e instanceof Error ? e.message : "Không tạo được hóa đơn.";
+        setError(draftSaved ? `${message} Hóa đơn đã được lưu ở dạng nháp.` : message);
+      }
       finally { pending.current = false; setBusy(false); }
       return;
     }
@@ -184,7 +197,7 @@ export function InvoiceAmountForm({
                 Chưa có ứng viên được nhận để tạo hóa đơn.{" "}
                 <Link href="/business/applications">Xem ứng viên</Link>
               </p>
-            ) : (
+            ) : devnet ? null : (
               <select
                 aria-label="Người nhận"
                 value={contractorId}
@@ -198,6 +211,41 @@ export function InvoiceAmountForm({
               </select>
             )}
           </label>
+          {devnet && recipients && recipients.length > 0 && (
+            <fieldset className="field full recipient-choice-list">
+              <legend className="sr-only">Người nhận</legend>
+              {recipients.map((recipient) => {
+                const status = normalizeApplicationStatus(recipient.applicationStatus ?? "");
+                const ready = recipient.payoutReadiness === "READY";
+                return (
+                  <label className="recipient-choice" key={recipient.id}>
+                    <input
+                      type="radio"
+                      name="recipient"
+                      value={recipient.id}
+                      checked={recipient.id === contractorId}
+                      onChange={() => { setContractorId(recipient.id); setError(""); }}
+                    />
+                    {recipient.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={recipient.avatarUrl} alt="" />
+                    ) : (
+                      <span className="recipient-initial" aria-hidden="true">{recipient.displayName.slice(0, 1)}</span>
+                    )}
+                    <span>
+                      <strong>{recipient.displayName}</strong>
+                      <small>
+                        {recipient.subtitle} · {status ? statusCopy[status].label : recipient.applicationStatus}
+                      </small>
+                    </span>
+                    <span className={"status-badge " + (ready ? "success" : "warning")}>
+                      {readinessLabel(recipient.payoutReadiness ?? "NOT_CONFIGURED")}
+                    </span>
+                  </label>
+                );
+              })}
+            </fieldset>
+          )}
           <label className="field full">
             <span>Nội dung công việc</span>
             <textarea
@@ -291,24 +339,39 @@ export function InvoiceAmountForm({
             <dt>Mạng xử lý</dt>
             <dd>Solana Devnet</dd>
           </div>
+          {devnet && selectedContractor && (
+            <div>
+              <dt>Ví nhận USDC</dt>
+              <dd className={selectedContractor.walletAddress ? "mono" : undefined} title={selectedContractor.walletAddress ?? undefined}>
+                {selectedContractor.walletAddress
+                  ? shortAddress(selectedContractor.walletAddress)
+                  : readinessLabel(selectedContractor.payoutReadiness ?? "NOT_CONFIGURED")}
+              </dd>
+            </div>
+          )}
           <div>
             <dt>Trạng thái</dt>
-            <dd>Chờ thanh toán</dd>
+            <dd>{walletBlock ? "Bản nháp" : "Chờ thanh toán"}</dd>
           </div>
         </dl>
         <div className="job-publish-assurance">
           <ShieldCheck size={18} />
           <span>
-            {devnet ? "Hóa đơn được lưu ở backend. Bước tiếp theo hiển thị địa chỉ ví nhận demo và cho bạn kiểm tra trước khi ký trên Devnet." : "Kiểm tra người nhận và số tiền trước khi tiếp tục. Hóa đơn thử nghiệm được lưu trên trình duyệt này."}
+            {devnet ? "Hóa đơn được lưu ở backend. Bước tiếp theo hiển thị ví nhận của ứng viên, token và mạng để bạn kiểm tra trước khi ký trên Devnet." : "Kiểm tra người nhận và số tiền trước khi tiếp tục. Hóa đơn thử nghiệm được lưu trên trình duyệt này."}
           </span>
         </div>
+        {walletBlock && (
+          <p className="form-error" role="status">
+            {walletBlock} Bạn có thể lưu hóa đơn nháp và tạo yêu cầu thanh toán sau khi ứng viên thêm ví trong ứng dụng Nova.
+          </p>
+        )}
         {error && (
           <p className="form-error" role="alert">
             {error}
           </p>
         )}
         <button className="business-primary-button wide" type="submit" disabled={busy || !selectedContractor}>
-          <span>Tạo yêu cầu thanh toán</span>
+          <span>{walletBlock ? "Lưu hóa đơn nháp" : "Tạo yêu cầu thanh toán"}</span>
           <ArrowRight size={18} />
         </button>
       </aside>

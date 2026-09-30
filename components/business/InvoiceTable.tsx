@@ -28,7 +28,38 @@ import { formatDate, statusLabels, statusTone } from "@/lib/portal-data";
 import type { Invoice } from "@/types/invoice";
 import { isPaidInvoice, isPendingInvoice } from "@/lib/invoice-api";
 import { proxiedMediaUrl } from "@/lib/workspace-api";
+import { useRouter } from "next/navigation";
+import { devnetApi, DevnetApiError } from "@/lib/devnet-api";
+import { walletErrorMessage } from "@/lib/payout-wallet";
 const devnet = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
+
+/** Turns a live draft into a payment request; the backend refuses while the contractor has no wallet. */
+function IssueDraftButton({ invoiceId }: { invoiceId: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function issue() {
+    setBusy(true);
+    setError("");
+    try {
+      const issued = await devnetApi<{ paymentRequest: { id: string } }>(`invoices/${invoiceId}/issue`, {}, `issue-${invoiceId}`);
+      router.push(`/pay/${issued.paymentRequest.id}`);
+    } catch (e) {
+      setError(e instanceof DevnetApiError ? walletErrorMessage(e.code, e.message) : "Không tạo được yêu cầu thanh toán.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <>
+      {error && <p className="form-error" role="alert">{error}</p>}
+      <button className="business-primary-button" type="button" disabled={busy} onClick={issue}>
+        Tạo yêu cầu thanh toán
+        <ArrowUpRight size={16} />
+      </button>
+    </>
+  );
+}
 
 /** Live invoices carry the backend recipient; demo invoices use the fixture list. */
 function recipientName(invoice: Invoice) {
@@ -380,6 +411,9 @@ export function InvoiceTable({
                 <dd>Solana Devnet</dd>
               </div>
             </dl>
+            {devnet && selected.status === "DRAFT" && !selected.paymentRequestId && (
+              <IssueDraftButton invoiceId={selected.id} />
+            )}
             {!!selected.paymentRequestId && !selected.id.startsWith("sample-") && (
               <Link
                 href={"/pay/" + selected.paymentRequestId}

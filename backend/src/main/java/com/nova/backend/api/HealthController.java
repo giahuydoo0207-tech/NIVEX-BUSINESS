@@ -1,9 +1,8 @@
 package com.nova.backend.api;
 
-import com.nova.backend.payment.DevnetRpc;
+import com.nova.backend.wallet.PayoutNetwork;
 import java.time.Instant;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,11 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1")
 public class HealthController {
-    @Value("${nova.network:devnet}")
-    private String network;
+    private final PayoutNetwork payoutNetwork;
 
-    @Value("${nova.solana.recipient:}")
-    private String recipient;
+    public HealthController(PayoutNetwork payoutNetwork) {
+        this.payoutNetwork = payoutNetwork;
+    }
 
     @GetMapping("/health")
     public Map<String, Object> health() {
@@ -23,9 +22,11 @@ public class HealthController {
             "ok", true,
             "service", "nova-backend",
             "version", "v1",
-            "network", network,
-            "usdcMint", DevnetRpc.MINT,
-            "paymentsConfigured", recipient.matches("[1-9A-HJ-NP-Za-km-z]{32,44}"),
+            "network", payoutNetwork.network(),
+            "usdcMint", payoutNetwork.mint(),
+            "paymentsConfigured", payoutNetwork.isDevnet(),
+            // Payments go to each contractor's own wallet, never a server wallet.
+            "payoutRecipient", "CONTRACTOR_WALLET",
             "timestamp", Instant.now().toString()
         );
     }
