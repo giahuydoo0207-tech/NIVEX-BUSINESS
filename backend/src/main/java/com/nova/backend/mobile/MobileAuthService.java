@@ -27,23 +27,17 @@ public class MobileAuthService {
     private final SecureRandom random = new SecureRandom();
     private final int accessTtlSeconds;
     private final int refreshTtlSeconds;
-    private final int otpTtlSeconds;
-    private final boolean debugOtp;
 
     public MobileAuthService(
         JdbcTemplate jdbc,
         MobileSessionAuthenticator sessions,
         @Value("${nova.auth.access-ttl-seconds:900}") int accessTtlSeconds,
-        @Value("${nova.auth.refresh-ttl-seconds:2592000}") int refreshTtlSeconds,
-        @Value("${nova.auth.otp-ttl-seconds:300}") int otpTtlSeconds,
-        @Value("${nova.auth.debug-otp:false}") boolean debugOtp
+        @Value("${nova.auth.refresh-ttl-seconds:2592000}") int refreshTtlSeconds
     ) {
         this.jdbc = jdbc;
         this.sessions = sessions;
         this.accessTtlSeconds = positive(accessTtlSeconds, "access TTL");
         this.refreshTtlSeconds = positive(refreshTtlSeconds, "refresh TTL");
-        this.otpTtlSeconds = positive(otpTtlSeconds, "OTP TTL");
-        this.debugOtp = debugOtp;
     }
 
     @Transactional
@@ -65,43 +59,6 @@ public class MobileAuthService {
         if (account.passwordHash() == null || !verifySecret(password, account.passwordHash())) {
             throw unauthorized();
         }
-        return issue(account);
-    }
-
-    @Transactional
-    public PhoneChallenge requestPhoneOtp(String phone) {
-        String normalizedPhone = phone(phone);
-        jdbc.update(
-            "update mobile_phone_otp_challenges set consumed_at=now() where phone_e164=? and consumed_at is null",
-            normalizedPhone
-        );
-        String code = String.format(Locale.ROOT, "%06d", random.nextInt(1_000_000));
-        UUID id = UUID.randomUUID();
-        jdbc.update(
-            "insert into mobile_phone_otp_challenges(id, phone_e164, code_hash, expires_at) values (?, ?, ?, now() + (? * interval '1 second'))",
-            id, normalizedPhone, hashSecret(code), otpTtlSeconds
-        );
-        return new PhoneChallenge(id, otpTtlSeconds, debugOtp ? code : null);
-    }
-
-    @Transactional
-    public MobileAuthSession verifyPhoneOtp(UUID challengeId, String code, String displayName) {
-        if (code == null || !code.matches("^[0-9]{6}$")) throw unauthorized();
-        OtpChallenge challenge = jdbc.query(
-            "select phone_e164, code_hash, expires_at, attempt_count, consumed_at from mobile_phone_otp_challenges where id=? for update",
-            (rs, row) -> new OtpChallenge(rs.getString(1), rs.getString(2), rs.getTimestamp(3).toInstant(), rs.getInt(4), rs.getTimestamp(5) == null),
-            challengeId
-        ).stream().findFirst().orElseThrow(this::unauthorized);
-        if (!challenge.isActive() || challenge.expiresAt().isBefore(Instant.now()) || challenge.attemptCount() >= 5) {
-            throw unauthorized();
-        }
-        if (!verifySecret(code, challenge.codeHash())) {
-            jdbc.update("update mobile_phone_otp_challenges set attempt_count=least(attempt_count + 1, 5) where id=?", challengeId);
-            throw unauthorized();
-        }
-        jdbc.update("update mobile_phone_otp_challenges set consumed_at=now() where id=? and consumed_at is null", challengeId);
-        Account account = findByPhone(challenge.phone())
-            .orElseGet(() -> createAccount(null, challenge.phone(), displayName, null));
         return issue(account);
     }
 
@@ -280,8 +237,6 @@ public class MobileAuthService {
     }
 
     public record MobileAuthSession(String accessToken, String refreshToken, Instant accessExpiresAt) {}
-    public record PhoneChallenge(UUID challengeId, int expiresInSeconds, String debugOtp) {}
     public record MobileAccountView(UUID id, String email, String phoneE164, String displayName, String headline) {}
     private record Account(UUID id, UUID organizationId, String contractorId, String email, String phone, String passwordHash, String displayName, String headline) {}
-    private record OtpChallenge(String phone, String codeHash, Instant expiresAt, int attemptCount, boolean isActive) {}
 }

@@ -17,7 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest(properties = "nova.auth.debug-otp=true")
+@SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
 class MobileAuthControllerTest {
@@ -93,39 +93,6 @@ class MobileAuthControllerTest {
         mvc.perform(post("/api/v1/auth/refresh")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"refreshToken\":\"%s\"}".formatted(refreshToken)))
-            .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void verifiesPhoneWithDebugOtpAndConsumesChallenge() throws Exception {
-        String suffix = Long.toUnsignedString(System.nanoTime());
-        String phone = "+84902" + suffix.substring(Math.max(0, suffix.length() - 7));
-        MvcResult requested = mvc.perform(post("/api/v1/auth/phone/request-otp")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"phoneE164\":\"%s\"}".formatted(phone)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.challengeId").isString())
-            .andExpect(jsonPath("$.debugOtp").isString())
-            .andReturn();
-
-        String challengeId = value(requested, "challengeId");
-        String code = value(requested, "debugOtp");
-        MvcResult verified = mvc.perform(post("/api/v1/auth/phone/verify-otp")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {"challengeId":"%s","code":"%s","displayName":"Phone Member"}
-                    """.formatted(challengeId, code)))
-            .andExpect(status().isOk())
-            .andReturn();
-
-        mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + value(verified, "accessToken")))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.phoneE164").value(phone));
-        mvc.perform(post("/api/v1/auth/phone/verify-otp")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {"challengeId":"%s","code":"%s","displayName":"Phone Member"}
-                    """.formatted(challengeId, code)))
             .andExpect(status().isUnauthorized());
     }
 

@@ -4,10 +4,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,18 +50,6 @@ public class MobileAuthController {
         auth.logout(authorization, request == null ? null : request.refreshToken());
     }
 
-    @PostMapping("/phone/request-otp")
-    public MobileAuthService.PhoneChallenge requestPhoneOtp(@Valid @RequestBody PhoneOtpRequest request, HttpServletResponse response) {
-        noStore(response);
-        return auth.requestPhoneOtp(request.phoneE164());
-    }
-
-    @PostMapping("/phone/verify-otp")
-    public MobileAuthService.MobileAuthSession verifyPhoneOtp(@Valid @RequestBody PhoneOtpVerification request, HttpServletResponse response) {
-        noStore(response);
-        return auth.verifyPhoneOtp(request.challengeId(), request.code(), request.displayName());
-    }
-
     @GetMapping("/me")
     public MobileAuthService.MobileAccountView me(@RequestHeader(name = "Authorization", required = false) String authorization, HttpServletResponse response) {
         noStore(response);
@@ -92,13 +78,4 @@ public class MobileAuthController {
 
     public record LogoutRequest(String refreshToken) {}
 
-    public record PhoneOtpRequest(
-        @NotBlank @Pattern(regexp = "^\\+[1-9][0-9]{7,14}$") String phoneE164
-    ) {}
-
-    public record PhoneOtpVerification(
-        @NotNull UUID challengeId,
-        @NotBlank @Pattern(regexp = "^[0-9]{6}$") String code,
-        @NotBlank @Size(min = 2, max = 160) String displayName
-    ) {}
 }
