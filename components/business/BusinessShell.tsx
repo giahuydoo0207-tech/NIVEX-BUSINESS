@@ -4,23 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
   Bell,
-  BriefcaseBusiness,
   Building2,
   ChevronDown,
   FileText,
   Globe2,
   HelpCircle,
-  LayoutDashboard,
   LogOut,
   Menu,
-  MessagesSquare,
   Plus,
-  UserCircle,
-  UserRoundCheck,
-  UsersRound,
   WalletCards,
   X,
 } from "lucide-react";
+import { ALL_NAV_ITEMS, BUSINESS_REPRESENTATIVE, NAV_GROUPS } from "@/lib/business-navigation";
 import { NivexLogo } from "@/components/ui/NivexLogo";
 import { PortalDialog } from "@/components/ui/PortalDialog";
 import {
@@ -34,95 +29,8 @@ import { liveBackend } from "@/lib/workspace-api";
 import { WorkspaceMenu } from "./WorkspaceMenu";
 import { useLiveCounts } from "./useLiveCounts";
 
-export interface NavItem {
-  key: string;
-  label: string;
-  href: string;
-  icon: typeof LayoutDashboard;
-  badge?: string | number;
-}
+export { NAV_GROUPS, type NavGroup, type NavItem } from "@/lib/business-navigation";
 
-export interface NavGroup {
-  groupLabel?: string;
-  items: NavItem[];
-}
-
-export const NAV_GROUPS: NavGroup[] = [
-  {
-    groupLabel: "Không gian làm việc",
-    items: [
-      {
-        key: "dashboard",
-        label: "Tổng quan",
-        href: "/business/dashboard",
-        icon: LayoutDashboard,
-      },
-    ],
-  },
-  {
-    groupLabel: "Mạng lưới",
-    items: [
-      {
-        key: "community",
-        label: "Cộng đồng",
-        href: "/business/community",
-        icon: Globe2,
-      },
-      {
-        key: "profile",
-        label: "Trang cá nhân",
-        href: "/business/profile",
-        icon: UserCircle,
-      },
-      {
-        key: "messages",
-        label: "Tin nhắn",
-        href: "/business/messages",
-        icon: MessagesSquare,
-        badge: 2,
-      },
-    ],
-  },
-  {
-    groupLabel: "Tuyển dụng",
-    items: [
-      {
-        key: "jobs",
-        label: "Cơ hội việc làm",
-        href: "/business/jobs",
-        icon: BriefcaseBusiness,
-        badge: "NEW",
-      },
-      {
-        key: "applications",
-        label: "Ứng viên",
-        href: "/business/applications",
-        icon: UserRoundCheck,
-        badge: 3,
-      },
-    ],
-  },
-  {
-    groupLabel: "Tài chính",
-    items: [
-      {
-        key: "invoices",
-        label: "Hóa đơn",
-        href: "/business/invoices",
-        icon: FileText,
-        badge: "USDC",
-      },
-      {
-        key: "contractors",
-        label: "Nhân sự",
-        href: "/business/contractors",
-        icon: UsersRound,
-      },
-    ],
-  },
-];
-
-const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
 type NotificationItem = { id: string; type: string; title: string; body: string; readAt: string | null; createdAt: string };
 
 export function BusinessShell({
@@ -136,6 +44,7 @@ export function BusinessShell({
   children: React.ReactNode;
   active:
     | "dashboard"
+    | "personalInfo"
     | "jobs"
     | "applications"
     | "messages"
@@ -338,10 +247,10 @@ export function BusinessShell({
             Đăng xuất
           </Link>
           <div className="sidebar-profile">
-            <span className="avatar">GH</span>
+            <span className="avatar">{BUSINESS_REPRESENTATIVE.initials}</span>
             <span>
-              <strong>Gia Huy</strong>
-              <small>{liveBackend ? "Quản trị viên" : "Quản trị viên · Demo"}</small>
+              <strong>{BUSINESS_REPRESENTATIVE.name}</strong>
+              <small>{liveBackend ? BUSINESS_REPRESENTATIVE.role : `${BUSINESS_REPRESENTATIVE.role} · Demo`}</small>
             </span>
           </div>
         </div>
@@ -393,7 +302,7 @@ export function BusinessShell({
                 </span>
               )}
             </button>
-            <span className="avatar topbar-avatar">GH</span>
+            <span className="avatar topbar-avatar">{BUSINESS_REPRESENTATIVE.initials}</span>
           </div>
         </header>}
         <main className="business-content">{children}</main>
