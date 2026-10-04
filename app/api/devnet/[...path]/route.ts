@@ -7,7 +7,9 @@ const communityProfile = "community/profiles/[^/]+/(?:following|blocked)";
 const memberAvatar = "profile/[A-Za-z0-9_-]{1,120}/(?:avatar|cover)";
 const businessJobs = `business/jobs(?:/${UUID}(?:/status)?)?`;
 const applications = `applications(?:/${UUID}/status)?`;
-const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages|messages/${UUID}/(accept|decline|block|messages|read|typing)|notifications|notifications/${UUID}/read|business/profile(/(avatar|cover))?|business/recipients|${businessJobs}|${applications}|${communityPost}|${communityProfile}|community/(?:reports|media|media/${UUID})|${memberAvatar}|media/(?:business-profile|community)/${UUID})$`);
+// Management only; Nova ID + Key verification is for other Nova services and is not proxied.
+const novaCredentials = "business/nova-credentials(?:/key)?";
+const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages|messages/${UUID}/(accept|decline|block|messages|read|typing)|notifications|notifications/${UUID}/read|business/profile(/(avatar|cover))?|business/recipients|${novaCredentials}|${businessJobs}|${applications}|${communityPost}|${communityProfile}|community/(?:reports|media|media/${UUID})|${memberAvatar}|media/(?:business-profile|community)/${UUID})$`);
 const binary = (path: string) => path.startsWith("media/") || new RegExp(`^${memberAvatar}$`).test(path);
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
