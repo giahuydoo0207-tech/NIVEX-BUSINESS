@@ -28,3 +28,6 @@ nova:
   auth:
     access-ttl-seconds: ${NOVA_AUTH_ACCESS_TTL_SECONDS:900}
     refresh-ttl-seconds: ${NOVA_AUTH_REFRESH_TTL_SECONDS:2592000}
+  replyn:
+    # Server-to-server secret shared only with Replyn's server. Blank disables QR login.
+    qr-client-secret: ${REPLYN_QR_CLIENT_SECRET:}
