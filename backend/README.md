@@ -41,8 +41,15 @@ SOLANA_RPC_URL=https://api.devnet.solana.com
 SOLANA_DEMO_RECIPIENT=<public-devnet-recipient-wallet>
 SOLANA_USDC_MINT=BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k
 NOVA_DEMO_API_KEY=<same-server-side-demo-key-as-the-web-proxy>
+REPLYN_QR_CLIENT_SECRET=<same-value-as-replyn-server-at-least-32-random-chars>
 ```
 
 Use a managed PostgreSQL instance in production. `NOVA_DEMO_API_KEY` is a
 temporary demo guard for invoice/payment endpoints; keep it server-side and
 rotate it if it is ever exposed.
+
+`REPLYN_QR_CLIENT_SECRET` authenticates Replyn's server to the QR login API
+(`/api/v1/integrations/replyn/pairings`). Leave it blank to disable QR login. QR challenges
+live 60 seconds in `replyn_pairings` (only SHA-256 hashes of their secrets are stored) and
+expired rows are removed when new challenges are created. Distributed rate limiting for the
+pairing and login endpoints is the next infrastructure step; it is not emulated in memory.
