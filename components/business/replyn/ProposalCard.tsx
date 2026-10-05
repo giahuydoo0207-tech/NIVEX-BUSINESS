@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { CalendarClock, ExternalLink, FileText, Info, Layers, ShieldCheck, Wallet, X, XCircle } from "lucide-react";
 import {
   SIMULATION_NOTICE,
@@ -11,6 +11,7 @@ import {
   workspaceUrl,
   type ReplynProposal,
 } from "@/lib/replyn-proposals";
+import { Overlay, useModal } from "./overlay";
 
 /** A proposal inside the Nova conversation: a card of its own, never a text message. */
 export function ProposalCard({ proposal, onOpen }: { proposal: ReplynProposal; onOpen: () => void }) {
@@ -51,17 +52,11 @@ interface DetailsProps {
 /** Read-only agreement as sent; a pending proposal can only be withdrawn, not edited. */
 export function ProposalDetailsDialog({ proposal, previous, candidateName, demo, onCancel, onClose }: DetailsProps) {
   const titleId = useId();
+  const dialogRef = useRef<HTMLElement>(null);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !busy) onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [busy, onClose]);
+  useModal(dialogRef, onClose, busy);
 
   async function cancel() {
     setBusy(true);
@@ -71,10 +66,11 @@ export function ProposalDetailsDialog({ proposal, previous, candidateName, demo,
 
   const tone = statusTone(proposal.status);
   return (
-    <div className="action-dialog-backdrop" onClick={() => !busy && onClose()}>
-      <section className="action-dialog-content replyn-proposal-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()}>
-        <header className="action-dialog-header">
-          <div className="action-dialog-icon-wrap primary"><ShieldCheck size={22} /></div>
+    <Overlay>
+    <div className="action-dialog-backdrop replyn-backdrop" onClick={() => !busy && onClose()}>
+      <section ref={dialogRef} className="action-dialog-content replyn-proposal-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()}>
+        <header className="replyn-dialog-head">
+          <div className="action-dialog-icon-wrap primary"><ShieldCheck size={20} /></div>
           <div className="replyn-confirm-text">
             <h3 id={titleId} className="action-dialog-title">{proposal.projectName}</h3>
             <p className="action-dialog-desc">
@@ -116,7 +112,7 @@ export function ProposalDetailsDialog({ proposal, previous, candidateName, demo,
           <p className="replyn-simulation"><Info size={15} />{SIMULATION_NOTICE}</p>
           {error && <p className="replyn-form-error" role="alert">{error}</p>}
         </div>
-        <footer className="action-dialog-footer">
+        <footer className="replyn-dialog-foot replyn-details-footer">
           {proposal.status === "PENDING" && !confirming && (
             <button type="button" className="action-dialog-btn secondary danger-text" onClick={() => setConfirming(true)}><XCircle size={16} />Hủy đề xuất</button>
           )}
@@ -134,5 +130,6 @@ export function ProposalDetailsDialog({ proposal, previous, candidateName, demo,
         </footer>
       </section>
     </div>
+    </Overlay>
   );
 }
