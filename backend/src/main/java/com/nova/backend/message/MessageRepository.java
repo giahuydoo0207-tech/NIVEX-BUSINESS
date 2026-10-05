@@ -10,31 +10,36 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import com.nova.backend.notification.NotificationRepository;
+import com.nova.backend.replyn.ReplynProposalService;
 
 /**
  * Message threads shared by Nova Business (organization side) and Nova Mobile (talent side).
  * Listing a thread only marks messages as delivered; "seen" is recorded when a client explicitly
- * opens the conversation through the read endpoints.
+ * opens the conversation through the read endpoints. Hiding and muting only change the business's
+ * own copy of a thread; the talent keeps the full history.
  */
 @Repository
 public class MessageRepository {
     private final JdbcTemplate jdbc;
     private final NotificationRepository notifications;
-    public MessageRepository(JdbcTemplate jdbc, NotificationRepository notifications) { this.jdbc = jdbc; this.notifications = notifications; }
+    private final ReplynProposalService proposals;
+    public MessageRepository(JdbcTemplate jdbc, NotificationRepository notifications, ReplynProposalService proposals) { this.jdbc = jdbc; this.notifications = notifications; this.proposals = proposals; }
 
     @Transactional public List<MessageThread> businessThreads(UUID organizationId, String status) {
         jdbc.update("update thread_messages m set delivered_at=now() from message_threads t where m.thread_id=t.id and t.organization_id=? and t.request_status='ACCEPTED' and m.sender_type='TALENT' and m.delivered_at is null", organizationId);
-        return jdbc.query(threadSelect() + " where t.organization_id=? and t.request_status=? order by t.updated_at desc", this::mapThread, organizationId, status);
+        return jdbc.query(threadSelect() + " where t.organization_id=? and t.request_status=? and (t.business_hidden_at is null or t.updated_at>t.business_hidden_at) order by t.updated_at desc", this::mapThread, organizationId, status);
     }
+    /** Blocked threads stay listed so the talent keeps the history; sending is refused. */
     @Transactional public List<MessageThread> contractorThreads(String contractorId) {
         jdbc.update("update thread_messages m set delivered_at=now() from message_threads t where m.thread_id=t.id and t.contractor_id=? and t.request_status='ACCEPTED' and m.sender_type='BUSINESS' and m.delivered_at is null", contractorId);
-        return jdbc.query(threadSelect() + " where t.contractor_id=? and t.request_status in ('PENDING','ACCEPTED') order by t.updated_at desc", this::mapThread, contractorId);
+        return jdbc.query(threadSelect() + " where t.contractor_id=? and t.request_status in ('PENDING','ACCEPTED','BLOCKED') order by t.updated_at desc", this::mapThread, contractorId)
+            .stream().map(MessageThread::forTalent).toList();
     }
     /** Marks the organization's messages as seen when the talent opens the thread. */
     @Transactional public MessageThread readByTalent(UUID id, String contractorId) {
         if (!owner(id, contractorId)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Thread belongs to another contractor");
         jdbc.update("update thread_messages set delivered_at=coalesce(delivered_at,now()), seen_at=now() where thread_id=? and sender_type='BUSINESS' and seen_at is null", id);
-        return thread(id);
+        return thread(id).forTalent();
     }
     /** Marks the talent's messages as seen when the business opens an accepted thread. */
     @Transactional public MessageThread readByBusiness(UUID id, UUID organizationId) {
@@ -58,8 +63,8 @@ public class MessageRepository {
         }
         message(id,"TALENT",body);
         // A follow-up while the request is still pending must not notify the business again.
-        if(newRequest) notifications.business(organizationId,"MESSAGE_REQUEST","Yêu cầu tin nhắn mới",talentName(contractorId)+" muốn trò chuyện với doanh nghiệp của bạn.","{\"threadId\":\""+id+"\"}");
-        return thread(id);
+        if(newRequest && !muted(id)) notifications.business(organizationId,"MESSAGE_REQUEST","Yêu cầu tin nhắn mới",talentName(contractorId)+" muốn trò chuyện với doanh nghiệp của bạn.","{\"threadId\":\""+id+"\"}");
+        return thread(id).forTalent();
     }
     @Transactional public MessageThread decide(UUID id, UUID organizationId, String decision) {
         owns(id,organizationId); String current=status(id);
@@ -74,7 +79,32 @@ public class MessageRepository {
     }
     @Transactional public ThreadMessage sendTalent(UUID id,String contractorId,String body){
         if(!owner(id,contractorId))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Thread belongs to another contractor"); accepted(id); ThreadMessage sent=message(id,"TALENT",body);
-        notifications.business(organization(id),"MESSAGE_RECEIVED","Tin nhắn mới từ "+talentName(contractorId),body.trim(),"{\"threadId\":\""+id+"\"}"); return sent;
+        if(!muted(id)) notifications.business(organization(id),"MESSAGE_RECEIVED","Tin nhắn mới từ "+talentName(contractorId),body.trim(),"{\"threadId\":\""+id+"\"}"); return sent;
+    }
+    /** Blocks the candidate; the history, accepted proposals and their Replyn workspaces stay. Open proposals are withdrawn. */
+    @Transactional public MessageThread block(UUID id, UUID organizationId) {
+        owns(id, organizationId);
+        int changed = jdbc.update("update message_threads set request_status='BLOCKED' where id=? and request_status in ('PENDING','ACCEPTED','DECLINED')", id);
+        if (changed != 1) throw new ResponseStatusException(HttpStatus.CONFLICT, "Thread is already blocked");
+        proposals.closeOpenOnBlock(id);
+        return thread(id);
+    }
+    /** Restores the conversation as it was before the block: active if it had been accepted, otherwise declined. */
+    @Transactional public MessageThread unblock(UUID id, UUID organizationId) {
+        owns(id, organizationId);
+        int changed = jdbc.update("update message_threads set request_status=case when accepted_at is null then 'DECLINED' else 'ACCEPTED' end where id=? and request_status='BLOCKED'", id);
+        if (changed != 1) throw new ResponseStatusException(HttpStatus.CONFLICT, "Thread is not blocked");
+        return thread(id);
+    }
+    @Transactional public MessageThread mute(UUID id, UUID organizationId, boolean muted) {
+        owns(id, organizationId);
+        jdbc.update(muted ? "update message_threads set business_muted_at=coalesce(business_muted_at,now()) where id=?" : "update message_threads set business_muted_at=null where id=?", id);
+        return thread(id);
+    }
+    /** Removes the thread from the business's list until the candidate writes again; nothing is deleted. */
+    @Transactional public void hide(UUID id, UUID organizationId) {
+        owns(id, organizationId);
+        jdbc.update("update message_threads set business_hidden_at=now() where id=?", id);
     }
     public void requireBusinessThread(UUID id, UUID organizationId) { owns(id, organizationId); }
     public void requireTalentThread(UUID id, String contractorId) {
@@ -82,7 +112,8 @@ public class MessageRepository {
     }
     private ThreadMessage message(UUID id,String sender,String body){UUID messageId=UUID.randomUUID();jdbc.update("insert into thread_messages(id,thread_id,sender_type,body) values(?,?,?,?)",messageId,id,sender,body.trim());jdbc.update("update message_threads set updated_at=now() where id=?",id);return jdbc.query("select id,sender_type,body,sent_at,delivered_at,seen_at from thread_messages where id=?",this::mapMessage,messageId).getFirst();}
     private MessageThread thread(UUID id){return jdbc.query(threadSelect()+" where t.id=?",this::mapThread,id).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Thread not found"));}
-    private void accepted(UUID id){if(!"ACCEPTED".equals(status(id)))throw new ResponseStatusException(HttpStatus.CONFLICT,"Message request has not been accepted");}
+    private void accepted(UUID id){String status=status(id);if("BLOCKED".equals(status))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"You cannot contact this business");if(!"ACCEPTED".equals(status))throw new ResponseStatusException(HttpStatus.CONFLICT,"Message request has not been accepted");}
+    private boolean muted(UUID id){return Boolean.TRUE.equals(jdbc.queryForObject("select business_muted_at is not null from message_threads where id=?",Boolean.class,id));}
     private String status(UUID id){return jdbc.query("select request_status from message_threads where id=?",(rs,row)->rs.getString(1),id).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Thread not found"));}
     private UUID organization(UUID id){return jdbc.query("select organization_id from message_threads where id=?",(rs,row)->rs.getObject(1,UUID.class),id).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Thread not found"));}
     private String organizationName(UUID organizationId){return jdbc.query("select coalesce(b.display_name,o.trading_name) from organizations o left join business_profiles b on b.organization_id=o.id where o.id=?",(rs,row)->rs.getString(1),organizationId).stream().findFirst().orElse("Doanh nghiệp");}
@@ -93,10 +124,10 @@ public class MessageRepository {
         + "t.organization_id,coalesce(b.display_name,o.trading_name),cp.avatar_url,"
         + "(select a.id from business_profile_assets a where a.organization_id=t.organization_id and a.asset_type='AVATAR'),"
         + "(select count(*) from thread_messages m where m.thread_id=t.id and m.sender_type='BUSINESS' and m.seen_at is null),"
-        + "(select count(*) from thread_messages m where m.thread_id=t.id and m.sender_type='TALENT' and m.seen_at is null) "
+        + "(select count(*) from thread_messages m where m.thread_id=t.id and m.sender_type='TALENT' and m.seen_at is null),t.business_muted_at is not null "
         + "from message_threads t join talent_profiles p on p.contractor_id=t.contractor_id "
         + "join organizations o on o.id=t.organization_id left join business_profiles b on b.organization_id=t.organization_id "
         + "left join community_profiles cp on cp.id=t.contractor_id";}
-    private MessageThread mapThread(ResultSet rs,int row)throws SQLException{UUID id=rs.getObject(1,UUID.class);UUID org=rs.getObject(9,UUID.class);return new MessageThread(id,rs.getString(2),rs.getString(3),rs.getString(4),rs.getString(5),rs.getTimestamp(6).toInstant(),rs.getTimestamp(7)==null?null:rs.getTimestamp(7).toInstant(),rs.getTimestamp(8).toInstant(),org,rs.getString(10),rs.getString(11),rs.getObject(12,UUID.class)==null?null:"/media/business-profile/"+rs.getObject(12,UUID.class),rs.getLong(13),rs.getLong(14),jdbc.query("select id,sender_type,body,sent_at,delivered_at,seen_at from thread_messages where thread_id=? order by sent_at,id",this::mapMessage,id));}
+    private MessageThread mapThread(ResultSet rs,int row)throws SQLException{UUID id=rs.getObject(1,UUID.class);UUID org=rs.getObject(9,UUID.class);return new MessageThread(id,rs.getString(2),rs.getString(3),rs.getString(4),rs.getString(5),rs.getTimestamp(6).toInstant(),rs.getTimestamp(7)==null?null:rs.getTimestamp(7).toInstant(),rs.getTimestamp(8).toInstant(),org,rs.getString(10),rs.getString(11),rs.getObject(12,UUID.class)==null?null:"/media/business-profile/"+rs.getObject(12,UUID.class),rs.getLong(13),rs.getLong(14),jdbc.query("select id,sender_type,body,sent_at,delivered_at,seen_at from thread_messages where thread_id=? order by sent_at,id",this::mapMessage,id),rs.getBoolean(15),proposals.forThread(id,true));}
     private ThreadMessage mapMessage(ResultSet rs,int row)throws SQLException{return new ThreadMessage(rs.getObject(1,UUID.class),rs.getString(2),rs.getString(3),rs.getTimestamp(4).toInstant(),rs.getTimestamp(5)==null?null:rs.getTimestamp(5).toInstant(),rs.getTimestamp(6)==null?null:rs.getTimestamp(6).toInstant());}
 }

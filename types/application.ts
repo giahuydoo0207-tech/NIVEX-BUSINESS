@@ -16,6 +16,8 @@ export interface ApplicationMessage {
   senderName: string;
   body: string;
   sentAt: string;
+  /** ISO time from the backend; places Replyn proposal cards between messages. */
+  sentAtIso?: string;
   deliveryStatus?: MessageDeliveryStatus;
   replyToId?: string;
 }
