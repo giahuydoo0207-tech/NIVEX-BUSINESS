@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { Info, Plus, ShieldCheck, Trash2, X } from "lucide-react";
 import {
   SIMULATION_NOTICE,
@@ -11,6 +11,7 @@ import {
   type FieldErrors,
   type ProposalForm,
 } from "@/lib/replyn-proposals";
+import { Overlay, useModal } from "./overlay";
 
 export type ProposalSubmit = (form: ProposalForm, send: boolean) => Promise<{ ok: true } | { ok: false; message: string; errors?: FieldErrors }>;
 
@@ -28,22 +29,17 @@ interface Props {
 /**
  * Drafts and sends a Replyn proposal. Once sent the agreement cannot be edited, so the form says so
  * next to the send button; a change later means withdrawing it and sending a new version.
+ * Header and footer stay put; only the form body scrolls.
  */
 export function ReplynProposalDialog({ candidateName, initial, hasDraft, replacesRejected, onSubmit, onDiscardDraft, onClose }: Props) {
   const titleId = useId();
+  const dialogRef = useRef<HTMLElement>(null);
   const [form, setForm] = useState<ProposalForm>(initial);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touchedSend, setTouchedSend] = useState(false);
   const [busy, setBusy] = useState<"draft" | "send" | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !busy) onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [busy, onClose]);
+  useModal(dialogRef, onClose, !!busy);
 
   // After a failed send, errors follow the edits so a fixed field clears at once.
   useEffect(() => {
@@ -68,7 +64,7 @@ export function ReplynProposalDialog({ candidateName, initial, hasDraft, replace
     setFormError(null);
     if (Object.keys(found).length) {
       setFormError(send ? "Hãy sửa các trường được đánh dấu trước khi gửi." : null);
-      document.querySelector<HTMLElement>(`[data-field="${Object.keys(found)[0]}"]`)?.focus();
+      dialogRef.current?.querySelector<HTMLElement>(`[data-field="${Object.keys(found)[0]}"]`)?.focus();
       return;
     }
     setBusy(send ? "send" : "draft");
@@ -83,81 +79,83 @@ export function ReplynProposalDialog({ candidateName, initial, hasDraft, replace
   const err = (key: string) => errors[key];
 
   return (
-    <div className="action-dialog-backdrop" onClick={() => !busy && onClose()}>
-      <section className="action-dialog-content replyn-proposal-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()}>
-        <header className="action-dialog-header">
-          <div className="action-dialog-icon-wrap primary"><ShieldCheck size={22} /></div>
-          <div className="replyn-confirm-text">
-            <h3 id={titleId} className="action-dialog-title">Đề xuất Replyn cho {candidateName}</h3>
-            <p className="action-dialog-desc">
-              {replacesRejected ? "Phiên bản mới thay cho đề xuất trước; lịch sử vẫn được giữ trong cuộc trò chuyện. " : ""}
-              Ứng viên xem và chấp nhận trên Nova Mobile. Chỉ sau khi được chấp nhận, hai bên mới mở cùng một workspace Replyn.
-            </p>
-          </div>
-          <button type="button" className="action-dialog-close" onClick={onClose} disabled={!!busy} aria-label="Đóng"><X size={18} /></button>
-        </header>
+    <Overlay>
+      <div className="action-dialog-backdrop replyn-backdrop" onClick={() => !busy && onClose()}>
+        <section ref={dialogRef} className="action-dialog-content replyn-proposal-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()}>
+          <header className="replyn-dialog-head">
+            <div className="action-dialog-icon-wrap primary"><ShieldCheck size={20} /></div>
+            <div className="replyn-confirm-text">
+              <h3 id={titleId} className="action-dialog-title">Đề xuất Replyn cho {candidateName}</h3>
+              <p className="action-dialog-desc">
+                {replacesRejected ? "Phiên bản mới thay cho đề xuất trước; lịch sử vẫn được giữ trong cuộc trò chuyện. " : ""}
+                Ứng viên xem và chấp nhận trên Nova Mobile. Chỉ sau khi được chấp nhận, hai bên mới mở cùng một workspace Replyn.
+              </p>
+            </div>
+            <button type="button" className="action-dialog-close" onClick={onClose} disabled={!!busy} aria-label="Đóng"><X size={18} /></button>
+          </header>
 
-        <div className="replyn-proposal-body">
-          <p className="replyn-simulation"><Info size={15} />{SIMULATION_NOTICE}</p>
+          <div className="replyn-proposal-body">
+            <p className="replyn-simulation"><Info size={14} />{SIMULATION_NOTICE}</p>
 
-          <Field id="projectName" label="Tên dự án" required error={err("projectName")}>
-            <input data-field="projectName" id="projectName" value={form.projectName} maxLength={160} onChange={(e) => set("projectName", e.target.value)} aria-invalid={!!err("projectName")} />
-          </Field>
-          <Field id="scope" label="Mô tả / phạm vi công việc" required error={err("scope")}>
-            <textarea data-field="scope" id="scope" rows={4} value={form.scope} maxLength={4000} onChange={(e) => set("scope", e.target.value)} aria-invalid={!!err("scope")} />
-          </Field>
+            <Field id="projectName" label="Tên dự án" required error={err("projectName")}>
+              <input data-field="projectName" data-autofocus id="projectName" value={form.projectName} maxLength={160} onChange={(e) => set("projectName", e.target.value)} aria-invalid={!!err("projectName")} />
+            </Field>
+            <Field id="scope" label="Mô tả / phạm vi công việc" required error={err("scope")}>
+              <textarea data-field="scope" id="scope" rows={4} value={form.scope} maxLength={4000} onChange={(e) => set("scope", e.target.value)} aria-invalid={!!err("scope")} />
+            </Field>
 
-          <fieldset className="replyn-fieldset" data-field="deliverables" tabIndex={-1}>
-            <legend>Sản phẩm bàn giao <span aria-hidden>*</span></legend>
-            {form.deliverables.map((item, index) => (
-              <div className="replyn-row" key={index}>
-                <input value={item} maxLength={300} placeholder={`Sản phẩm ${index + 1}`} aria-label={`Sản phẩm bàn giao ${index + 1}`} onChange={(e) => setDeliverable(index, e.target.value)} />
-                {form.deliverables.length > 1 && (
-                  <button type="button" className="icon-button" aria-label={`Xóa sản phẩm ${index + 1}`} onClick={() => set("deliverables", form.deliverables.filter((_, i) => i !== index))}>
-                    <Trash2 size={15} />
-                  </button>
-                )}
-              </div>
-            ))}
-            {err("deliverables") && <p className="replyn-field-error" role="alert">{err("deliverables")}</p>}
-            {form.deliverables.length < 20 && (
-              <button type="button" className="replyn-add" onClick={() => set("deliverables", [...form.deliverables, ""])}><Plus size={15} />Thêm sản phẩm</button>
-            )}
-          </fieldset>
+            <fieldset className="replyn-section" data-field="deliverables" tabIndex={-1}>
+              <legend>Sản phẩm bàn giao <span aria-hidden>*</span></legend>
+              {form.deliverables.map((item, index) => (
+                <div className="replyn-row" key={index}>
+                  <input value={item} maxLength={300} placeholder={`Sản phẩm ${index + 1}`} aria-label={`Sản phẩm bàn giao ${index + 1}`} onChange={(e) => setDeliverable(index, e.target.value)} />
+                  {form.deliverables.length > 1 && (
+                    <button type="button" className="icon-button replyn-remove" aria-label={`Xóa sản phẩm ${index + 1}`} onClick={() => set("deliverables", form.deliverables.filter((_, i) => i !== index))}>
+                      <Trash2 size={15} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              {err("deliverables") && <p className="replyn-field-error" role="alert">{err("deliverables")}</p>}
+              {form.deliverables.length < 20 && (
+                <button type="button" className="replyn-add" onClick={() => set("deliverables", [...form.deliverables, ""])}><Plus size={15} />Thêm sản phẩm</button>
+              )}
+            </fieldset>
 
-          <div className="replyn-grid">
-            <Field id="startDate" label="Ngày bắt đầu dự kiến" error={err("startDate")}>
-              <input data-field="startDate" id="startDate" type="date" min={todayIso()} value={form.startDate} onChange={(e) => set("startDate", e.target.value)} aria-invalid={!!err("startDate")} />
-            </Field>
-            <Field id="deadline" label="Deadline" required error={err("deadline")}>
-              <input data-field="deadline" id="deadline" type="date" min={form.startDate || todayIso()} value={form.deadline} onChange={(e) => set("deadline", e.target.value)} aria-invalid={!!err("deadline")} />
-            </Field>
-            <Field id="revisionLimit" label="Số lần chỉnh sửa" required error={err("revisionLimit")}>
-              <input data-field="revisionLimit" id="revisionLimit" type="number" min={0} max={20} step={1} value={form.revisionLimit} onChange={(e) => set("revisionLimit", e.target.value)} aria-invalid={!!err("revisionLimit")} />
-            </Field>
-            <Field id="reviewPeriodDays" label="Thời gian nghiệm thu (ngày)" required error={err("reviewPeriodDays")}>
-              <input data-field="reviewPeriodDays" id="reviewPeriodDays" type="number" min={1} max={30} step={1} value={form.reviewPeriodDays} onChange={(e) => set("reviewPeriodDays", e.target.value)} aria-invalid={!!err("reviewPeriodDays")} />
-            </Field>
-            <Field id="totalAmount" label="Tổng ngân sách" required error={err("totalAmount")}>
-              <input data-field="totalAmount" id="totalAmount" inputMode="decimal" value={form.totalAmount} onChange={(e) => set("totalAmount", e.target.value)} placeholder="2500" aria-invalid={!!err("totalAmount")} />
-            </Field>
-            <Field id="currency" label="Đơn vị tiền tệ" error={err("currency")}>
-              <select id="currency" value={form.currency} onChange={() => set("currency", "USDC")}>
-                <option value="USDC">USDC (mô phỏng)</option>
-              </select>
-            </Field>
-          </div>
+            <div className="replyn-grid">
+              <Field id="startDate" label="Ngày bắt đầu dự kiến" error={err("startDate")}>
+                <input data-field="startDate" id="startDate" type="date" min={todayIso()} value={form.startDate} onChange={(e) => set("startDate", e.target.value)} aria-invalid={!!err("startDate")} />
+              </Field>
+              <Field id="deadline" label="Deadline" required error={err("deadline")}>
+                <input data-field="deadline" id="deadline" type="date" min={form.startDate || todayIso()} value={form.deadline} onChange={(e) => set("deadline", e.target.value)} aria-invalid={!!err("deadline")} />
+              </Field>
+              <Field id="revisionLimit" label="Số lần chỉnh sửa" required error={err("revisionLimit")}>
+                <input data-field="revisionLimit" id="revisionLimit" type="number" min={0} max={20} step={1} value={form.revisionLimit} onChange={(e) => set("revisionLimit", e.target.value)} aria-invalid={!!err("revisionLimit")} />
+              </Field>
+              <Field id="reviewPeriodDays" label="Thời gian nghiệm thu (ngày)" required error={err("reviewPeriodDays")}>
+                <input data-field="reviewPeriodDays" id="reviewPeriodDays" type="number" min={1} max={30} step={1} value={form.reviewPeriodDays} onChange={(e) => set("reviewPeriodDays", e.target.value)} aria-invalid={!!err("reviewPeriodDays")} />
+              </Field>
+            </div>
 
-          <fieldset className="replyn-fieldset" data-field="milestones" tabIndex={-1}>
-            <legend>Milestone <span aria-hidden>*</span></legend>
-            {form.milestones.map((m, index) => {
-              const key = `milestones.${index}.`;
-              return (
-                <div className="replyn-milestone" key={index}>
-                  <span className="replyn-milestone-index">{index + 1}</span>
-                  <div className="replyn-milestone-fields">
+            <div className="replyn-grid replyn-budget">
+              <Field id="totalAmount" label="Tổng ngân sách" required error={err("totalAmount")}>
+                <input data-field="totalAmount" id="totalAmount" inputMode="decimal" value={form.totalAmount} onChange={(e) => set("totalAmount", e.target.value)} placeholder="2500" aria-invalid={!!err("totalAmount")} />
+              </Field>
+              <Field id="currency" label="Đơn vị tiền tệ" error={err("currency")}>
+                <select id="currency" value={form.currency} onChange={() => set("currency", "USDC")}>
+                  <option value="USDC">USDC (mô phỏng)</option>
+                </select>
+              </Field>
+            </div>
+
+            <fieldset className="replyn-section" data-field="milestones" tabIndex={-1}>
+              <legend>Milestone <span aria-hidden>*</span></legend>
+              {form.milestones.map((m, index) => {
+                const key = `milestones.${index}.`;
+                return (
+                  <div className="replyn-milestone" key={index} role="group" aria-label={`Milestone ${index + 1}`}>
                     <label>
-                      <span>Tên milestone</span>
+                      <span>Tên milestone {index + 1}</span>
                       <input data-field={`${key}title`} value={m.title} maxLength={160} onChange={(e) => setMilestone(index, { title: e.target.value })} aria-invalid={!!err(`${key}title`)} />
                       {err(`${key}title`) && <small className="replyn-field-error">{err(`${key}title`)}</small>}
                     </label>
@@ -171,46 +169,48 @@ export function ReplynProposalDialog({ candidateName, initial, hasDraft, replace
                       <input data-field={`${key}deadline`} type="date" value={m.deadline} min={form.startDate || todayIso()} max={form.deadline || undefined} onChange={(e) => setMilestone(index, { deadline: e.target.value })} aria-invalid={!!err(`${key}deadline`)} />
                       {err(`${key}deadline`) && <small className="replyn-field-error">{err(`${key}deadline`)}</small>}
                     </label>
+                    {form.milestones.length > 1 ? (
+                      <button type="button" className="icon-button replyn-remove" aria-label={`Xóa milestone ${index + 1}`} onClick={() => set("milestones", form.milestones.filter((_, i) => i !== index))}>
+                        <Trash2 size={15} />
+                      </button>
+                    ) : (
+                      <span className="replyn-remove-placeholder" aria-hidden />
+                    )}
                   </div>
-                  {form.milestones.length > 1 && (
-                    <button type="button" className="icon-button" aria-label={`Xóa milestone ${index + 1}`} onClick={() => set("milestones", form.milestones.filter((_, i) => i !== index))}>
-                      <Trash2 size={15} />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-            <div className="replyn-allocation" aria-live="polite">
-              Đã phân bổ {formatAmount(allocated)} / {total && Number.isFinite(total) ? formatAmount(total) : "—"}
-            </div>
-            {err("milestones") && <p className="replyn-field-error" role="alert">{err("milestones")}</p>}
-            {form.milestones.length < 10 && (
-              <button type="button" className="replyn-add" onClick={() => set("milestones", [...form.milestones, { title: "", amount: "", deadline: "" }])}><Plus size={15} />Thêm milestone</button>
-            )}
-          </fieldset>
+                );
+              })}
+              <div className="replyn-allocation" aria-live="polite">
+                Đã phân bổ {formatAmount(allocated)} / {total && Number.isFinite(total) ? formatAmount(total) : "—"}
+              </div>
+              {err("milestones") && <p className="replyn-field-error" role="alert">{err("milestones")}</p>}
+              {form.milestones.length < 10 && (
+                <button type="button" className="replyn-add" onClick={() => set("milestones", [...form.milestones, { title: "", amount: "", deadline: "" }])}><Plus size={15} />Thêm milestone</button>
+              )}
+            </fieldset>
 
-          <Field id="notes" label="Ghi chú bổ sung" error={err("notes")}>
-            <textarea data-field="notes" id="notes" rows={3} value={form.notes} maxLength={2000} onChange={(e) => set("notes", e.target.value)} />
-          </Field>
-          {formError && <p className="replyn-form-error" role="alert">{formError}</p>}
-        </div>
-
-        <footer className="action-dialog-footer replyn-proposal-footer">
-          <small>Sau khi gửi, đề xuất không thể chỉnh sửa. Muốn thay đổi, hãy hủy và gửi phiên bản mới.</small>
-          <div>
-            {hasDraft && (
-              <button type="button" className="action-dialog-btn secondary danger-text" onClick={onDiscardDraft} disabled={!!busy}>Bỏ bản nháp</button>
-            )}
-            <button type="button" className="action-dialog-btn secondary" onClick={() => submit(false)} disabled={!!busy}>
-              {busy === "draft" ? "Đang lưu…" : "Lưu nháp"}
-            </button>
-            <button type="button" className="action-dialog-btn primary" onClick={() => submit(true)} disabled={!!busy}>
-              {busy === "send" ? "Đang gửi…" : "Gửi đề xuất"}
-            </button>
+            <Field id="notes" label="Ghi chú bổ sung" error={err("notes")}>
+              <textarea data-field="notes" id="notes" rows={3} value={form.notes} maxLength={2000} onChange={(e) => set("notes", e.target.value)} />
+            </Field>
+            {formError && <p className="replyn-form-error" role="alert">{formError}</p>}
           </div>
-        </footer>
-      </section>
-    </div>
+
+          <footer className="replyn-dialog-foot replyn-proposal-footer">
+            <small>Sau khi gửi, đề xuất không thể chỉnh sửa. Muốn thay đổi, hãy hủy và gửi phiên bản mới.</small>
+            <div>
+              {hasDraft && (
+                <button type="button" className="action-dialog-btn secondary danger-text" onClick={onDiscardDraft} disabled={!!busy}>Bỏ bản nháp</button>
+              )}
+              <button type="button" className="action-dialog-btn secondary" onClick={() => submit(false)} disabled={!!busy}>
+                {busy === "draft" ? "Đang lưu…" : "Lưu nháp"}
+              </button>
+              <button type="button" className="action-dialog-btn primary" onClick={() => submit(true)} disabled={!!busy}>
+                {busy === "send" ? "Đang gửi…" : "Gửi đề xuất"}
+              </button>
+            </div>
+          </footer>
+        </section>
+      </div>
+    </Overlay>
   );
 }
 

@@ -1,24 +1,24 @@
 /* Replyn proposals and the conversation "..." menu in Nova Business. Theme tokens only, so every
-   Business theme (light and dark) applies. */
+   Business theme (light and dark) applies. Menus and dialogs are portalled into `.business-app`
+   and positioned against the viewport, so they never take part in the chat columns. */
 
-.thread-options {
-  position: relative;
-  flex-shrink: 0;
+/* The header gives every direct div `flex: 1` and grid; the menu wrapper must stay button-sized. */
+.message-thread-head > .thread-options {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0;
 }
 
 .thread-options-menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 60;
-  width: max-content;
-  min-width: 220px;
-  max-width: min(300px, calc(100vw - 32px));
+  position: fixed;
+  z-index: 120;
+  width: 260px;
+  max-width: calc(100vw - 16px);
   padding: 6px;
   border: 1px solid var(--border-popover, var(--border));
   border-radius: 10px;
   background: var(--surface-popover, var(--surface));
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 12px 32px rgba(2, 8, 23, 0.28), 0 2px 6px rgba(2, 8, 23, 0.16);
 }
 
 .thread-options-item {
@@ -26,13 +26,15 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 9px 10px;
+  min-height: 42px;
+  padding: 0 12px;
   border: 0;
   border-radius: 7px;
   background: transparent;
   color: var(--ink);
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 500;
+  line-height: 1.2;
   text-align: left;
   cursor: pointer;
 }
@@ -48,6 +50,10 @@
   outline: none;
 }
 
+.thread-options-item:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
 .thread-options-item.primary {
   font-weight: 650;
 }
@@ -56,21 +62,48 @@
   color: var(--accent);
 }
 
+/* Muted red that reads on both light and dark surfaces. */
 .thread-options-item.danger,
 .thread-options-item.danger svg {
-  color: var(--danger, #b42318);
+  color: color-mix(in srgb, var(--danger, #dc2626) 72%, var(--ink));
+}
+
+.thread-options-item.danger:hover,
+.thread-options-item.danger:focus-visible {
+  background: color-mix(in srgb, var(--danger, #dc2626) 10%, transparent);
 }
 
 .thread-options-separator {
   height: 1px;
-  margin: 5px 4px;
+  margin: 6px 4px;
   background: var(--border);
 }
 
-/* dialogs */
+/* Native controls (date picker icon, number spinners, select arrow) follow the theme. */
+.business-app[data-theme="cyberNight"] :is(.replyn-backdrop, .thread-options-menu),
+.business-app[data-theme="blockchainFlow"] :is(.replyn-backdrop, .thread-options-menu) {
+  color-scheme: dark;
+}
+
+.business-app[data-theme="defaultTheme"] :is(.replyn-backdrop, .thread-options-menu),
+.business-app[data-theme="vietnamFuture"] :is(.replyn-backdrop, .thread-options-menu) {
+  color-scheme: light;
+}
+
+/* ---------- dialogs ---------- */
+
+.replyn-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  padding: 12px;
+  overscroll-behavior: contain;
+}
 
 .replyn-confirm {
-  max-width: 480px;
+  width: min(480px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
 }
 
 .replyn-confirm-text {
@@ -107,53 +140,117 @@
 }
 
 .replyn-form-error {
-  margin-top: 10px;
+  margin-top: 4px;
 }
 
+/* One surface, three rows: fixed header, scrolling body, fixed footer. */
 .replyn-proposal-dialog {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(920px, calc(100vw - 48px));
+  max-width: none;
+  max-height: min(88dvh, 840px);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.replyn-dialog-head,
+.replyn-dialog-foot {
+  background: var(--surface);
+}
+
+.replyn-dialog-head {
   display: flex;
-  flex-direction: column;
-  max-width: 760px;
-  max-height: min(92dvh, 900px);
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px 14px 24px;
+  border-bottom: 1px solid var(--border-subtle, var(--border));
+}
+
+.replyn-dialog-head .action-dialog-icon-wrap {
+  width: 36px;
+  height: 36px;
+}
+
+.replyn-dialog-head .action-dialog-desc {
+  font-size: 12.5px;
+}
+
+.replyn-dialog-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 12px 20px 14px 24px;
+  border-top: 1px solid var(--border-subtle, var(--border));
 }
 
 .replyn-proposal-body {
+  --replyn-scroll-thumb: color-mix(in srgb, var(--muted) 45%, transparent);
   display: grid;
-  gap: 14px;
+  align-content: start;
+  gap: 16px;
   min-height: 0;
-  padding: 4px 20px 18px;
+  padding: 16px 20px 20px 24px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--replyn-scroll-thumb) var(--surface);
+  background: var(--surface);
   color: var(--ink);
   font-size: 13px;
+}
+
+.replyn-proposal-body::-webkit-scrollbar {
+  width: 12px;
+}
+
+.replyn-proposal-body::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+/* 8px thumb: 2px of track colour on each side via a transparent border. */
+.replyn-proposal-body::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: var(--replyn-scroll-thumb);
+  background-clip: padding-box;
+}
+
+.replyn-proposal-body::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--muted) 70%, transparent);
+}
+
+.replyn-proposal-body::-webkit-scrollbar-corner {
+  background: var(--surface);
 }
 
 .replyn-simulation {
   display: flex;
   gap: 8px;
-  align-items: flex-start;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
+  align-items: center;
+  margin: 0;
+  padding: 8px 12px;
   border-radius: 8px;
-  background: var(--canvas);
+  background: var(--surface-subtle, var(--canvas));
   color: var(--muted);
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .replyn-simulation svg {
   flex-shrink: 0;
-  margin-top: 1px;
 }
 
 .replyn-field {
   display: grid;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
 }
 
 .replyn-field > label,
-.replyn-fieldset legend,
-.replyn-milestone-fields label > span {
+.replyn-section legend,
+.replyn-milestone label > span {
   color: var(--ink);
   font-size: 12px;
   font-weight: 600;
@@ -162,25 +259,31 @@
 .replyn-proposal-body input,
 .replyn-proposal-body textarea,
 .replyn-proposal-body select {
+  box-sizing: border-box;
   width: 100%;
   min-width: 0;
-  padding: 8px 10px;
+  height: 38px;
+  padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--surface);
+  background: var(--canvas);
   color: var(--ink);
   font: inherit;
+  font-size: 13px;
 }
 
 .replyn-proposal-body textarea {
-  resize: vertical;
+  height: auto;
+  min-height: 76px;
+  padding: 8px 10px;
   line-height: 1.5;
+  resize: vertical;
 }
 
 .replyn-proposal-body input:focus-visible,
 .replyn-proposal-body textarea:focus-visible,
 .replyn-proposal-body select:focus-visible,
-.replyn-fieldset:focus-visible {
+.replyn-section:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
@@ -189,24 +292,43 @@
   border-color: var(--danger, #b42318);
 }
 
-.replyn-fieldset {
+/* Sections are separated by a heading and a rule, not by nested cards. */
+.replyn-section {
   display: grid;
   gap: 8px;
   min-width: 0;
   margin: 0;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--border-subtle, var(--border));
 }
 
-.replyn-fieldset legend {
-  padding: 0 4px;
+.replyn-section legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 2px;
+  padding: 0;
 }
 
 .replyn-row {
-  display: flex;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  gap: 8px;
   align-items: center;
+}
+
+.replyn-row:has(> input:only-child) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.replyn-remove {
+  width: 34px;
+  height: 38px;
+  color: var(--muted);
+}
+
+.replyn-remove:hover {
+  color: var(--danger, #b42318);
 }
 
 .replyn-add {
@@ -214,11 +336,11 @@
   gap: 6px;
   align-items: center;
   justify-self: start;
-  padding: 6px 4px;
+  padding: 4px 2px;
   border: 0;
   background: transparent;
   color: var(--accent);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -226,47 +348,35 @@
 .replyn-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px 16px;
 }
 
+.replyn-budget {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+/* Tên milestone | Số tiền | Deadline | xóa */
 .replyn-milestone {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(150px, 1.2fr) 34px;
   gap: 10px;
-  align-items: flex-start;
-  padding-bottom: 10px;
-  border-bottom: 1px dashed var(--border);
+  align-items: start;
 }
 
-.replyn-milestone-index {
+.replyn-milestone label {
   display: grid;
-  flex-shrink: 0;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  margin-top: 20px;
-  border-radius: 50%;
-  background: var(--accent-soft, var(--canvas));
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.replyn-milestone-fields {
-  display: grid;
-  flex: 1;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.2fr);
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
-.replyn-milestone-fields label {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
+.replyn-milestone .replyn-remove,
+.replyn-remove-placeholder {
+  align-self: start;
+  margin-top: 24px;
 }
 
-.replyn-milestone .icon-button {
-  margin-top: 18px;
+.replyn-remove-placeholder {
+  width: 34px;
 }
 
 .replyn-allocation {
@@ -275,23 +385,29 @@
   text-align: right;
 }
 
-.replyn-proposal-footer {
-  flex-wrap: wrap;
-  justify-content: space-between;
-}
-
 .replyn-proposal-footer > small {
-  flex: 1 1 220px;
+  flex: 1 1 auto;
+  min-width: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 11.5px;
   line-height: 1.4;
 }
 
-.replyn-proposal-footer > div {
+.replyn-proposal-footer > div,
+.replyn-details-footer {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+}
+
+.replyn-details-footer {
+  justify-content: flex-end;
+}
+
+.replyn-proposal-dialog .action-dialog-btn {
+  justify-content: center;
+  white-space: nowrap;
 }
 
 .action-dialog-btn.danger-text {
@@ -473,18 +589,71 @@
   transform: translateX(-50%);
 }
 
-@media (max-width: 640px) {
+/* Between 761px and 1180px the candidate panel is an overlay drawer; start it below the thread
+   header so the "..." button and the panel toggle stay reachable. */
+@media (min-width: 761px) and (max-width: 1180px) {
+  .messages-workspace .message-context {
+    top: 70px;
+  }
+}
+
+@media (max-width: 760px) {
+  /* The 1180px rule for a closed candidate panel outranks the one-column phone layout, which
+     squeezed the conversation (and its "..." button) into a 240px column. */
+  .messages-workspace.context-hidden {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .replyn-proposal-dialog {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+  }
+
+  .replyn-dialog-head {
+    padding: 14px 14px 12px 16px;
+  }
+
+  .replyn-proposal-body {
+    padding: 14px 12px 18px 16px;
+  }
+
   .replyn-grid,
-  .replyn-milestone-fields,
+  .replyn-budget,
   .replyn-proposal-facts {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .replyn-milestone-index {
+  /* One column per milestone; the delete button sits on its own line at the end. */
+  .replyn-milestone {
+    grid-template-columns: minmax(0, 1fr);
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border-subtle, var(--border));
+  }
+
+  .replyn-milestone .replyn-remove {
+    justify-self: end;
     margin-top: 0;
   }
 
-  .replyn-proposal-dialog {
-    max-height: 100dvh;
+  .replyn-remove-placeholder {
+    display: none;
+  }
+
+  .replyn-dialog-foot {
+    flex-wrap: wrap;
+    padding: 10px 12px 12px 16px;
+  }
+
+  .replyn-proposal-footer > small {
+    flex-basis: 100%;
+  }
+
+  .replyn-proposal-footer > div {
+    width: 100%;
+  }
+
+  /* Two buttons share a row; a third (Bỏ bản nháp) takes its own row instead of squeezing. */
+  .replyn-proposal-footer > div > .action-dialog-btn {
+    flex: 1 1 calc(50% - 4px);
   }
 }
