@@ -4,6 +4,7 @@ import "@fontsource-variable/geist";
 import "./redesign.css";
 import "./landing.css";
 import "./landing-scenes.css";
+import "./replyn-proposals.css";
 
 export const metadata: Metadata = {
   title: "Nova Business | Quy trình chi trả USDC rõ ràng",

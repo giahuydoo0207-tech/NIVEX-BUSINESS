@@ -9,7 +9,9 @@ const businessJobs = `business/jobs(?:/${UUID}(?:/status)?)?`;
 const applications = `applications(?:/${UUID}/status)?`;
 // Management only; Nova ID + Key verification is for other Nova services and is not proxied.
 const novaCredentials = "business/nova-credentials(?:/key)?";
-const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages|messages/${UUID}/(accept|decline|block|messages|read|typing)|notifications|notifications/${UUID}/read|business/profile(/(avatar|cover))?|business/recipients|${novaCredentials}|${businessJobs}|${applications}|${communityPost}|${communityProfile}|community/(?:reports|media|media/${UUID})|${memberAvatar}|media/(?:business-profile|community)/${UUID})$`);
+// Replyn proposals are created and withdrawn by the business; accepting is a Nova Mobile action and is not proxied.
+const replynProposals = `messages/${UUID}/replyn-proposals(?:/${UUID}(?:/(?:send|cancel))?)?`;
+const allowed = new RegExp(`^(invoices|invoices/${UUID}/issue|payment-requests/${UUID}(/prepare|/verify)?|messages|messages/${UUID}/(accept|decline|block|unblock|mute|unmute|hide|messages|read|typing)|${replynProposals}|notifications|notifications/${UUID}/read|business/profile(/(avatar|cover))?|business/recipients|${novaCredentials}|${businessJobs}|${applications}|${communityPost}|${communityProfile}|community/(?:reports|media|media/${UUID})|${memberAvatar}|media/(?:business-profile|community)/${UUID})$`);
 const binary = (path: string) => path.startsWith("media/") || new RegExp(`^${memberAvatar}$`).test(path);
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {

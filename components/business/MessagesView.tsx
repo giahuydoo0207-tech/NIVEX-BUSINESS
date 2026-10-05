@@ -3,13 +3,14 @@
 import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
+  AlertTriangle,
   ArrowLeft,
+  Ban,
   Check,
   CheckCheck,
   Clock3,
   ExternalLink,
   FileText,
-  MoreHorizontal,
   PanelRightClose,
   PanelRightOpen,
   Paperclip,
@@ -17,6 +18,7 @@ import {
   Search,
   Send,
   Smile,
+  Trash2,
   UserRoundCheck,
   X,
 } from "lucide-react";
@@ -24,11 +26,29 @@ import { demoApplications } from "@/lib/application-demo-data";
 import { statusCopy } from "@/lib/application-status";
 import type { ApplicationMessage, ApplicationStatus, CandidateApplication } from "@/types/application";
 import { mapApiApplication, proxiedMediaUrl, type ApiApplication } from "@/lib/workspace-api";
+import {
+  emptyForm,
+  formFromProposal,
+  payload,
+  proposalMenuItem,
+  readApiError,
+  workspaceUrl,
+  type ProposalForm,
+  type ReplynProposal,
+} from "@/lib/replyn-proposals";
+import { demoSave, loadDemoState, saveDemoState, toggle, type DemoConversationState } from "@/lib/replyn-proposal-demo";
 import { MESSAGES_UPDATED_EVENT } from "./useLiveCounts";
+import { ConfirmDialog } from "./replyn/ConfirmDialog";
+import { ProposalCard, ProposalDetailsDialog } from "./replyn/ProposalCard";
+import { ReplynProposalDialog, type ProposalSubmit } from "./replyn/ReplynProposalDialog";
+import { ThreadOptionsMenu } from "./replyn/ThreadOptionsMenu";
 
 const liveMessages = process.env.NEXT_PUBLIC_PAYMENT_MODE === "devnet";
 
-type ApiThread = { id: string; contractorId: string; candidateName: string; headline: string; requestStatus: "PENDING" | "ACCEPTED"; createdAt: string; organizationName?: string; candidateAvatarUrl?: string | null; unreadForBusiness?: number; messages: Array<{ id: string; senderType: "BUSINESS" | "TALENT"; body: string; sentAt: string; deliveredAt?: string | null; seenAt?: string | null }> };
+type ApiThread = { id: string; contractorId: string; candidateName: string; headline: string; requestStatus: "PENDING" | "ACCEPTED" | "BLOCKED"; createdAt: string; organizationName?: string; candidateAvatarUrl?: string | null; unreadForBusiness?: number; businessMuted?: boolean; replynProposals?: ReplynProposal[]; messages: Array<{ id: string; senderType: "BUSINESS" | "TALENT"; body: string; sentAt: string; deliveredAt?: string | null; seenAt?: string | null }> };
+
+type ProposalDialogState = { initial: ProposalForm; draftId?: string; supersedesId?: string } | null;
+type ConfirmState = { kind: "delete" | "block" | "unblock"; id: string } | null;
 
 /**
  * Threads are per organization–candidate pair and carry no job, so the
@@ -61,8 +81,40 @@ function mapThread(thread: ApiThread, application?: CandidateApplication): Conve
     submittedAt: thread.createdAt, createdAt: thread.createdAt, updatedAt: thread.createdAt,
     hasActiveApplication: hasApplication && application?.status !== "withdrawn" && application?.status !== "rejected",
     requestState: thread.requestStatus.toLowerCase() as ConversationItem["requestState"],
-    messages: thread.messages.map((message) => ({ id: message.id, role: message.senderType, senderName: message.senderType === "BUSINESS" ? thread.organizationName ?? "Doanh nghiệp" : thread.candidateName, body: message.body, sentAt: new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit" }).format(new Date(message.sentAt)), deliveryStatus: message.seenAt ? "SEEN" : message.deliveredAt ? "DELIVERED" : "SENT" })),
+    muted: Boolean(thread.businessMuted),
+    replynProposals: thread.replynProposals ?? [],
+    messages: thread.messages.map((message) => ({ id: message.id, role: message.senderType, senderName: message.senderType === "BUSINESS" ? thread.organizationName ?? "Doanh nghiệp" : thread.candidateName, body: message.body, sentAt: new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit" }).format(new Date(message.sentAt)), sentAtIso: message.sentAt, deliveryStatus: message.seenAt ? "SEEN" : message.deliveredAt ? "DELIVERED" : "SENT" })),
   };
+}
+
+type StreamItem = { kind: "message"; message: ApplicationMessage } | { kind: "proposal"; proposal: ReplynProposal };
+
+/** Messages in order with each sent proposal placed by its send time; drafts are not shown in the chat. */
+function streamItems(messages: ApplicationMessage[], proposals: ReplynProposal[]): StreamItem[] {
+  const cards = proposals.filter((p) => p.status !== "DRAFT" && p.sentAt).sort((a, b) => a.sentAt!.localeCompare(b.sentAt!));
+  const items: StreamItem[] = [];
+  let next = 0;
+  for (const message of messages) {
+    // Demo messages carry no timestamp, so cards follow them.
+    while (message.sentAtIso && next < cards.length && cards[next].sentAt! < message.sentAtIso) {
+      items.push({ kind: "proposal", proposal: cards[next++] });
+    }
+    items.push({ kind: "message", message });
+  }
+  while (next < cards.length) items.push({ kind: "proposal", proposal: cards[next++] });
+  return items;
+}
+
+/** Sample conversations with this browser's saved demo preferences and proposals applied. */
+function applyDemoState(items: ConversationItem[], demo: DemoConversationState): ConversationItem[] {
+  return items
+    .filter((item) => !demo.hidden.includes(item.id))
+    .map((item) => ({
+      ...item,
+      muted: demo.muted.includes(item.id),
+      replynProposals: demo.proposals[item.id] ?? [],
+      requestState: demo.blocked.includes(item.id) ? "blocked" : item.requestState,
+    }));
 }
 
 /** The candidate's most relevant application: an active one first, then the newest. */
@@ -109,7 +161,10 @@ function DeliveryMark({ message }: { message: ApplicationMessage }) {
 
 export interface ConversationItem extends CandidateApplication {
   hasActiveApplication: boolean;
-  requestState: "none" | "pending" | "accepted" | "declined";
+  requestState: "none" | "pending" | "accepted" | "declined" | "blocked";
+  /** Notifications for this conversation are muted for the business. */
+  muted?: boolean;
+  replynProposals?: ReplynProposal[];
   /** Live mode: the linked application, or none for a direct conversation. */
   applicationId?: string;
   applicationStatus?: ApplicationStatus | null;
@@ -178,7 +233,28 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
     return [DEMO_STRANGER_REQUEST, ...base];
   });
 
-  const [activeTab, setActiveTab] = useState<"all" | "requests">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "requests" | "blocked">("all");
+  const [proposalDialog, setProposalDialog] = useState<ProposalDialogState>(null);
+  const [detailsId, setDetailsId] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<ConfirmState>(null);
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [demoState, setDemoState] = useState<DemoConversationState | null>(null);
+
+  // Demo mode: apply this browser's saved preferences after hydration (localStorage is client-only).
+  useEffect(() => {
+    if (liveMessages) return;
+    const saved = loadDemoState();
+    setDemoState(saved);
+    setConversations((current) => applyDemoState(current, saved));
+  }, []);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
   const [selectedId, setSelectedId] = useState(
     liveMessages ? initialCandidateId ?? "" :
     initialCandidateId && demoApplications.some((item) => item.id === initialCandidateId)
@@ -201,12 +277,13 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
       if (!response.ok) throw new Error(`API ${response.status}`);
       return response.json() as Promise<T>;
     };
-    const [pending, accepted, applications] = await Promise.all([
+    const [pending, accepted, blocked, applications] = await Promise.all([
       get<ApiThread[]>("messages?status=PENDING"),
       get<ApiThread[]>("messages?status=ACCEPTED"),
+      get<ApiThread[]>("messages?status=BLOCKED"),
       get<ApiApplication[]>("applications?limit=100").then((rows) => rows.map(mapApiApplication)),
     ]);
-    const next = [...pending, ...accepted].map((thread) =>
+    const next = [...pending, ...accepted, ...blocked].map((thread) =>
       mapThread(thread, applicationFor(thread.contractorId, applications)),
     );
     setConversations(next);
@@ -245,7 +322,12 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
     [conversations],
   );
 
-  const currentList = activeTab === "all" ? allConversations : pendingRequests;
+  const blockedConversations = useMemo(
+    () => conversations.filter((c) => c.requestState === "blocked"),
+    [conversations],
+  );
+
+  const currentList = activeTab === "all" ? allConversations : activeTab === "requests" ? pendingRequests : blockedConversations;
 
   const filtered = useMemo(() => {
     const value = query.trim().toLocaleLowerCase("vi");
@@ -353,6 +435,181 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
     }
   }
 
+  /** Demo mode: save the change in this browser and re-apply it to the sample conversations. */
+  function updateDemo(change: (state: DemoConversationState) => DemoConversationState) {
+    const next = change(demoState ?? loadDemoState());
+    saveDemoState(next);
+    setDemoState(next);
+    setConversations((current) =>
+      current
+        .filter((item) => !next.hidden.includes(item.id))
+        .map((item) => ({
+          ...item,
+          muted: next.muted.includes(item.id),
+          replynProposals: next.proposals[item.id] ?? [],
+          requestState: next.blocked.includes(item.id)
+            ? "blocked"
+            : item.requestState === "blocked"
+              ? item.hasActiveApplication ? "none" : "pending"
+              : item.requestState,
+        })),
+    );
+  }
+
+  /** Live mode: POSTs a conversation action; returns an error message or null. */
+  async function liveAction(path: string): Promise<string | null> {
+    try {
+      const response = await fetch(`/api/devnet/${path}`, { method: "POST" });
+      if (!response.ok) return (await readApiError(response)).message ?? `Không thể thực hiện thao tác (lỗi ${response.status}).`;
+      await refreshLiveThreads();
+      window.dispatchEvent(new Event(MESSAGES_UPDATED_EVENT));
+      return null;
+    } catch {
+      return "Không kết nối được máy chủ Nova. Hãy thử lại.";
+    }
+  }
+
+  function handleProposalMenu() {
+    if (!selected) return;
+    const item = proposalMenuItem(selected.replynProposals ?? []);
+    const proposal = item.proposal;
+    switch (item.action) {
+      case "create":
+        setProposalDialog({ initial: emptyForm() });
+        break;
+      case "continue":
+        setProposalDialog({ initial: formFromProposal(proposal!), draftId: proposal!.id });
+        break;
+      case "view":
+        setDetailsId(proposal!.id);
+        break;
+      case "open":
+        if (proposal?.workspaceId) window.open(workspaceUrl(proposal.workspaceId), "_blank", "noopener,noreferrer");
+        break;
+      case "recreate":
+        setProposalDialog({ initial: formFromProposal(proposal!), supersedesId: proposal!.id });
+        break;
+    }
+  }
+
+  const submitProposal: ProposalSubmit = async (form, send) => {
+    if (!selected || !proposalDialog) return { ok: false, message: "Không tìm thấy cuộc trò chuyện." };
+    const threadId = selected.id;
+    const done = () => {
+      setProposalDialog(null);
+      setNotice(send ? "Đã gửi đề xuất Replyn. Đang chờ freelancer xác nhận." : "Đã lưu bản nháp đề xuất Replyn.");
+      return { ok: true as const };
+    };
+    if (!liveMessages) {
+      updateDemo((state) => {
+        const list = state.proposals[threadId] ?? [];
+        const existing = list.find((p) => p.id === proposalDialog.draftId);
+        const saved = demoSave(existing, threadId, form, send, proposalDialog.supersedesId);
+        return { ...state, proposals: { ...state.proposals, [threadId]: existing ? list.map((p) => (p.id === saved.id ? saved : p)) : [...list, saved] } };
+      });
+      return done();
+    }
+    const base = `/api/devnet/messages/${threadId}/replyn-proposals`;
+    const headers = { "Content-Type": "application/json" };
+    try {
+      let response: Response;
+      if (proposalDialog.draftId) {
+        response = await fetch(`${base}/${proposalDialog.draftId}`, { method: "PUT", headers, body: JSON.stringify(payload(form)) });
+        if (response.ok && send) response = await fetch(`${base}/${proposalDialog.draftId}/send`, { method: "POST" });
+      } else {
+        response = await fetch(`${base}?send=${send}`, { method: "POST", headers, body: JSON.stringify(payload(form, proposalDialog.supersedesId)) });
+      }
+      if (!response.ok) {
+        const error = await readApiError(response);
+        await refreshLiveThreads().catch(() => undefined);
+        return { ok: false, message: error.message ?? `Không thể lưu đề xuất (lỗi ${response.status}).`, errors: error.errors };
+      }
+      await refreshLiveThreads();
+      return done();
+    } catch {
+      return { ok: false, message: "Không kết nối được máy chủ Nova. Hãy thử lại." };
+    }
+  };
+
+  async function discardDraft() {
+    if (!selected || !proposalDialog?.draftId) return;
+    const threadId = selected.id;
+    const draftId = proposalDialog.draftId;
+    if (liveMessages) {
+      const error = await liveAction(`messages/${threadId}/replyn-proposals/${draftId}/cancel`);
+      if (error) return setNotice(error);
+    } else {
+      updateDemo((state) => ({ ...state, proposals: { ...state.proposals, [threadId]: (state.proposals[threadId] ?? []).filter((p) => p.id !== draftId) } }));
+    }
+    setProposalDialog(null);
+    setNotice("Đã bỏ bản nháp đề xuất.");
+  }
+
+  async function cancelProposal(proposalId: string): Promise<string | null> {
+    if (!selected) return "Không tìm thấy cuộc trò chuyện.";
+    const threadId = selected.id;
+    if (liveMessages) {
+      const error = await liveAction(`messages/${threadId}/replyn-proposals/${proposalId}/cancel`);
+      if (error) return error;
+    } else {
+      const now = new Date().toISOString();
+      updateDemo((state) => ({
+        ...state,
+        proposals: {
+          ...state.proposals,
+          [threadId]: (state.proposals[threadId] ?? []).map((p) => (p.id === proposalId && p.status === "PENDING" ? { ...p, status: "CANCELLED", cancelledAt: now, updatedAt: now } : p)),
+        },
+      }));
+    }
+    setDetailsId(null);
+    setNotice("Đã hủy đề xuất Replyn.");
+    return null;
+  }
+
+  async function toggleMute() {
+    if (!selected) return;
+    const mute = !selected.muted;
+    if (liveMessages) {
+      const error = await liveAction(`messages/${selected.id}/${mute ? "mute" : "unmute"}`);
+      if (error) return setNotice(error);
+    } else {
+      const id = selected.id;
+      updateDemo((state) => ({ ...state, muted: toggle(state.muted, id, mute) }));
+    }
+    setNotice(mute ? "Đã tắt thông báo cho cuộc trò chuyện này." : "Đã bật lại thông báo.");
+  }
+
+  async function runConfirm() {
+    if (!confirm) return;
+    const { kind, id } = confirm;
+    setConfirmBusy(true);
+    setConfirmError(null);
+    let error: string | null = null;
+    if (liveMessages) {
+      error = await liveAction(`messages/${id}/${kind === "delete" ? "hide" : kind}`);
+    } else {
+      updateDemo((state) =>
+        kind === "delete"
+          ? { ...state, hidden: toggle(state.hidden, id, true) }
+          : { ...state, blocked: toggle(state.blocked, id, kind === "block") },
+      );
+    }
+    setConfirmBusy(false);
+    if (error) return setConfirmError(error);
+    setConfirm(null);
+    if (kind === "delete") {
+      setMobileThreadOpen(false);
+      setSelectedId("");
+      setNotice("Đã xóa cuộc trò chuyện khỏi tài khoản của bạn.");
+    } else if (kind === "block") {
+      setActiveTab("blocked");
+      setNotice("Đã chặn ứng viên. Bạn có thể bỏ chặn trong mục Đã chặn.");
+    } else {
+      setActiveTab("all");
+      setNotice("Đã bỏ chặn ứng viên.");
+    }
+  }
+
   function patchMessage(applicationId: string, messageId: string, patch: Partial<ApplicationMessage>) {
     setConversations((current) =>
       current.map((application) =>
@@ -371,7 +628,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
   async function sendMessage(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
     const body = draft.trim();
-    if (!body || !selected || selected.requestState === "pending") return;
+    if (!body || !selected || selected.requestState === "pending" || selected.requestState === "blocked") return;
     const applicationId = selected.id;
     if (liveMessages) {
       const response = await fetch(`/api/devnet/messages/${applicationId}/messages`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ body }) });
@@ -424,6 +681,13 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
   }
 
   const isSelectedPending = selected?.requestState === "pending";
+  const isSelectedBlocked = selected?.requestState === "blocked";
+  const composerLocked = isSelectedPending || isSelectedBlocked;
+  const selectedProposals = selected?.replynProposals ?? [];
+  // Proposals belong to an active conversation, not to a message request or a blocked candidate.
+  const proposalItem = selected && !composerLocked ? proposalMenuItem(selectedProposals) : null;
+  const detailsProposal = selectedProposals.find((p) => p.id === detailsId);
+  const hasAcceptedProposal = selectedProposals.some((p) => p.status === "ACCEPTED");
 
   return (
     <div className="messages-view">
@@ -459,6 +723,17 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                     <span className="messages-tab-badge">{pendingRequests.length}</span>
                   )}
                 </button>
+                {(blockedConversations.length > 0 || activeTab === "blocked") && (
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === "blocked"}
+                    className={`messages-tab-btn ${activeTab === "blocked" ? "active" : ""}`}
+                    onClick={() => setActiveTab("blocked")}
+                  >
+                    Đã chặn
+                  </button>
+                )}
               </div>
             </div>
             <label className="application-search">
@@ -477,7 +752,9 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                 <small>
                   {activeTab === "requests"
                     ? "Không có yêu cầu tin nhắn nào."
-                    : "Không tìm thấy hội thoại."}
+                    : activeTab === "blocked"
+                      ? "Bạn chưa chặn ứng viên nào."
+                      : "Không tìm thấy hội thoại."}
                 </small>
               </div>
             ) : (
@@ -580,15 +857,31 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                 >
                   {showContext ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
                 </button>
-                <button
-                  type="button"
-                  className="icon-button"
-                  title="Tùy chọn"
-                  aria-label="Tùy chọn hội thoại"
-                >
-                  <MoreHorizontal size={18} />
-                </button>
+                <ThreadOptionsMenu
+                  key={selected.id}
+                  proposal={proposalItem}
+                  muted={Boolean(selected.muted)}
+                  blocked={isSelectedBlocked}
+                  onProposal={handleProposalMenu}
+                  onToggleMute={toggleMute}
+                  onDelete={() => { setConfirmError(null); setConfirm({ kind: "delete", id: selected.id }); }}
+                  onBlock={() => { setConfirmError(null); setConfirm({ kind: isSelectedBlocked ? "unblock" : "block", id: selected.id }); }}
+                />
               </header>
+
+              {isSelectedBlocked && (
+                <div className="message-request-banner">
+                  <div className="message-request-banner-text">
+                    <strong>Bạn đã chặn {selected.candidateName}</strong>
+                    <p>Ứng viên không thể gửi tin nhắn hay yêu cầu mới. Lịch sử trò chuyện và các dự án Replyn đã chấp nhận vẫn được giữ.</p>
+                  </div>
+                  <div className="message-request-banner-actions">
+                    <button type="button" className="business-secondary-button compact" onClick={() => { setConfirmError(null); setConfirm({ kind: "unblock", id: selected.id }); }}>
+                      Bỏ chặn
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Message Request Banner if pending */}
               {isSelectedPending && (
@@ -623,7 +916,15 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                 <div className="thread-date">
                   <span>Hôm nay</span>
                 </div>
-                {selected.messages.map((message) => {
+                {streamItems(selected.messages, selectedProposals).map((item) => {
+                  if (item.kind === "proposal") {
+                    return (
+                      <div className="message-row proposal-row" key={`proposal-${item.proposal.id}`}>
+                        <ProposalCard proposal={item.proposal} onOpen={() => setDetailsId(item.proposal.id)} />
+                      </div>
+                    );
+                  }
+                  const message = item.message;
                   const quoted = message.replyToId
                     ? selected.messages.find((item) => item.id === message.replyToId)
                     : null;
@@ -717,7 +1018,7 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                     className="icon-button"
                     title="Đính kèm"
                     aria-label="Đính kèm tệp"
-                    disabled={isSelectedPending}
+                    disabled={composerLocked}
                   >
                     <Paperclip size={18} />
                   </button>
@@ -730,26 +1031,28 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                     onKeyDown={handleComposerKeyDown}
                     rows={1}
                     placeholder={
-                      isSelectedPending
-                        ? "Bạn cần chấp nhận yêu cầu tin nhắn để trả lời..."
-                        : `Nhắn cho ${selected.candidateName}...`
+                      isSelectedBlocked
+                        ? "Bạn đã chặn ứng viên này"
+                        : isSelectedPending
+                          ? "Bạn cần chấp nhận yêu cầu tin nhắn để trả lời..."
+                          : `Nhắn cho ${selected.candidateName}...`
                     }
                     aria-label="Nội dung tin nhắn"
-                    disabled={isSelectedPending}
+                    disabled={composerLocked}
                   />
                   <button
                     type="button"
                     className="icon-button"
                     title="Biểu cảm"
                     aria-label="Chọn biểu cảm"
-                    disabled={isSelectedPending}
+                    disabled={composerLocked}
                   >
                     <Smile size={18} />
                   </button>
                   <button
                     type="submit"
                     className="message-send-button"
-                    disabled={!draft.trim() || isSelectedPending}
+                    disabled={!draft.trim() || composerLocked}
                     title="Gửi"
                     aria-label="Gửi tin nhắn"
                   >
@@ -757,9 +1060,11 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
                   </button>
                 </div>
                 <small>
-                  {isSelectedPending
-                    ? "Chấp nhận yêu cầu để bắt đầu trò chuyện"
-                    : "Enter để gửi · Shift + Enter để xuống dòng"}
+                  {isSelectedBlocked
+                    ? "Bỏ chặn để tiếp tục trò chuyện"
+                    : isSelectedPending
+                      ? "Chấp nhận yêu cầu để bắt đầu trò chuyện"
+                      : "Enter để gửi · Shift + Enter để xuống dòng"}
                 </small>
               </form>
             </section>
@@ -851,6 +1156,84 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
           </div>
         )}
       </section>
+
+      {selected && proposalDialog && (
+        <ReplynProposalDialog
+          key={proposalDialog.draftId ?? proposalDialog.supersedesId ?? "new"}
+          candidateName={selected.candidateName}
+          initial={proposalDialog.initial}
+          hasDraft={Boolean(proposalDialog.draftId)}
+          replacesRejected={Boolean(proposalDialog.supersedesId)}
+          onSubmit={submitProposal}
+          onDiscardDraft={discardDraft}
+          onClose={() => setProposalDialog(null)}
+        />
+      )}
+
+      {selected && detailsProposal && (
+        <ProposalDetailsDialog
+          proposal={detailsProposal}
+          previous={selectedProposals.find((p) => p.id === detailsProposal.supersedesId)}
+          candidateName={selected.candidateName}
+          demo={!liveMessages}
+          onCancel={() => cancelProposal(detailsProposal.id)}
+          onClose={() => setDetailsId(null)}
+        />
+      )}
+
+      {selected && confirm?.kind === "delete" && (
+        <ConfirmDialog
+          title="Xóa cuộc trò chuyện?"
+          icon={<Trash2 size={22} />}
+          tone="danger"
+          confirmLabel="Xóa cuộc trò chuyện"
+          busy={confirmBusy}
+          error={confirmError}
+          onConfirm={runConfirm}
+          onClose={() => setConfirm(null)}
+        >
+          <p>Cuộc trò chuyện chỉ bị xóa khỏi tài khoản của bạn. {selected.candidateName} vẫn giữ toàn bộ lịch sử; nếu ứng viên nhắn tiếp, cuộc trò chuyện sẽ hiện lại.</p>
+          {hasAcceptedProposal && <p className="replyn-warning"><AlertTriangle size={15} />Đề xuất đã chấp nhận và workspace Replyn không bị xóa.</p>}
+        </ConfirmDialog>
+      )}
+
+      {selected && confirm?.kind === "block" && (
+        <ConfirmDialog
+          title={`Chặn ${selected.candidateName}?`}
+          icon={<Ban size={22} />}
+          tone="danger"
+          confirmLabel="Chặn ứng viên"
+          busy={confirmBusy}
+          error={confirmError}
+          onConfirm={runConfirm}
+          onClose={() => setConfirm(null)}
+        >
+          <p>Ứng viên sẽ không thể gửi tin nhắn hoặc yêu cầu mới tới doanh nghiệp. Lịch sử trò chuyện được giữ nguyên và bạn có thể bỏ chặn bất cứ lúc nào trong mục Đã chặn.</p>
+          {selectedProposals.some((p) => p.status === "PENDING") && <p>Đề xuất Replyn đang chờ phản hồi sẽ bị hủy.</p>}
+          {hasAcceptedProposal && (
+            <p className="replyn-warning"><AlertTriangle size={15} />Hai bên đang có dự án Replyn. Workspace, thỏa thuận và bằng chứng dự án vẫn được giữ nguyên sau khi chặn.</p>
+          )}
+        </ConfirmDialog>
+      )}
+
+      {selected && confirm?.kind === "unblock" && (
+        <ConfirmDialog
+          title={`Bỏ chặn ${selected.candidateName}?`}
+          icon={<UserRoundCheck size={22} />}
+          tone="primary"
+          confirmLabel="Bỏ chặn"
+          busy={confirmBusy}
+          error={confirmError}
+          onConfirm={runConfirm}
+          onClose={() => setConfirm(null)}
+        >
+          <p>Ứng viên có thể nhắn tin lại cho doanh nghiệp. Cuộc trò chuyện trở về trạng thái trước khi chặn.</p>
+        </ConfirmDialog>
+      )}
+
+      {notice && (
+        <div className="messages-notice" role="status">{notice}</div>
+      )}
     </div>
   );
 }
