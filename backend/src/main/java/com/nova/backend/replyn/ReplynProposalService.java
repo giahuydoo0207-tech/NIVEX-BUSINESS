@@ -147,6 +147,10 @@ public class ReplynProposalService {
     public ReplynProposal accept(UUID threadId, UUID proposalId, String contractorId) {
         Locked locked = lockForTalent(threadId, proposalId, contractorId);
         ReplynProposal proposal = locked.proposal();
+        // A retried accept by the talent it was accepted for (double tap, lost response, race) returns the same workspace.
+        if ("ACCEPTED".equals(proposal.status()) && proposal.workspaceId() != null && acceptedFor(proposalId, contractorId)) {
+            return proposal;
+        }
         if (!"PENDING".equals(proposal.status())) throw alreadyDecided(proposal.status());
         if (expired(proposalId)) throw expire(proposalId);
         int changed = jdbc.update("update replyn_proposals set status='ACCEPTED', workspace_id=?, accepted_at=now(), updated_at=now() "
@@ -197,14 +201,15 @@ public class ReplynProposalService {
         }
         return jdbc.query("select p.workspace_id, p.id, p.project_name, p.scope, p.deliverables::text, p.revision_limit, p.currency, p.total_amount, "
                 + "p.start_date, p.deadline, p.review_period_days, p.milestones::text, p.notes, p.accepted_at, "
-                + "coalesce(b.display_name, o.trading_name), t.display_name from replyn_proposals p "
+                + "coalesce(b.display_name, o.trading_name), t.display_name, p.thread_id from replyn_proposals p "
                 + "join organizations o on o.id=p.organization_id left join business_profiles b on b.organization_id=p.organization_id "
                 + "join talent_profiles t on t.contractor_id=p.contractor_id "
                 + "where p.status='ACCEPTED' and " + member + only + " order by p.accepted_at desc limit 50",
             (rs, row) -> new WorkspaceView(rs.getObject(1, UUID.class), rs.getObject(2, UUID.class), rs.getString(3), rs.getString(4),
                 read(rs.getString(5), STRINGS), rs.getObject(6, Integer.class), rs.getString(7), rs.getBigDecimal(8),
                 rs.getObject(9, LocalDate.class), rs.getObject(10, LocalDate.class), rs.getObject(11, Integer.class),
-                read(rs.getString(12), MILESTONES), rs.getString(13), rs.getTimestamp(14).toInstant(), rs.getString(15), rs.getString(16), role),
+                read(rs.getString(12), MILESTONES), rs.getString(13), rs.getTimestamp(14).toInstant(), rs.getString(15), rs.getString(16), role,
+                "business".equals(role) ? rs.getObject(17, UUID.class) : null),
             args.toArray());
     }
 
@@ -384,6 +389,12 @@ public class ReplynProposalService {
             "Đề xuất đã gửi không thể sửa. Hãy hủy và gửi đề xuất mới.");
     }
 
+    private boolean acceptedFor(UUID proposalId, String contractorId) {
+        Integer matches = jdbc.queryForObject("select count(*) from replyn_proposals where id=? and status='ACCEPTED' and contractor_id=?",
+            Integer.class, proposalId, contractorId);
+        return matches != null && matches == 1;
+    }
+
     private static ReplynProposalException alreadyDecided(String status) {
         return new ReplynProposalException(HttpStatus.CONFLICT, "PROPOSAL_" + status, switch (status) {
             case "ACCEPTED" -> "Đề xuất đã được chấp nhận.";
@@ -452,11 +463,15 @@ public class ReplynProposalService {
         }
     }
 
-    /** What Replyn's server receives for a workspace: the accepted agreement and display names, no internal ids. */
+    /**
+     * What Replyn's server receives for a workspace: the accepted agreement and display names, no internal profile ids.
+     * {@code sourceThreadId} is the Nova message thread the proposal was sent in, so Replyn can link back to that conversation.
+     * Only the business viewer receives it; the freelancer continues the conversation on Nova Mobile.
+     */
     public record WorkspaceView(UUID workspaceId, UUID proposalId, String projectName, String scope, List<String> deliverables,
                                 Integer revisionLimit, String currency, BigDecimal totalAmount, LocalDate startDate, LocalDate deadline,
                                 Integer reviewPeriodDays, List<ReplynProposal.Milestone> milestones, String notes, Instant acceptedAt,
-                                String businessName, String freelancerName, String viewerRole) {}
+                                String businessName, String freelancerName, String viewerRole, UUID sourceThreadId) {}
 
     private record ThreadRow(UUID organizationId, String contractorId, String status) {}
     private record Locked(ThreadRow thread, ReplynProposal proposal) {}

@@ -55,6 +55,16 @@ export function lastKeyChange(key: NovaCredential["key"]): string | null {
   return times.reduce((latest, value) => (Date.parse(value) > Date.parse(latest) ? value : latest));
 }
 
+/**
+ * The message to show when a public demo has frozen Nova Key changes (the proxy answers 403 with a
+ * Vietnamese message while NOVA_KEY_ROTATION_DISABLED=true). Null for any other failure.
+ */
+export function novaKeyLockedMessage(error: unknown): string | null {
+  if (!(error instanceof Error) || (error as { status?: unknown }).status !== 403) return null;
+  // A bare 403 (e.g. the cross-origin guard) has no body, so the client falls back to "API 403".
+  return error.message && !/^API \d+$/.test(error.message) ? error.message : null;
+}
+
 /** The first key needs no confirmation; replacing an active key does. */
 export function issueKeyNeedsConfirmation(status: NovaKeyStatus): boolean {
   return status === "ACTIVE";

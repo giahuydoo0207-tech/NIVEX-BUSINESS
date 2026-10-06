@@ -47,11 +47,22 @@ class ReplynProposalRaceTest {
     @Test
     void concurrentAcceptsAllocateExactlyOneWorkspace() throws Exception {
         UUID id = proposals.create(thread, TestRecipients.ORG, input(), true).id();
-        List<String> outcomes = race(
-            () -> outcome(() -> proposals.accept(thread, id, TestRecipients.CONTRACTOR)),
-            () -> outcome(() -> proposals.accept(thread, id, TestRecipients.CONTRACTOR)));
-        assertThat(outcomes).containsExactlyInAnyOrder("ACCEPTED", "PROPOSAL_ACCEPTED");
+        // The same talent accepting twice is idempotent: both calls succeed with the one workspace the first allocated.
+        Callable<String> accept = () -> {
+            try {
+                ReplynProposal accepted = proposals.accept(thread, id, TestRecipients.CONTRACTOR);
+                return accepted.status() + ":" + accepted.workspaceId();
+            } catch (ReplynProposalException refused) {
+                return refused.code();
+            }
+        };
+        List<String> outcomes = race(accept, accept);
+        UUID workspace = jdbc.queryForObject("select workspace_id from replyn_proposals where id=?", UUID.class, id);
+        assertThat(workspace).isNotNull();
+        assertThat(outcomes).containsExactly("ACCEPTED:" + workspace, "ACCEPTED:" + workspace);
         assertThat(jdbc.queryForObject("select count(*) from replyn_proposals where thread_id=? and workspace_id is not null", Integer.class, thread)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from notifications where type='REPLYN_PROPOSAL_ACCEPTED' and data->>'threadId'=?",
+            Integer.class, thread.toString())).isEqualTo(1);
     }
 
     @Test

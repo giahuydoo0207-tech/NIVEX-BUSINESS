@@ -25,6 +25,7 @@ import {
   issueKeyNeedsConfirmation,
   lastKeyChange,
   maskedNovaKey,
+  novaKeyLockedMessage,
   novaKeyStatusLabel,
   type IssuedNovaKey,
   type NovaCredential,
@@ -48,10 +49,10 @@ export function PersonalInfoView() {
   const [timeZone, setTimeZone] = useState<string>("—");
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const showNotice = useCallback((message: string) => {
+  const showNotice = useCallback((message: string, durationMs = 2600) => {
     setNotice(message);
     if (noticeTimer.current) clearTimeout(noticeTimer.current);
-    noticeTimer.current = setTimeout(() => setNotice(null), 2600);
+    noticeTimer.current = setTimeout(() => setNotice(null), durationMs);
   }, []);
 
   const load = useCallback(async () => {
@@ -101,8 +102,10 @@ export function PersonalInfoView() {
         setCredential(issued.credential);
         setKeyCopied(false);
         setIssuedKey(issued.novaKey);
-      } catch {
-        showNotice("Không thể tạo Nova Key. Vui lòng thử lại.");
+      } catch (error) {
+        const locked = novaKeyLockedMessage(error);
+        if (locked) showNotice(locked, 6000);
+        else showNotice("Không thể tạo Nova Key. Vui lòng thử lại.");
       }
     });
 
@@ -111,8 +114,10 @@ export function PersonalInfoView() {
       try {
         setCredential(await workspaceRequest<NovaCredential>(NOVA_KEY_PATH, { method: "DELETE" }));
         showNotice("Đã thu hồi Nova Key.");
-      } catch {
-        showNotice("Không thể thu hồi Nova Key. Vui lòng tải lại trang.");
+      } catch (error) {
+        const locked = novaKeyLockedMessage(error);
+        if (locked) showNotice(locked, 6000);
+        else showNotice("Không thể thu hồi Nova Key. Vui lòng tải lại trang.");
       }
     });
 
