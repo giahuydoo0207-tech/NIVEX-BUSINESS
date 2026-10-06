@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { emptyForm, payload, proposalMenuItem, validate, workspaceUrl, type ProposalForm, type ReplynProposal } from "./replyn-proposals";
+import { emptyForm, payload, proposalMenuItem, threadIdFromQuery, validate, workspaceUrl, type ProposalForm, type ReplynProposal } from "./replyn-proposals";
 
 const day = (offset: number) => {
   const date = new Date();
@@ -88,4 +88,15 @@ test("the menu item follows the conversation's proposal state", () => {
 
 test("workspace links carry only the opaque workspace id", () => {
   assert.equal(workspaceUrl("3f1c0d4e-0000-4000-8000-000000000001"), "https://replyn-web.vercel.app/workspace/3f1c0d4e-0000-4000-8000-000000000001");
+});
+
+test("?thread= only opens a well-formed thread id", () => {
+  assert.equal(threadIdFromQuery("3F1C0D4E-0000-4000-8000-000000000001"), "3f1c0d4e-0000-4000-8000-000000000001");
+  assert.equal(threadIdFromQuery(" 3f1c0d4e-0000-4000-8000-000000000001 "), "3f1c0d4e-0000-4000-8000-000000000001");
+  assert.equal(threadIdFromQuery(undefined), undefined);
+  assert.equal(threadIdFromQuery(""), undefined);
+  assert.equal(threadIdFromQuery("not-a-uuid"), undefined);
+  assert.equal(threadIdFromQuery("3f1c0d4e-0000-4000-8000-000000000001x"), undefined);
+  assert.equal(threadIdFromQuery("../messages?status=BLOCKED"), undefined);
+  assert.equal(threadIdFromQuery(["3f1c0d4e-0000-4000-8000-000000000001", "3f1c0d4e-0000-4000-8000-000000000002"]), undefined);
 });

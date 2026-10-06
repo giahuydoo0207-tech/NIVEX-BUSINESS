@@ -66,6 +66,18 @@ export function workspaceUrl(workspaceId: string) {
   return `${REPLYN_URL}/workspace/${encodeURIComponent(workspaceId)}`;
 }
 
+const THREAD_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * The `?thread=` value Replyn links business users back with (`/business/messages?thread=<id>`).
+ * Only a single well-formed UUID is accepted; anything else is ignored so the page falls back to its default.
+ */
+export function threadIdFromQuery(value: string | string[] | undefined): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const id = value.trim();
+  return THREAD_ID.test(id) ? id.toLowerCase() : undefined;
+}
+
 export function emptyForm(): ProposalForm {
   return {
     projectName: "",

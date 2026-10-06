@@ -6,8 +6,10 @@ import {
   issueKeyNeedsConfirmation,
   lastKeyChange,
   maskedNovaKey,
+  novaKeyLockedMessage,
   novaKeyStatusLabel,
 } from "./nova-credentials";
+import { WorkspaceApiError } from "./workspace-api";
 
 test("Thông tin cá nhân sits right under Tổng quan in the workspace group", () => {
   const workspace = NAV_GROUPS[0];
@@ -67,4 +69,13 @@ test("missing or invalid timestamps render as a dash", () => {
   assert.equal(formatCredentialTime(null), "—");
   assert.equal(formatCredentialTime("not a date"), "—");
   assert.match(formatCredentialTime("2026-10-04T08:00:00Z"), /2026/);
+});
+
+test("a locked Nova Key shows the proxy's message; other failures keep the generic copy", () => {
+  const locked = "Tạo hoặc đổi Nova Key đang tạm khóa trên bản demo công khai.";
+  assert.equal(novaKeyLockedMessage(new WorkspaceApiError(locked, 403)), locked);
+  assert.equal(novaKeyLockedMessage(new WorkspaceApiError("API 403", 403)), null);
+  assert.equal(novaKeyLockedMessage(new WorkspaceApiError("Backend lỗi", 500)), null);
+  assert.equal(novaKeyLockedMessage(new Error(locked)), null);
+  assert.equal(novaKeyLockedMessage(undefined), null);
 });

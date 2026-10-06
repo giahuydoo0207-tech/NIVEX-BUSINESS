@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { isNovaKeyChange, NOVA_KEY_LOCKED_MESSAGE, novaKeyRotationLocked } from "@/lib/server/nova-key-lock";
 
 const UUID = "[0-9a-fA-F-]{36}";
 const communityPost = `community/posts(?:/${UUID}(?:/(?:pin|privacy|reaction|reactions|saved|hidden|comments(?:/${UUID}/(?:liked|reaction))?))?)?`;
@@ -22,6 +23,10 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   }
   const path = (await context.params).path.join("/");
   if (!allowed.test(path)) return new Response(null, { status: 404 });
+  // Checked before anything reaches the backend, so a locked request never returns a key.
+  if (isNovaKeyChange(path, request.method) && novaKeyRotationLocked(process.env.NOVA_KEY_ROTATION_DISABLED)) {
+    return Response.json({ message: NOVA_KEY_LOCKED_MESSAGE }, { status: 403, headers: { "Cache-Control": "no-store" } });
+  }
   if (request.method !== "GET" && request.headers.get("origin") !== request.nextUrl.origin) {
     return new Response(null, { status: 403 });
   }

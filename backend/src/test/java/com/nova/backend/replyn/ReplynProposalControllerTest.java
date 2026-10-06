@@ -76,17 +76,20 @@ class ReplynProposalControllerTest {
             .andExpect(jsonPath("$.status").value("ACCEPTED"))
             .andExpect(jsonPath("$.acceptedAt").isNotEmpty()));
         String workspaceId = accepted.get("workspaceId").asText();
-        assertThat(jdbc.queryForObject("select count(*) from notifications where type='REPLYN_PROPOSAL_ACCEPTED'", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from notifications where type='REPLYN_PROPOSAL_ACCEPTED' and data->>'threadId'=?",
+            Integer.class, thread.toString())).isEqualTo(1);
 
         // Both parties resolve the same workspace; neither payload carries internal profile ids.
         lookup("TALENT", TestRecipients.CONTRACTOR, workspaceId).andExpect(status().isOk())
             .andExpect(jsonPath("$.workspaces[0].workspaceId").value(workspaceId))
             .andExpect(jsonPath("$.workspaces[0].proposalId").value(proposalId))
+            .andExpect(jsonPath("$.workspaces[0].sourceThreadId").doesNotExist())
             .andExpect(jsonPath("$.workspaces[0].viewerRole").value("freelancer"))
             .andExpect(jsonPath("$.workspaces[0].freelancerName").isNotEmpty())
             .andExpect(jsonPath("$.workspaces[0].contractorId").doesNotExist());
         lookup("ORGANIZATION", TestRecipients.ORG.toString(), workspaceId).andExpect(status().isOk())
             .andExpect(jsonPath("$.workspaces[0].workspaceId").value(workspaceId))
+            .andExpect(jsonPath("$.workspaces[0].sourceThreadId").value(thread.toString()))
             .andExpect(jsonPath("$.workspaces[0].viewerRole").value("business"))
             .andExpect(jsonPath("$.workspaces[0].organizationId").doesNotExist());
         // Someone else's workspace looks like one that does not exist.
@@ -151,8 +154,23 @@ class ReplynProposalControllerTest {
         respond(TOKEN, id, "accept", null).andExpect(status().isOk());
         // An accepted agreement is opened in Replyn, not proposed again.
         create(proposal(), true).andExpect(status().isConflict());
-        respond(TOKEN, id, "accept", null).andExpect(status().isConflict()).andExpect(jsonPath("$.status").value("PROPOSAL_ACCEPTED"));
-        respond(TOKEN, id, "reject", null).andExpect(status().isConflict());
+        respond(TOKEN, id, "reject", null).andExpect(status().isConflict()).andExpect(jsonPath("$.status").value("PROPOSAL_ACCEPTED"));
+    }
+
+    @Test
+    void acceptingTwiceReturnsTheSameWorkspace() throws Exception {
+        String id = body(create(proposal(), true).andExpect(status().isCreated())).get("id").asText();
+        String first = body(respond(TOKEN, id, "accept", null).andExpect(status().isOk())).get("workspaceId").asText();
+        // A retried tap or a lost response must not fail or allocate a second workspace.
+        respond(TOKEN, id, "accept", null).andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("ACCEPTED"))
+            .andExpect(jsonPath("$.workspaceId").value(first));
+        assertThat(jdbc.queryForObject("select count(*) from replyn_proposals where thread_id=? and workspace_id is not null", Integer.class, thread))
+            .isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from notifications where type='REPLYN_PROPOSAL_ACCEPTED' and data->>'threadId'=?",
+            Integer.class, thread.toString())).isEqualTo(1);
+        // Anyone other than that talent is still refused.
+        respond(OTHER_TOKEN, id, "accept", null).andExpect(status().isForbidden());
     }
 
     @Test

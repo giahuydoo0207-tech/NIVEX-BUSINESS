@@ -218,7 +218,7 @@ const DEMO_STRANGER_REQUEST: ConversationItem = {
   ],
 };
 
-export function MessagesView({ initialCandidateId }: { initialCandidateId?: string }) {
+export function MessagesView({ initialCandidateId, initialThreadId }: { initialCandidateId?: string; initialThreadId?: string }) {
   const [conversations, setConversations] = useState<ConversationItem[]>(() => {
     // Live workspaces only show threads stored in the shared backend.
     if (liveMessages) return [];
@@ -256,7 +256,8 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
     return () => window.clearTimeout(timer);
   }, [notice]);
   const [selectedId, setSelectedId] = useState(
-    liveMessages ? initialCandidateId ?? "" :
+    // ?thread= (from Replyn) names a shared-backend thread, so it only applies to live workspaces.
+    liveMessages ? initialThreadId ?? initialCandidateId ?? "" :
     initialCandidateId && demoApplications.some((item) => item.id === initialCandidateId)
       ? initialCandidateId
       : demoApplications[0]?.id ?? "",
@@ -266,8 +267,10 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
   const [replyingTo, setReplyingTo] = useState<ApplicationMessage | null>(null);
   const [typingId, setTypingId] = useState<string | null>(null);
   const [showContext, setShowContext] = useState(true);
-  const [mobileThreadOpen, setMobileThreadOpen] = useState(Boolean(initialCandidateId));
+  const [mobileThreadOpen, setMobileThreadOpen] = useState(Boolean(initialCandidateId || (liveMessages && initialThreadId)));
   const bottomRef = useRef<HTMLDivElement>(null);
+  // Consumed by the first live load: a linked request or blocked thread is shown in its own tab.
+  const linkedThreadRef = useRef(liveMessages ? initialThreadId : undefined);
   const timersRef = useRef<number[]>([]);
 
   async function refreshLiveThreads() {
@@ -287,7 +290,15 @@ export function MessagesView({ initialCandidateId }: { initialCandidateId?: stri
       mapThread(thread, applicationFor(thread.contractorId, applications)),
     );
     setConversations(next);
-    // ?candidate= may carry an application id when opened from Ứng viên.
+    const linkedId = linkedThreadRef.current;
+    const linked = linkedId ? next.find((item) => item.id === linkedId) : undefined;
+    linkedThreadRef.current = undefined;
+    // A well-formed but unknown id is not opened on phones; the list is shown instead.
+    if (linkedId && !linked) setMobileThreadOpen(Boolean(initialCandidateId));
+    if (linked && linked.requestState === "pending") setActiveTab("requests");
+    if (linked && linked.requestState === "blocked") setActiveTab("blocked");
+    // ?candidate= may carry an application id when opened from Ứng viên; ?thread= a thread id from Replyn.
+    // An unknown id falls back to the first conversation.
     setSelectedId((current) =>
       next.find((item) => item.id === current || item.applicationId === current)?.id ?? next[0]?.id ?? "",
     );
